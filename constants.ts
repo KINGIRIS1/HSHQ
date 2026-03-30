@@ -33,12 +33,13 @@ export const STATUS_COLORS: Record<RecordStatus, string> = {
   [RecordStatus.WITHDRAWN]: 'bg-slate-600 text-white',
 };
 
-export const GROUPS = ['Chơn Thành', 'Minh Hưng', 'Nha Bích'];
+export const GROUPS = ['Tân Khai', 'Tân Quan', 'Minh Đức', 'Tân Hưng'];
 
 export const DEFAULT_WARDS = [
-  'Chơn Thành',
-  'Minh Hưng',
-  'Nha Bích'
+  'Tân Khai',
+  'Tân Quan',
+  'Minh Đức',
+  'Tân Hưng'
 ];
 
 export const WARDS = DEFAULT_WARDS;
@@ -72,9 +73,10 @@ export const getNormalizedWard = (ward: string | null | undefined): string => {
   const lower = w.toLowerCase();
 
   // 1. Xử lý các mã viết tắt đặc biệt
-  if (lower === 'ct' || lower === 'chơn thành') return 'Chơn Thành';
-  if (lower === 'nb' || lower === 'nha bích') return 'Nha Bích';
-  if (lower === 'mh' || lower === 'minh hưng') return 'Minh Hưng';
+  if (lower === 'tk' || lower === 'tân khai') return 'Tân Khai';
+  if (lower === 'md' || lower === 'minh đức') return 'Minh Đức';
+  if (lower === 'th' || lower === 'tân hưng') return 'Tân Hưng';
+  if (lower === 'tq' || lower === 'tân quan') return 'Tân Quan';
 
   // 2. Xử lý Title Case (Viết hoa chữ cái đầu mỗi từ)
   return w.toLowerCase().split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
@@ -113,14 +115,14 @@ export const MOCK_EMPLOYEES: Employee[] = [
     name: 'Nguyễn Văn A', 
     department: 'Phòng Kỹ thuật', 
     position: 'Trưởng phòng',
-    managedWards: ['Minh Hưng'] 
+    managedWards: ['Tân Quan'] 
   },
   { 
     id: 'emp2', 
     name: 'Trần Thị B', 
     department: 'Phòng Pháp chế', 
     position: 'Chuyên viên',
-    managedWards: ['Nha Bích', 'Chơn Thành'] 
+    managedWards: ['Minh Đức', 'Tân Khai'] 
   },
   { 
     id: 'emp3', 
@@ -192,8 +194,8 @@ export const MOCK_RECORDS: RecordFile[] = [
     receivedDate: getRelativeDate(0), 
     deadline: getRelativeDate(5),      
     status: RecordStatus.RECEIVED,
-    group: 'Minh Hưng',
-    ward: 'Minh Hưng'
+    group: 'Tân Quan',
+    ward: 'Tân Quan'
   }
 ];
 
@@ -203,7 +205,7 @@ export const MOCK_CONTRACTS: Contract[] = [
     code: 'HĐ-2024-001',
     customerName: 'Nguyễn Văn A (Mẫu)',
     phoneNumber: '0909123456',
-    ward: 'Minh Hưng',
+    ward: 'Tân Quan',
     contractType: 'Đo đạc',
     serviceType: 'Đo đạc diện tích dưới 500m2',
     areaType: 'Đất đô thị',

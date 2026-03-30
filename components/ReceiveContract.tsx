@@ -403,7 +403,7 @@ const ReceiveContract: React.FC<ReceiveContractProps> = ({ wards, currentUser, r
           XA: rawWard,
           KHUVUC: val(dataToPrint.areaType),
           TINH: "Bình Phước",
-          HUYEN: "thị xã Chơn Thành",
+          HUYEN: "huyện Hớn Quản",
           LOAIHS: val(dataToPrint.contractType),
           LOAIDV: val(dataToPrint.serviceType || dataToPrint.contractType),
           NOI_DUNG_CV: val(dataToPrint.serviceType || dataToPrint.contractType),

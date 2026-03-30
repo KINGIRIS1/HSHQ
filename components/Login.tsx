@@ -101,7 +101,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, users }) => {
             <div className="relative z-10 mt-10 pt-6 border-t border-slate-800 flex justify-between items-end">
                 <div>
                     <p className="text-[10px] text-slate-500 font-mono uppercase tracking-wider mb-1">System Version</p>
-                    <p className="text-xs text-slate-300 font-semibold">{APP_VERSION} • Chi nhánh Chơn Thành</p>
+                    <p className="text-xs text-slate-300 font-semibold">{APP_VERSION} • Chi nhánh Hớn Quản</p>
                 </div>
             </div>
 

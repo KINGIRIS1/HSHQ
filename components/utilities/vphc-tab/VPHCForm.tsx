@@ -14,9 +14,10 @@ const VPHCForm: React.FC<VPHCFormProps> = ({ formData, handleChange }) => {
     const iconClass = "absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none";
 
     const WARDS = [
-        "phường Minh Hưng",
-        "phường Chơn Thành", 
-        "xã Nha Bích"
+        "xã Tân Quan",
+        "thị trấn Tân Khai", 
+        "xã Minh Đức",
+    "xã Tân Hưng"
     ];
 
     return (

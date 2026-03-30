@@ -60,7 +60,7 @@ try {
 const DEFAULT_DATA = {
     records: [], 
     excerpt_history: [],
-    excerpt_counters: { "Chơn Thành": 0, "Minh Hưng": 0, "Nha Bích": 0 },
+    excerpt_counters: { "Tân Khai": 0, "Tân Quan": 0, "Minh Đức": 0, "Tân Hưng": 0 },
     employees: [],
     users: [{ username: 'admin', password: '123', name: 'Administrator', role: 'ADMIN' }]
 };

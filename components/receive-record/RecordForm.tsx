@@ -49,7 +49,7 @@ const RecordForm: React.FC<RecordFormProps> = ({ onSave, wards, records, holiday
   }, [notification]);
 
   const linkedEmp = employees.find(e => e.id === currentUser.employeeId);
-  const processingWard = linkedEmp?.managedWards?.[0] || 'Chơn Thành';
+  const processingWard = linkedEmp?.managedWards?.[0] || 'Tân Khai';
 
   useEffect(() => {
     if (!initialData) {

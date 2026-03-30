@@ -95,7 +95,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                     Hệ thống tiếp nhận và quản lý hồ sơ đo đạc
                  </h1>
                  <div className="text-[11px] text-blue-400 font-medium mt-1">
-                    Chi nhánh Chơn Thành
+                    Chi nhánh Hớn Quản
                  </div>
              </div>
              <button onClick={() => setMobileOpen(false)} className="md:hidden text-slate-400 hover:text-white"><X size={20} /></button>

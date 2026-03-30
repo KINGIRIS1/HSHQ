@@ -91,7 +91,7 @@ const EmployeeManagement: React.FC<EmployeeManagementProps> = ({
   const handleDownloadSample = () => {
       const headers = ["MÃ NV", "HỌ TÊN", "PHÒNG BAN", "CHỨC VỤ", "PHỤ TRÁCH"];
       const data = [
-          ["NV001", "Trần Văn B", "Kỹ thuật", "Trưởng phòng", "Minh Hưng, Nha Bích"],
+          ["NV001", "Trần Văn B", "Kỹ thuật", "Trưởng phòng", "Tân Quan, Minh Đức"],
           ["NV002", "Lê Thị C", "Văn phòng", "Nhân viên", ""],
       ];
       const ws = XLSX.utils.aoa_to_sheet([headers, ...data]);

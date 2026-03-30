@@ -30,8 +30,8 @@ const BulkImport: React.FC<BulkImportProps> = ({ onSave, calculateDeadline, calc
       ];
       
       const sampleData = [
-          ["Nguyễn Văn A", "0901234567", "Minh Hưng", "123", "45", "100.5", "Tổ 1, KP 2", "Trích lục", "Xin trích lục bản đồ", "", ""],
-          ["Trần Thị B", "0987654321", "Chơn Thành", "456", "78", "250.0", "KP 3", "Đo đạc", "Đo đạc cắm mốc", "Lê Văn C", "Giấy ủy quyền"]
+          ["Nguyễn Văn A", "0901234567", "Tân Quan", "123", "45", "100.5", "Tổ 1, KP 2", "Trích lục", "Xin trích lục bản đồ", "", ""],
+          ["Trần Thị B", "0987654321", "Tân Khai", "456", "78", "250.0", "KP 3", "Đo đạc", "Đo đạc cắm mốc", "Lê Văn C", "Giấy ủy quyền"]
       ];
       
       const ws = XLSX.utils.aoa_to_sheet([headers, ...sampleData]);

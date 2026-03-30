@@ -27,9 +27,10 @@ interface OwnerData {
 
 const DIRECTIONS = ['Bắc', 'Đông', 'Nam', 'Tây'];
 const WARDS_QUICK = [
-    { label: 'xã Nha Bích', value: 'xã Nha Bích' },
-    { label: 'phường Chơn Thành', value: 'phường Chơn Thành' },
-    { label: 'phường Minh Hưng', value: 'phường Minh Hưng' }
+    { label: 'xã Minh Đức', value: 'xã Minh Đức' },
+    { label: 'xã Tân Hưng', value: 'xã Tân Hưng' },
+    { label: 'thị trấn Tân Khai', value: 'thị trấn Tân Khai' },
+    { label: 'xã Tân Quan', value: 'xã Tân Quan' }
 ];
 
 const ADJACENT_OBJECTS = ["Thửa đất số", "Đường", "Đường nhựa", "Đường bê tông", "Đường đất", "Sông", "Suối", "Mương nước", "Cống"];

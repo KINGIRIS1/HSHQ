@@ -14,10 +14,11 @@ interface ChinhLyBienDongTabProps {
 }
 
 // Danh sách Xã/Phường giới hạn theo yêu cầu
-const CHON_THANH_WARDS = [
-    "phường Chơn Thành",
-    "phường Minh Hưng",
-    "xã Nha Bích"
+const HON_QUAN_WARDS = [
+    "thị trấn Tân Khai",
+    "xã Tân Quan",
+    "xã Minh Đức",
+    "xã Tân Hưng"
 ];
 
 // Dữ liệu dùng chung cho cả nhóm (Header)
@@ -644,7 +645,7 @@ const ChinhLyBienDongTab: React.FC<ChinhLyBienDongTabProps> = ({ currentUser, no
                                         onChange={e => setCommonData({...commonData, XA: e.target.value})}
                                     >
                                         <option value="">-- Chọn Xã/Phường --</option>
-                                        {CHON_THANH_WARDS.map(w => (
+                                        {HON_QUAN_WARDS.map(w => (
                                             <option key={w} value={w}>{w}</option>
                                         ))}
                                     </select>

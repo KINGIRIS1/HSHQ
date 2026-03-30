@@ -88,7 +88,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                     <div className="flex flex-col leading-tight">
                         <h1 className="font-bold text-sm uppercase tracking-wide">Hệ thống tiếp nhận và</h1>
                         <span className="font-bold text-sm uppercase tracking-wide">quản lý hồ sơ</span>
-                        <span className="text-[10px] text-blue-200 font-normal">Chi nhánh Chơn Thành</span>
+                        <span className="text-[10px] text-blue-200 font-normal">Chi nhánh Hớn Quản</span>
                     </div>
                 </div>
 

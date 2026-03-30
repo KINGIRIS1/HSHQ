@@ -223,7 +223,7 @@ export const MobileDetailModal: React.FC<MobileDetailModalProps> = ({
         TIEU_DE: tp1Value,
         SDTLH: sdtLienHe, 
         TINH: "Bình Phước", 
-        HUYEN: "thị xã Chơn Thành"
+        HUYEN: "huyện Hớn Quản"
     };
 
     const blob = await generateDocxBlobAsync(STORAGE_KEYS.RECEIPT_TEMPLATE, printData);

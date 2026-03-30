@@ -27,9 +27,10 @@ interface ExcerptManagementProps {
 }
 
 const INITIAL_CONFIG: Record<string, number> = {
-  'Chơn Thành': 0,
-  'Minh Hưng': 0,
-  'Nha Bích': 0
+  'Tân Khai': 0,
+  'Tân Quan': 0,
+  'Minh Đức': 0,
+  'Tân Hưng': 0
 };
 
 const ExcerptManagement: React.FC<ExcerptManagementProps> = ({ currentUser, records, onUpdateRecord, wards, onAddWard, onDeleteWard, onResetWards }) => {

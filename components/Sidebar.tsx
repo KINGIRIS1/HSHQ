@@ -150,7 +150,7 @@ const Sidebar: React.FC<SidebarProps> = ({
              {/* Hover Tooltip for Brand */}
              <div className="absolute left-full top-2 ml-2 bg-slate-800 text-white px-3 py-2 rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50 border border-slate-700">
                  <h1 className="font-bold text-sm">Hệ thống quản lý</h1>
-                 <div className="text-[10px] text-blue-400">Chi nhánh Chơn Thành</div>
+                 <div className="text-[10px] text-blue-400">Chi nhánh Hớn Quản</div>
              </div>
              <button onClick={() => setMobileOpen(false)} className="md:hidden absolute right-4 text-slate-400 hover:text-white"><X size={20} /></button>
         </div>

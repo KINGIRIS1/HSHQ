@@ -160,9 +160,10 @@ const InfoForm: React.FC<InfoFormProps> = ({
                         <div className="relative">
                             <MapPin size={16} className={iconClass} />
                             <select className={`${inputClass} appearance-none bg-white cursor-pointer`} value={formData.Phuong} onChange={e => handleChange('Phuong', e.target.value)}>
-                                <option value="phường Chơn Thành">Chơn Thành</option>
-                                <option value="phường Minh Hưng">Minh Hưng</option>
-                                <option value="xã Nha Bích">Nha Bích</option>
+                                <option value="thị trấn Tân Khai">Tân Khai</option>
+                                <option value="xã Tân Quan">Tân Quan</option>
+                                <option value="xã Minh Đức">Minh Đức</option>
+                                <option value="xã Tân Hưng">Tân Hưng</option>
                             </select>
                         </div>
                     </div>

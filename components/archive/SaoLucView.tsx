@@ -33,7 +33,7 @@ interface SaoLucFormData {
     danh_sach?: string;
 }
 
-const SaoLucView: React.FC<SaoLucViewProps> = ({ currentUser, wards = ['Minh Hưng', 'Chơn Thành', 'Nha Bích'] }) => {
+const SaoLucView: React.FC<SaoLucViewProps> = ({ currentUser, wards = ['Tân Quan', 'Tân Khai', 'Minh Đức', 'Tân Hưng'] }) => {
     const [subTab, setSubTab] = useState<'all' | 'draft' | 'assigned' | 'executed' | 'sign' | 'signed' | 'result'>('all');
     const [records, setRecords] = useState<ArchiveRecord[]>([]);
     const [employees, setEmployees] = useState<Employee[]>([]);
@@ -64,7 +64,7 @@ const SaoLucView: React.FC<SaoLucViewProps> = ({ currentUser, wards = ['Minh Hư
     const [formData, setFormData] = useState<SaoLucFormData>({
         so_hieu: '',
         chu_su_dung: '',
-        xa_phuong: 'Chơn Thành',
+        xa_phuong: 'Tân Khai',
         to_ban_do: '',
         thua_dat: '',
         ngay_nhan: new Date().toISOString().split('T')[0],
@@ -230,7 +230,7 @@ const SaoLucView: React.FC<SaoLucViewProps> = ({ currentUser, wards = ['Minh Hư
         setFormData({
             so_hieu: '',
             chu_su_dung: '',
-            xa_phuong: 'Chơn Thành',
+            xa_phuong: 'Tân Khai',
             to_ban_do: '',
             thua_dat: '',
             ngay_nhan: new Date().toISOString().split('T')[0],
@@ -379,7 +379,7 @@ const SaoLucView: React.FC<SaoLucViewProps> = ({ currentUser, wards = ['Minh Hư
             ngay_nhan: r.ngay_thang,
             noi_dung: r.trich_yeu,
             status: r.status,
-            xa_phuong: r.data?.xa_phuong || 'Chơn Thành',
+            xa_phuong: r.data?.xa_phuong || 'Tân Khai',
             to_ban_do: r.data?.to_ban_do || '',
             thua_dat: r.data?.thua_dat || '',
             hen_tra: r.data?.hen_tra || '',

@@ -63,7 +63,7 @@ export const PLANNING_PRESETS: PlanningConfig[] = [
     {
         key: 'QH',
         Label: 'QH Sử dụng đất',
-        TenDoAn: "Bản đồ Điều chỉnh Quy hoạch sử dụng đất thị xã Chơn Thành đến năm 2030",
+        TenDoAn: "Bản đồ Điều chỉnh Quy hoạch sử dụng đất huyện Hớn Quản đến năm 2030",
         SoQuyetDinh: "1238/QĐ-UBND",
         NgayQuyetDinh: "17/6/2025",
         CoQuanBanHanh: "UBND tỉnh Bình Phước"
@@ -79,7 +79,7 @@ export const PLANNING_PRESETS: PlanningConfig[] = [
     {
         key: 'QHC',
         Label: 'QH Chung (Cũ)',
-        TenDoAn: "Bản đồ Quy hoạch chung đô thị Chơn Thành",
+        TenDoAn: "Bản đồ Quy hoạch chung đô thị Tân Khai",
         SoQuyetDinh: "2892/QĐ-UBND",
         NgayQuyetDinh: "31/12/2019",
         CoQuanBanHanh: "UBND tỉnh Bình Phước"
@@ -87,7 +87,7 @@ export const PLANNING_PRESETS: PlanningConfig[] = [
     {
         key: 'QHC_DC',
         Label: 'QH Chung (ĐC Cục bộ)',
-        TenDoAn: "Bản đồ điều chỉnh cục bộ quy hoạch chung đô thị Chơn Thành",
+        TenDoAn: "Bản đồ điều chỉnh cục bộ quy hoạch chung đô thị Tân Khai",
         SoQuyetDinh: "424/QĐ-UBND",
         NgayQuyetDinh: "26/02/2025",
         CoQuanBanHanh: "UBND tỉnh Bình Phước"
@@ -95,7 +95,7 @@ export const PLANNING_PRESETS: PlanningConfig[] = [
     {
         key: 'QHC_DC_Moi',
         Label: 'QH Chung 2040',
-        TenDoAn: "Bản đồ điều chỉnh cục bộ quy hoạch chung đô thị Chơn Thành đến năm 2040",
+        TenDoAn: "Bản đồ điều chỉnh cục bộ quy hoạch chung đô thị Tân Khai đến năm 2040",
         SoQuyetDinh: "1574/QĐ-UBND",
         NgayQuyetDinh: "29/06/2025",
         CoQuanBanHanh: "UBND tỉnh Bình Phước"
@@ -106,7 +106,7 @@ export const PLANNING_PRESETS: PlanningConfig[] = [
         TenDoAn: "Bản đồ Quy hoạch phân khu tỷ lệ 1/2000 khu đô thị Minh Long",
         SoQuyetDinh: "2101/QĐ-UBND",
         NgayQuyetDinh: "18/09/2024",
-        CoQuanBanHanh: "UBND thị xã Chơn Thành"
+        CoQuanBanHanh: "UBND huyện Hớn Quản"
     }
 ];
 
@@ -179,9 +179,9 @@ export const generatePreviewData = (data: PhieuInfoData, planningConfigs: Planni
 
     if (data.To_106) {
         if (data.To_2024 && data.Thua_2024) {
-            dieuChinhThuaDat = `đã được điều chỉnh thành thửa đất số ${data.Thua_2024}, tờ bản đồ số ${data.To_2024} theo bản đồ địa chính năm 2024, và chuyển đổi thành tờ bản đồ số ${data.To_106} theo Công văn số 106/VPĐK-KTĐC ngày 08/07/2025 của Văn phòng Đăng ký đất đai tỉnh Đồng Nai, diện tích mới là ${dtMoiStr}.`;
+            dieuChinhThuaDat = `đã được điều chỉnh thành thửa đất số ${data.Thua_2024}, tờ bản đồ số ${data.To_2024} theo bản đồ địa chính năm 2024, và chuyển đổi thành tờ bản đồ số ${data.To_106} theo Công văn số 106/VPĐK-KTĐC ngày 08/07/2025 của Văn phòng Đăng ký đất đai tỉnh Bình Phước, diện tích mới là ${dtMoiStr}.`;
         } else {
-            dieuChinhThuaDat = `được chuyển đổi thành tờ bản đồ số ${data.To_106} theo Công văn số 106/VPĐK-KTĐC ngày 08/07/2025 của Văn phòng Đăng ký đất đai tỉnh Đồng Nai, diện tích mới là ${dtMoiStr}.`;
+            dieuChinhThuaDat = `được chuyển đổi thành tờ bản đồ số ${data.To_106} theo Công văn số 106/VPĐK-KTĐC ngày 08/07/2025 của Văn phòng Đăng ký đất đai tỉnh Bình Phước, diện tích mới là ${dtMoiStr}.`;
         }
     } else if (data.To_2024) {
         dieuChinhThuaDat = `đã được điều chỉnh thành thửa đất số ${data.Thua_2024 || '...'}, tờ bản đồ số ${data.To_2024} theo bản đồ địa chính năm 2024, diện tích mới là ${dtMoiStr}.`;

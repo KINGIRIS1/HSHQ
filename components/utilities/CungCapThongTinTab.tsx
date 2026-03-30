@@ -49,7 +49,7 @@ const CungCapThongTinTab: React.FC<CungCapThongTinTabProps> = ({ currentUser, no
     const [formData, setFormData] = useState<PhieuInfoData>({
         Ten_Nguoi_Yeu_Cau: '', UQ: '', Dia_Chi: '', Ngay_Nop: new Date().toISOString().split('T')[0],
         UQ_Loai: '', UQ_So: '', UQ_Ngay: '', UQ_VPCC: '',
-        Ten_CSD: '', Dia_Chi_Thua_Dat: '', Phuong: 'phường Chơn Thành',
+        Ten_CSD: '', Dia_Chi_Thua_Dat: '', Phuong: 'thị trấn Tân Khai',
         Thua_Cu: '', To_Cu: '', 
         DT_Cu: '0', DT_ODT: '0', DT_CLN: '0', 
         To_2024: '', Thua_2024: '', DT_Moi: '', To_106: '',
@@ -164,7 +164,7 @@ const CungCapThongTinTab: React.FC<CungCapThongTinTabProps> = ({ currentUser, no
         const resetData: PhieuInfoData = {
             Ten_Nguoi_Yeu_Cau: '', UQ: '', Dia_Chi: '', Ngay_Nop: new Date().toISOString().split('T')[0],
             UQ_Loai: '', UQ_So: '', UQ_Ngay: '', UQ_VPCC: '',
-            Ten_CSD: '', Dia_Chi_Thua_Dat: '', Phuong: 'phường Chơn Thành',
+            Ten_CSD: '', Dia_Chi_Thua_Dat: '', Phuong: 'thị trấn Tân Khai',
             Thua_Cu: '', To_Cu: '', 
             DT_Cu: '0', DT_ODT: '0', DT_CLN: '0', 
             To_2024: '', Thua_2024: '', DT_Moi: '', To_106: '',
@@ -394,7 +394,7 @@ const CungCapThongTinTab: React.FC<CungCapThongTinTabProps> = ({ currentUser, no
                 </table>
 
                 <div style="text-align: right; font-style: italic; margin-bottom: 45px; margin-top: 25px;">
-                    Chơn Thành, ngày ${day} tháng ${month} năm ${year}
+                    Tân Khai, ngày ${day} tháng ${month} năm ${year}
                 </div>
 
                 <div style="text-align: center; font-weight: bold; font-size: 15pt; margin-bottom: 20px;">
@@ -425,7 +425,7 @@ const CungCapThongTinTab: React.FC<CungCapThongTinTabProps> = ({ currentUser, no
                     Nội dung yêu cầu cung cấp thông tin quy hoạch thửa đất số <b>${formData.Thua_Cu}</b>, tờ bản đồ số <b>${formData.To_Cu}</b>, diện tích <b>${formData.DT_Cu}m²</b> ${previewData.Loai_Dat_Fmt} tọa lạc tại ${formData.Dia_Chi_Thua_Dat}, ${formData.Phuong}, tỉnh Bình Phước của ông (bà) <b>${formData.Ten_CSD}</b>.
                 </p>
                 <p style="text-indent: 30px; margin-bottom: 5px;">
-                    Căn cứ chức năng, nhiệm vụ Văn phòng Đăng ký Đất đai tỉnh Bình Phước – chi nhánh Chơn Thành cung cấp thông tin cho ông (bà) ${formData.Ten_Nguoi_Yeu_Cau} với các nội dung như sau:
+                    Căn cứ chức năng, nhiệm vụ Văn phòng Đăng ký Đất đai tỉnh Bình Phước – Chi nhánh Hớn Quản cung cấp thông tin cho ông (bà) ${formData.Ten_Nguoi_Yeu_Cau} với các nội dung như sau:
                 </p>
 
                 <div style="margin-top: 10px; font-weight: bold; font-style: italic;">* Thông tin về thửa đất:</div>
@@ -444,7 +444,7 @@ const CungCapThongTinTab: React.FC<CungCapThongTinTabProps> = ({ currentUser, no
                 </div>
 
                 <p style="text-indent: 30px; margin-top: 15px;">
-                    Vậy Văn phòng Đăng ký Đất đai tỉnh Bình Phước – chi nhánh Chơn Thành cung cấp thông tin cho ông (bà) được biết.
+                    Vậy Văn phòng Đăng ký Đất đai tỉnh Bình Phước – Chi nhánh Hớn Quản cung cấp thông tin cho ông (bà) được biết.
                 </p>
 
                 <table style="width: 100%; margin-top: 30px; text-align: center; border-collapse: collapse;">

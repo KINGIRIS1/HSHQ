@@ -13,8 +13,8 @@
       "assignedTo": "emp1",
       "assignedDate": "2023-10-21",
       "completedDate": "2023-10-29",
-      "group": "Minh Hưng",
-      "ward": "P. Minh Hưng",
+      "group": "Tân Quan",
+      "ward": "P. Tân Quan",
       "landPlot": "15",
       "mapSheet": "20",
       "measurementNumber": "TĐ-001",
@@ -34,7 +34,7 @@
       "status": "IN_PROGRESS",
       "assignedTo": "emp2",
       "assignedDate": "2023-10-25",
-      "group": "Chơn Thành",
+      "group": "Tân Khai",
       "ward": "P. Hưng Long",
       "landPlot": "102",
       "mapSheet": "5",
@@ -42,8 +42,10 @@
     }
   ],
   "excerpt_counters": {
-    "X. Nha Bích": 100,
-    "P. Minh Hưng": 205
+    "Tân Khai": 0,
+    "Tân Quan": 0,
+    "Minh Đức": 0,
+    "Tân Hưng": 0
   },
   "excerpt_history": [],
   "work_schedules": [],
