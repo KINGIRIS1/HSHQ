@@ -10,8 +10,8 @@ import { createClient } from '@supabase/supabase-js';
 // =========================================================================
 
 // --- CẤU HÌNH KẾT NỐI CLOUD ---
-const SUPABASE_URL: string = 'https://dajjhubrhybodggbqapt.supabase.co'; 
-const SUPABASE_ANON_KEY: string = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRhampodWJyaHlib2RnZ2JxYXB0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ3NzM3MDUsImV4cCI6MjA4MDM0OTcwNX0.Te4JGaR7DnSiejugyZHV0_uQSWsG_TS_xTmRgxgM5-4';
+const SUPABASE_URL: string = 'https://vzuetvlkfaosclbqfumg.supabase.co'; 
+const SUPABASE_ANON_KEY: string = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ6dWV0dmxrZmFvc2NsYnFmdW1nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4MTI1NTgsImV4cCI6MjA5MDM4ODU1OH0.K9xpD4fjN2h90bxR4yrICmScnE2pnl335rJUboUEXEk';
 
 // Kiểm tra kỹ điều kiện cấu hình
 const isEmpty = !SUPABASE_URL || !SUPABASE_ANON_KEY || SUPABASE_URL.trim() === '' || SUPABASE_ANON_KEY.trim() === '';
