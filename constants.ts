@@ -46,11 +46,11 @@ export const WARDS = DEFAULT_WARDS;
 
 // Danh sách loại hồ sơ CƠ BẢN (Dùng cho form Tiếp nhận hồ sơ thường xuyên)
 export const RECORD_TYPES = [
-  'Trích đo chỉnh lý bản đồ địa chính',
-  'Trích đo bản đồ địa chính',
-  'Trích lục bản đồ địa chính',
-  'Đo đạc',     
-  'Cắm mốc'
+  'Trích lục Cung cấp tài liệu đất đai',
+  'Trích lục quy hoạch',
+  'Trích lục Cung cấp số thửa đất',
+  'Trích đoTách-Hợp thửa',     
+  'Trích đo cắm mốc'
 ];
 
 // Danh sách loại hồ sơ MỞ RỘNG (Dùng cho form Thêm mới trong "Tất cả hồ sơ" - Admin/Nội bộ)
@@ -87,6 +87,12 @@ export const getShortRecordType = (type: string | null | undefined): string => {
   if (!type) return '---';
   const t = type.toLowerCase();
   
+  if (t.includes('trích lục cung cấp tài liệu đất đai')) return 'TL TLĐĐ';
+  if (t.includes('trích lục quy hoạch')) return 'TL Quy hoạch';
+  if (t.includes('trích lục cung cấp số thửa đất')) return 'TL Số thửa';
+  if (t.includes('trích đotách-hợp thửa') || t.includes('trích đo tách-hợp thửa')) return 'TĐ Tách-Hợp';
+  if (t.includes('trích đo cắm mốc')) return 'TĐ Cắm mốc';
+
   // Ưu tiên kiểm tra các từ khóa dài trước
   if (t.includes('chỉnh lý') || t.includes('hiến đường') || t.includes('thay đổi hlbv')) return 'Chỉnh lý';
   if (t.includes('trích lục')) return 'Trích lục';

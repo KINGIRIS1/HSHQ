@@ -14,6 +14,7 @@ import DailyList from './receive-record/DailyList';
 import TemplateConfigModal from './TemplateConfigModal';
 import DocxPreviewModal from './DocxPreviewModal';
 import ExcelPreviewModal from './ExcelPreviewModal';
+import SystemReceiptTemplate from './receive-record/SystemReceiptTemplate';
 
 interface ReceiveRecordProps {
   onSave: (record: RecordFile) => Promise<boolean>;
@@ -76,6 +77,8 @@ const ReceiveRecord: React.FC<ReceiveRecordProps> = ({ onSave, onDelete, wards, 
   const [previewWorkbook, setPreviewWorkbook] = useState<XLSX.WorkBook | null>(null);
   const [previewExcelName, setPreviewExcelName] = useState('');
 
+  const [systemReceiptData, setSystemReceiptData] = useState<Partial<RecordFile> | null>(null);
+
   // --- LOGIC TẠO MÃ HỒ SƠ (CẬP NHẬT CHÍNH XÁC THEO ĐỊA BÀN) ---
   const getShortCode = (ward: string) => {
       const normalized = ward.toLowerCase().trim();
@@ -91,6 +94,7 @@ const ReceiveRecord: React.FC<ReceiveRecordProps> = ({ onSave, onDelete, wards, 
       if (cleanName.includes('quang minh') || cleanName.includes('quangminh')) return 'QM';
       if (cleanName.includes('thành tâm') || cleanName.includes('thanhtam')) return 'TT';
       if (cleanName.includes('minh long') || cleanName.includes('minhlong')) return 'MLO';
+      if (cleanName.includes('tân khai') || cleanName.includes('tankhai')) return 'TK';
       
       return 'CT';
   };
@@ -104,7 +108,7 @@ const ReceiveRecord: React.FC<ReceiveRecordProps> = ({ onSave, onDelete, wards, 
     const dd = ('0' + d.getDate()).slice(-2);
     const datePrefix = `${yy}${mm}${dd}`;
     
-    const suffix = getShortCode(wardName);
+    const prefix = getShortCode(wardName);
     
     let maxSeq = 0;
     
@@ -112,8 +116,8 @@ const ReceiveRecord: React.FC<ReceiveRecordProps> = ({ onSave, onDelete, wards, 
         if (!r.code) return;
         const parts = r.code.split('-');
         if (parts.length === 3) {
-            const [rPrefix, rSeq, rSuffix] = parts;
-            if (rPrefix === datePrefix && rSuffix === suffix) {
+            const [rPrefix, rDate, rSeq] = parts;
+            if (rPrefix === prefix && rDate === datePrefix) {
                 const seqNum = parseInt(rSeq, 10);
                 if (!isNaN(seqNum) && seqNum > maxSeq) maxSeq = seqNum;
             }
@@ -124,8 +128,8 @@ const ReceiveRecord: React.FC<ReceiveRecordProps> = ({ onSave, onDelete, wards, 
         if (!code) return;
         const parts = code.split('-');
         if (parts.length === 3) {
-            const [rPrefix, rSeq, rSuffix] = parts;
-            if (rPrefix === datePrefix && rSuffix === suffix) {
+            const [rPrefix, rDate, rSeq] = parts;
+            if (rPrefix === prefix && rDate === datePrefix) {
                 const seqNum = parseInt(rSeq, 10);
                 if (!isNaN(seqNum) && seqNum > maxSeq) maxSeq = seqNum;
             }
@@ -133,7 +137,7 @@ const ReceiveRecord: React.FC<ReceiveRecordProps> = ({ onSave, onDelete, wards, 
     });
 
     const nextSeq = (maxSeq + 1).toString().padStart(3, '0');
-    return `${datePrefix}-${nextSeq}-${suffix}`;
+    return `${prefix}-${datePrefix}-${nextSeq}`;
   };
 
   // --- LOGIC TÍNH HẠN TRẢ (CẬP NHẬT FIX LỖI TIMEZONE VÀ NGÀY NGHỈ) ---
@@ -196,10 +200,7 @@ const ReceiveRecord: React.FC<ReceiveRecordProps> = ({ onSave, onDelete, wards, 
     }
     
     if (!hasTemplate(STORAGE_KEYS.RECEIPT_TEMPLATE)) {
-        if(await confirmAction('Bạn chưa tải lên mẫu Biên Nhận (.docx). Bạn có muốn cấu hình ngay không?')) {
-            setTemplateType('receipt');
-            setIsTemplateModalOpen(true);
-        }
+        setSystemReceiptData(dataToUse);
         return;
     }
 
@@ -418,6 +419,13 @@ const ReceiveRecord: React.FC<ReceiveRecordProps> = ({ onSave, onDelete, wards, 
       <TemplateConfigModal isOpen={isTemplateModalOpen} onClose={() => setIsTemplateModalOpen(false)} type={templateType as any} />
       <DocxPreviewModal isOpen={isPreviewOpen} onClose={() => setIsPreviewOpen(false)} docxBlob={previewBlob} fileName={previewFileName} />
       <ExcelPreviewModal isOpen={isExcelPreviewOpen} onClose={() => setIsExcelPreviewOpen(false)} workbook={previewWorkbook} fileName={previewExcelName} />
+      
+      {systemReceiptData && (
+          <SystemReceiptTemplate 
+              data={systemReceiptData} 
+              onClose={() => setSystemReceiptData(null)} 
+          />
+      )}
     </div>
   );
 };

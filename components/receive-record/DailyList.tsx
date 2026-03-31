@@ -16,7 +16,7 @@ interface DailyListProps {
   onPrint: (record: RecordFile) => void;
 }
 
-// Hàm lấy mã viết tắt (Suffix) từ tên Xã/Phường - Đồng bộ với logic sinh mã
+// Hàm lấy mã viết tắt (Prefix) từ tên Xã/Phường - Đồng bộ với logic sinh mã
 const getShortCode = (ward: string) => {
     const normalized = ward.toLowerCase().trim();
     const cleanName = normalized
@@ -31,6 +31,7 @@ const getShortCode = (ward: string) => {
     if (cleanName.includes('quang minh') || cleanName.includes('quangminh')) return 'QM';
     if (cleanName.includes('thành tâm') || cleanName.includes('thanhtam')) return 'TT';
     if (cleanName.includes('minh long') || cleanName.includes('minhlong')) return 'MLO';
+    if (cleanName.includes('tân khai') || cleanName.includes('tankhai')) return 'TK';
     
     return 'CT'; // Mặc định
 };
@@ -51,14 +52,14 @@ const DailyList: React.FC<DailyListProps> = ({ records, wards, onPreviewExcel, o
           
           // 2. Lọc theo Đơn vị phụ trách (Dựa vào Mã hồ sơ thay vì Địa chỉ đất)
           if (filterWard !== 'all') {
-              const targetSuffix = getShortCode(filterWard);
+              const targetPrefix = getShortCode(filterWard);
               const recordCode = (r.code || '').trim().toUpperCase();
               const parts = recordCode.split('-');
-              const recordSuffix = parts.length > 0 ? parts[parts.length - 1] : '';
+              const recordPrefix = parts.length > 0 ? parts[0] : '';
               
-              // Nếu mã hồ sơ có cấu trúc đúng (chứa suffix), so sánh suffix
+              // Nếu mã hồ sơ có cấu trúc đúng (chứa prefix), so sánh prefix
               if (parts.length >= 3) {
-                  if (recordSuffix !== targetSuffix) return false;
+                  if (recordPrefix !== targetPrefix) return false;
               } else {
                   // Fallback: Nếu mã không đúng chuẩn, so sánh địa chỉ đất (ít xảy ra với hồ sơ mới)
                   if (r.ward !== filterWard) return false;
@@ -74,21 +75,21 @@ const DailyList: React.FC<DailyListProps> = ({ records, wards, onPreviewExcel, o
           return true;
       });
 
-      // Sắp xếp: Gom nhóm theo Mã đơn vị (Suffix) trước, sau đó tăng dần theo số thứ tự
+      // Sắp xếp: Gom nhóm theo Mã đơn vị (Prefix) trước, sau đó tăng dần theo số thứ tự
       return list.sort((a, b) => {
           const codeA = (a.code || '').toUpperCase();
           const codeB = (b.code || '').toUpperCase();
           
-          // Tách suffix
+          // Tách prefix
           const partsA = codeA.split('-');
-          const suffixA = partsA.length >= 3 ? partsA[partsA.length - 1] : '';
+          const prefixA = partsA.length >= 3 ? partsA[0] : '';
           
           const partsB = codeB.split('-');
-          const suffixB = partsB.length >= 3 ? partsB[partsB.length - 1] : '';
+          const prefixB = partsB.length >= 3 ? partsB[0] : '';
 
-          // So sánh Suffix (Gom nhóm đơn vị)
-          const suffixCompare = suffixA.localeCompare(suffixB);
-          if (suffixCompare !== 0) return suffixCompare;
+          // So sánh Prefix (Gom nhóm đơn vị)
+          const prefixCompare = prefixA.localeCompare(prefixB);
+          if (prefixCompare !== 0) return prefixCompare;
 
           // Nếu cùng đơn vị, so sánh toàn bộ mã (để sắp xếp theo số thứ tự)
           return codeA.localeCompare(codeB, undefined, { numeric: true, sensitivity: 'base' });
