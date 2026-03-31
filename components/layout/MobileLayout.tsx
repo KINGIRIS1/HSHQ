@@ -9,7 +9,8 @@ import {
   Bell,
   Menu,
   Search,
-  Plus
+  Plus,
+  ScanBarcode
 } from 'lucide-react';
 
 interface MobileLayoutProps {
@@ -34,6 +35,7 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({
   const navItems = [
     { id: 'dashboard', label: 'Tổng quan', icon: LayoutDashboard },
     { id: 'all_records', label: 'Hồ sơ', icon: FileText },
+    { id: 'barcode_generator', label: 'Mã vạch', icon: ScanBarcode },
     { id: 'account_settings', label: 'Cài đặt', icon: Settings },
   ];
 

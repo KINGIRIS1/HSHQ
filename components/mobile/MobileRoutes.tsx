@@ -3,6 +3,7 @@ import { RecordFile, Employee, User, UserRole, Holiday } from '../../types';
 import MobileDashboard from './MobileDashboard';
 import MobileRecordList from './MobileRecordList';
 import MobileSettingsView from './MobileSettingsView';
+import BarcodeGeneratorView from '../BarcodeGeneratorView';
 
 interface MobileRoutesProps {
   currentView: string;
@@ -60,6 +61,9 @@ const MobileRoutes: React.FC<MobileRoutesProps> = (props) => {
           onAddRecord={() => { props.setEditingRecord(null); props.setIsModalOpen(true); }}
         />
       );
+
+    case 'barcode_generator':
+      return <BarcodeGeneratorView />;
 
     case 'account_settings':
       return (

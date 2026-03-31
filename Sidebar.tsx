@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { LayoutDashboard, FileText, ClipboardList, Send, BarChart3, Settings, LogOut, UserCircle, Users, Briefcase, BookOpen, UserPlus, ShieldAlert, X, FolderInput, FileSignature, MessageSquare, Loader2, UserCog, ShieldCheck, PenTool, CalendarDays, Archive, FolderArchive } from 'lucide-react';
+import { LayoutDashboard, FileText, ClipboardList, Send, BarChart3, Settings, LogOut, UserCircle, Users, Briefcase, BookOpen, UserPlus, ShieldAlert, X, FolderInput, FileSignature, MessageSquare, Loader2, UserCog, ShieldCheck, PenTool, CalendarDays, Archive, FolderArchive, ScanBarcode } from 'lucide-react';
 import { User, UserRole } from './types';
 import { APP_VERSION } from './constants';
 
@@ -43,8 +43,8 @@ const Sidebar: React.FC<SidebarProps> = ({
   const hasManagerRights = isAdmin || isSubadmin || isTeamLeader;
 
   // Cập nhật danh sách các view được phép (bỏ assign_tasks vì nó giờ là con của all_records)
-  const oneDoorAllowedViews = ['dashboard', 'internal_chat', 'receive_record', 'receive_contract', 'all_records', 'personal_profile', 'account_settings', 'utilities', 'handover_list', 'work_schedule', 'archive_records'];
-  const teamLeaderAllowedViews = ['dashboard', 'personal_profile', 'all_records', 'excerpt_management', 'reports', 'account_settings', 'internal_chat', 'utilities', 'work_schedule', 'archive_records'];
+  const oneDoorAllowedViews = ['dashboard', 'internal_chat', 'receive_record', 'receive_contract', 'all_records', 'personal_profile', 'account_settings', 'utilities', 'handover_list', 'work_schedule', 'archive_records', 'barcode_generator'];
+  const teamLeaderAllowedViews = ['dashboard', 'personal_profile', 'all_records', 'excerpt_management', 'reports', 'account_settings', 'internal_chat', 'utilities', 'work_schedule', 'archive_records', 'barcode_generator'];
 
   const menuItems = [
     { id: 'dashboard', label: 'Tổng quan', icon: LayoutDashboard, visible: true, badge: reminderCount, badgeColor: 'bg-pink-500' },
@@ -58,6 +58,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     // Đã xóa menu "Giao hồ sơ" (assign_tasks) để đưa vào làm tab con của "Hồ sơ đo đạc"
     { id: 'archive_records', label: 'Hồ sơ lưu trữ', icon: FolderArchive, visible: true },
     { id: 'excerpt_management', label: 'Số trích lục', icon: BookOpen, visible: !isOneDoor },
+    { id: 'barcode_generator', label: 'Tạo mã vạch', icon: ScanBarcode, visible: true },
     { id: 'utilities', label: 'Tiện ích', icon: PenTool, visible: true },
     { id: 'check_list', label: 'DS Ký kiểm tra', icon: ClipboardList, visible: isAdmin || isSubadmin },
     { id: 'handover_list', label: 'DS Giao 1 cửa', icon: Send, visible: isAdmin || isSubadmin || isOneDoor },

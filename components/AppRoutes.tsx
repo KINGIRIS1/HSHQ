@@ -18,6 +18,7 @@ import RecordRow from './RecordRow';
 import WorkScheduleView from './WorkScheduleView';
 import ArchiveRecords from './ArchiveRecords';
 import SystemView from './SystemView';
+import BarcodeGeneratorView from './BarcodeGeneratorView';
 
 // Icons
 import { Search, ListChecks, History, FileCheck, Calendar, X, CalendarRange, MapPin, Filter, User as UserIcon, AlertTriangle, Clock, SlidersHorizontal, Plus, FileSpreadsheet, Layers, CheckCircle, FileSignature, UserPlus, FileOutput, CheckSquare, Square, ArrowUpDown, ChevronLeft, ChevronRight, FileText, UserPlus as UserPlusIcon, ClipboardList, Send } from 'lucide-react';
@@ -522,6 +523,10 @@ const AppRoutes: React.FC<AppRoutesProps> = (props) => {
         case 'archive_records':
             return (
                 <ArchiveRecords currentUser={currentUser} wards={wards} />
+            );
+        case 'barcode_generator':
+            return (
+                <BarcodeGeneratorView />
             );
         case 'account_settings':
             return (
