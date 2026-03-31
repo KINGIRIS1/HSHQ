@@ -13,7 +13,8 @@ const RECORD_DB_COLUMNS = [
     'measurementNumber', 'excerptNumber',
     'reminderDate', 'lastRemindedAt',
     'receiptNumber', 'resultReturnedDate', 'receiverName',
-    'needsMapCorrection' // Cột mới
+    'needsMapCorrection',
+    'issueNumber', 'entryNumber', 'issueDate', 'residentialArea'
 ];
 
 export const fetchRecords = async (): Promise<RecordFile[]> => {

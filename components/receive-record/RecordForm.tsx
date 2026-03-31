@@ -23,10 +23,14 @@ const RecordForm: React.FC<RecordFormProps> = ({ onSave, wards, records, holiday
   const [notification, setNotification] = useState<{ type: 'success' | 'error', message: string } | null>(null);
   const topRef = useRef<HTMLDivElement>(null);
 
+  const linkedEmp = employees.find(e => e.id === currentUser.employeeId);
+  const processingWard = linkedEmp?.managedWards?.[0] || 'Tân Khai';
+
   const [formData, setFormData] = useState<Partial<RecordFile>>({
     code: '', customerName: '', phoneNumber: '', cccd: '', customerAddress: '', authorizedBy: '', authDocType: '', otherDocs: '', content: '',
-    receivedDate: new Date().toISOString().split('T')[0], deadline: '', ward: '', landPlot: '', mapSheet: '', area: 0,
-    address: '', recordType: '', status: RecordStatus.RECEIVED 
+    receivedDate: new Date().toISOString().split('T')[0], deadline: '', ward: processingWard, landPlot: '', mapSheet: '', area: 0,
+    address: '', recordType: '', status: RecordStatus.RECEIVED,
+    issueNumber: '', entryNumber: '', issueDate: '', residentialArea: 0
   });
 
   useEffect(() => {
@@ -47,9 +51,6 @@ const RecordForm: React.FC<RecordFormProps> = ({ onSave, wards, records, holiday
           }
       }
   }, [notification]);
-
-  const linkedEmp = employees.find(e => e.id === currentUser.employeeId);
-  const processingWard = linkedEmp?.managedWards?.[0] || 'Tân Khai';
 
   useEffect(() => {
     if (!initialData) {
@@ -90,7 +91,14 @@ const RecordForm: React.FC<RecordFormProps> = ({ onSave, wards, records, holiday
   };
 
   const handleReset = (keepNotification = false) => {
-      setFormData({ code: '', customerName: '', phoneNumber: '', cccd: '', customerAddress: '', authorizedBy: '', authDocType: '', otherDocs: '', content: '', receivedDate: new Date().toISOString().split('T')[0], deadline: '', ward: '', landPlot: '', mapSheet: '', area: 0, address: '', recordType: '', status: RecordStatus.RECEIVED });
+      setFormData({ 
+          code: '', customerName: '', phoneNumber: '', cccd: '', customerAddress: '', 
+          authorizedBy: '', authDocType: '', otherDocs: '', content: '', 
+          receivedDate: new Date().toISOString().split('T')[0], deadline: '', 
+          ward: processingWard, landPlot: '', mapSheet: '', area: 0, address: '', 
+          recordType: '', status: RecordStatus.RECEIVED,
+          issueNumber: '', entryNumber: '', issueDate: '', residentialArea: 0
+      });
       if (!keepNotification) setNotification(null);
       if (onCancelEdit && initialData) onCancelEdit();
   };
@@ -157,16 +165,20 @@ const RecordForm: React.FC<RecordFormProps> = ({ onSave, wards, records, holiday
             <div className="col-span-1 lg:col-span-4 space-y-6">
                 <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden h-full flex flex-col">
                     <div className="absolute top-0 left-0 w-1 h-full bg-green-500"></div>
-                    <h3 className="text-sm font-bold text-slate-800 uppercase mb-5 flex items-center gap-2"><span className="p-1.5 bg-green-100 text-green-600 rounded-lg"><MapPin size={16} /></span> Vị trí & Thửa đất</h3>
+                    <h3 className="text-sm font-bold text-slate-800 uppercase mb-5 flex items-center gap-2"><span className="p-1.5 bg-green-100 text-green-600 rounded-lg"><MapPin size={16} /></span> Thông tin giấy chứng nhận</h3>
                     <div className="space-y-5 flex-1">
-                        <div><label className={labelClass}>Chọn Xã / Phường <span className="text-red-500">*</span></label>
-                            <div className="flex flex-col gap-2">{wards.map(w => (<button type="button" key={w} onClick={() => handleChange('ward', w)} className={`py-3 px-4 text-sm font-bold rounded-xl border transition-all flex items-center justify-between ${formData.ward === w ? 'bg-green-600 text-white border-green-600 shadow-md' : 'bg-white text-slate-600 border-slate-200 hover:bg-green-50'}`}><span>{w}</span>{formData.ward === w && <CheckCircle size={16} />}</button>))}</div>
+                        <div className="relative"><label className={labelClass}>Xã / Phường</label><MapPin size={16} className={iconWrapperClass} /><input type="text" className={`${inputClass} bg-slate-100 text-slate-500 cursor-not-allowed`} value={formData.ward || ''} readOnly /></div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="relative"><label className={labelClass}>Số phát hành</label><input type="text" className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-blue-500 font-medium text-slate-700 bg-white" placeholder="VD: CD 123456" value={formData.issueNumber || ''} onChange={(e) => handleChange('issueNumber', e.target.value)} /></div>
+                            <div className="relative"><label className={labelClass}>Số vào sổ</label><input type="text" className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-blue-500 font-medium text-slate-700 bg-white" placeholder="VD: CH 01234" value={formData.entryNumber || ''} onChange={(e) => handleChange('entryNumber', e.target.value)} /></div>
                         </div>
-                        <div className="relative"><label className={labelClass}>Địa chỉ thửa đất</label><MapPin size={16} className={iconWrapperClass} /><input type="text" className={inputClass} placeholder="Ấp/Khu phố..." value={formData.address || ''} onChange={(e) => handleChange('address', e.target.value)} /></div>
-                        <div className="bg-green-50/50 p-4 rounded-xl border border-green-100 grid grid-cols-3 gap-4">
+                        <div className="relative"><label className={labelClass}>Ngày cấp</label><input type="date" className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-blue-500 font-medium text-slate-700 bg-white" value={formData.issueDate || ''} onChange={(e) => handleChange('issueDate', e.target.value)} /></div>
+                        
+                        <div className="bg-green-50/50 p-4 rounded-xl border border-green-100 grid grid-cols-2 gap-4">
                             <div className="relative"><label className="block text-[10px] font-bold text-green-700 uppercase mb-1 text-center">Tờ bản đồ</label><input type="text" className="w-full border border-green-200 rounded-lg px-2 py-2 text-center font-bold text-green-800 bg-white outline-none" placeholder="0" value={formData.mapSheet || ''} onChange={(e) => handleChange('mapSheet', e.target.value)} /></div>
                             <div className="relative"><label className="block text-[10px] font-bold text-green-700 uppercase mb-1 text-center">Thửa đất</label><input type="text" className="w-full border border-green-200 rounded-lg px-2 py-2 text-center font-bold text-green-800 bg-white outline-none" placeholder="0" value={formData.landPlot || ''} onChange={(e) => handleChange('landPlot', e.target.value)} /></div>
                             <div className="relative"><label className="block text-[10px] font-bold text-green-700 uppercase mb-1 text-center">Diện tích</label><input type="number" className="w-full border border-green-200 rounded-lg px-2 py-2 text-center font-bold text-green-800 bg-white outline-none" placeholder="0" value={formData.area || ''} onChange={(e) => handleChange('area', e.target.value)} /></div>
+                            <div className="relative"><label className="block text-[10px] font-bold text-green-700 uppercase mb-1 text-center">Đất ở</label><input type="number" className="w-full border border-green-200 rounded-lg px-2 py-2 text-center font-bold text-green-800 bg-white outline-none" placeholder="0" value={formData.residentialArea || ''} onChange={(e) => handleChange('residentialArea', e.target.value)} /></div>
                         </div>
                     </div>
                 </div>

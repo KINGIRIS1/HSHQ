@@ -134,7 +134,7 @@ export const sanitizeData = (data: any, allowedColumns: string[]) => {
         'area', 'exportBatch', 'unitPrice', 'vatRate', 'vatAmount', 'totalAmount', 
         'deposit', 'quantity', 'excerptNumber', 'plotCount', 'markerCount', 
         'minArea', 'maxArea', 'price',
-        'liquidationArea', 'liquidationAmount' // MỚI
+        'liquidationArea', 'liquidationAmount', 'residentialArea'
     ];
     numberFields.forEach(field => {
         if (clean[field] === '' || clean[field] === undefined || (typeof clean[field] === 'number' && isNaN(clean[field]))) {
@@ -147,7 +147,7 @@ export const sanitizeData = (data: any, allowedColumns: string[]) => {
         'receivedDate', 'deadline', 'assignedDate', 
         'submissionDate', 'approvalDate', 'completedDate', 
         'createdDate', 'exportDate',
-        'resultReturnedDate', 'reminderDate', 'lastRemindedAt'
+        'resultReturnedDate', 'reminderDate', 'lastRemindedAt', 'issueDate'
     ];
     
     dateFields.forEach(field => {

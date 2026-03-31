@@ -50,6 +50,11 @@ export interface RecordFile {
   area?: number | null;          
   address?: string | null;       
   group?: string | null;         
+  
+  issueNumber?: string | null;   // Số phát hành
+  entryNumber?: string | null;   // Số vào sổ
+  issueDate?: string | null;     // Ngày cấp
+  residentialArea?: number | null; // Đất ở
 
   content?: string | null;        
   recordType?: string | null;    
