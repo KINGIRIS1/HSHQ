@@ -31,7 +31,10 @@ const SystemReceiptTemplate: React.FC<SystemReceiptTemplateProps> = ({ data, onC
                             -webkit-print-color-adjust: exact;
                         }
                         .flex { display: flex; }
+                        .flex-col { flex-direction: column; }
                         .justify-between { justify-content: space-between; }
+                        .items-center { align-items: center; }
+                        .items-end { align-items: flex-end; }
                         .text-center { text-align: center; }
                         .font-bold { font-weight: bold; }
                         .italic { font-style: italic; }
@@ -114,12 +117,12 @@ const SystemReceiptTemplate: React.FC<SystemReceiptTemplateProps> = ({ data, onC
                                 <div className="font-bold text-[15px]">VĂN PHÒNG ĐKĐĐ TỈNH ĐỒNG NAI</div>
                                 <div className="font-bold text-[16px]">CHI NHÁNH HỚN QUẢN</div>
                                 <div className="text-[14px]">TRUNG TÂM PHỤC VỤ HÀNH CHÍNH CÔNG</div>
-                                <div className="text-[14px] uppercase">XÃ {wardName}</div>
+                                <div className="text-[14px] font-bold">XÃ {wardName.toUpperCase()}</div>
                                 
                                 {data.code && (
-                                    <div className="mt-2 flex flex-col items-center">
-                                        <div className="font-bold text-[15px]">{data.code}</div>
-                                        <div style={{ transform: 'scale(0.8)', transformOrigin: 'top center', marginTop: '-4px' }}>
+                                    <div className="mt-2 text-center" style={{ display: 'block' }}>
+                                        <div className="font-bold text-[15px]" style={{ display: 'block', whiteSpace: 'nowrap' }}>{data.code}</div>
+                                        <div style={{ transform: 'scale(0.8)', transformOrigin: 'top center', marginTop: '-4px', display: 'inline-block' }}>
                                             <Barcode value={data.code} height={30} displayValue={false} margin={0} width={1.5} />
                                         </div>
                                     </div>
