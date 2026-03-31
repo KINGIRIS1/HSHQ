@@ -162,7 +162,7 @@ export const deleteAllDataApi = async (): Promise<boolean> => {
         // Thực hiện xóa dữ liệu trên các bảng nghiệp vụ
         // Sử dụng neq('id', '0') để xóa tất cả các dòng
         
-        const { error: err1 } = await supabase.from('records').delete().neq('id', '0'); 
+        const { error: err1 } = await supabase.from('land_records').delete().neq('id', '0'); 
         if (err1) throw err1;
 
         const { error: err2 } = await supabase.from('contracts').delete().neq('id', '0');

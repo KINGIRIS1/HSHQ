@@ -33,7 +33,7 @@ export const fetchRecords = async (): Promise<RecordFile[]> => {
     while (hasMore) {
         try {
             const { data, error } = await supabase
-                .from('records')
+                .from('land_records')
                 .select('*')
                 .order('receivedDate', { ascending: false })
                 .order('id', { ascending: true }) 
@@ -79,7 +79,7 @@ export const createRecordApi = async (record: RecordFile): Promise<RecordFile | 
     if (!isConfigured) return record;
     try {
         const payload = sanitizeData(record, RECORD_DB_COLUMNS);
-        const { data, error } = await supabase.from('records').insert([payload]).select();
+        const { data, error } = await supabase.from('land_records').insert([payload]).select();
         if (error) throw error;
         return data?.[0] as RecordFile;
     } catch (error) {
@@ -92,7 +92,7 @@ export const updateRecordApi = async (record: RecordFile): Promise<RecordFile | 
     if (!isConfigured) return record;
     try {
         const payload = sanitizeData(record, RECORD_DB_COLUMNS);
-        const { data, error } = await supabase.from('records').update(payload).eq('id', record.id).select();
+        const { data, error } = await supabase.from('land_records').update(payload).eq('id', record.id).select();
         if (error) throw error;
         return data?.[0] as RecordFile;
     } catch (error) {
@@ -104,7 +104,7 @@ export const updateRecordApi = async (record: RecordFile): Promise<RecordFile | 
 export const deleteRecordApi = async (id: string): Promise<boolean> => {
     if (!isConfigured) return true;
     try {
-        const { error } = await supabase.from('records').delete().eq('id', id);
+        const { error } = await supabase.from('land_records').delete().eq('id', id);
         if (error) throw error;
         return true;
     } catch (error) {
@@ -117,7 +117,7 @@ export const createRecordsBatchApi = async (records: RecordFile[]): Promise<bool
     if (!isConfigured) return true;
     try {
         const payload = records.map(r => sanitizeData(r, RECORD_DB_COLUMNS));
-        const { error } = await supabase.from('records').insert(payload);
+        const { error } = await supabase.from('land_records').insert(payload);
         if (error) throw error;
         return true;
     } catch (error) {
@@ -145,7 +145,7 @@ export const forceUpdateRecordsBatchApi = async (records: RecordFile[]): Promise
 
         while (hasMore) {
             const { data, error } = await supabase
-                .from('records')
+                .from('land_records')
                 .select('*')
                 .range(from, from + step - 1);
             
@@ -198,7 +198,7 @@ export const forceUpdateRecordsBatchApi = async (records: RecordFile[]): Promise
         });
 
         if (updatesToPush.length > 0) {
-            const { error: upsertError } = await supabase.from('records').upsert(updatesToPush);
+            const { error: upsertError } = await supabase.from('land_records').upsert(updatesToPush);
             if (upsertError) throw upsertError;
         }
 
