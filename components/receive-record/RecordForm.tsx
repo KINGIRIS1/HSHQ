@@ -24,7 +24,7 @@ const RecordForm: React.FC<RecordFormProps> = ({ onSave, wards, records, holiday
   const topRef = useRef<HTMLDivElement>(null);
 
   const [formData, setFormData] = useState<Partial<RecordFile>>({
-    code: '', customerName: '', phoneNumber: '', cccd: '', authorizedBy: '', authDocType: '', otherDocs: '', content: '',
+    code: '', customerName: '', phoneNumber: '', cccd: '', customerAddress: '', authorizedBy: '', authDocType: '', otherDocs: '', content: '',
     receivedDate: new Date().toISOString().split('T')[0], deadline: '', ward: '', landPlot: '', mapSheet: '', area: 0,
     address: '', recordType: '', status: RecordStatus.RECEIVED 
   });
@@ -90,7 +90,7 @@ const RecordForm: React.FC<RecordFormProps> = ({ onSave, wards, records, holiday
   };
 
   const handleReset = (keepNotification = false) => {
-      setFormData({ code: '', customerName: '', phoneNumber: '', cccd: '', authorizedBy: '', authDocType: '', otherDocs: '', content: '', receivedDate: new Date().toISOString().split('T')[0], deadline: '', ward: '', landPlot: '', mapSheet: '', area: 0, address: '', recordType: '', status: RecordStatus.RECEIVED });
+      setFormData({ code: '', customerName: '', phoneNumber: '', cccd: '', customerAddress: '', authorizedBy: '', authDocType: '', otherDocs: '', content: '', receivedDate: new Date().toISOString().split('T')[0], deadline: '', ward: '', landPlot: '', mapSheet: '', area: 0, address: '', recordType: '', status: RecordStatus.RECEIVED });
       if (!keepNotification) setNotification(null);
       if (onCancelEdit && initialData) onCancelEdit();
   };
@@ -125,6 +125,7 @@ const RecordForm: React.FC<RecordFormProps> = ({ onSave, wards, records, holiday
                     <div className="space-y-4">
                         <div className="relative"><label className={labelClass}>Chủ sử dụng <span className="text-red-500">*</span></label><UserIcon size={16} className={iconWrapperClass} /><input type="text" required className={inputClass} placeholder="Nguyễn Văn A..." value={formData.customerName || ''} onChange={(e) => handleChange('customerName', e.target.value)} /></div>
                         <div className="relative"><label className={labelClass}>CCCD</label><Hash size={16} className={iconWrapperClass} /><input type="text" className={inputClass} placeholder="0123456789..." value={formData.cccd || ''} onChange={(e) => handleChange('cccd', e.target.value)} /></div>
+                        <div className="relative"><label className={labelClass}>Địa chỉ chủ sử dụng</label><MapPin size={16} className={iconWrapperClass} /><input type="text" className={inputClass} placeholder="Địa chỉ thường trú..." value={formData.customerAddress || ''} onChange={(e) => handleChange('customerAddress', e.target.value)} /></div>
                         <div className="relative"><label className={labelClass}>Số điện thoại</label><Phone size={16} className={iconWrapperClass} /><input type="text" className={inputClass} placeholder="09xxxxxxxx" value={formData.phoneNumber || ''} onChange={(e) => handleChange('phoneNumber', e.target.value)} /></div>
                         <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 mt-2">
                             <label className="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase mb-3 border-b border-slate-200 pb-2"><FileText size={14} /> Ủy quyền</label>
@@ -161,7 +162,7 @@ const RecordForm: React.FC<RecordFormProps> = ({ onSave, wards, records, holiday
                         <div><label className={labelClass}>Chọn Xã / Phường <span className="text-red-500">*</span></label>
                             <div className="flex flex-col gap-2">{wards.map(w => (<button type="button" key={w} onClick={() => handleChange('ward', w)} className={`py-3 px-4 text-sm font-bold rounded-xl border transition-all flex items-center justify-between ${formData.ward === w ? 'bg-green-600 text-white border-green-600 shadow-md' : 'bg-white text-slate-600 border-slate-200 hover:bg-green-50'}`}><span>{w}</span>{formData.ward === w && <CheckCircle size={16} />}</button>))}</div>
                         </div>
-                        <div className="relative"><label className={labelClass}>Địa chỉ chủ sử dụng</label><MapPin size={16} className={iconWrapperClass} /><input type="text" className={inputClass} placeholder="Ấp/Khu phố..." value={formData.address || ''} onChange={(e) => handleChange('address', e.target.value)} /></div>
+                        <div className="relative"><label className={labelClass}>Địa chỉ thửa đất</label><MapPin size={16} className={iconWrapperClass} /><input type="text" className={inputClass} placeholder="Ấp/Khu phố..." value={formData.address || ''} onChange={(e) => handleChange('address', e.target.value)} /></div>
                         <div className="bg-green-50/50 p-4 rounded-xl border border-green-100 grid grid-cols-3 gap-4">
                             <div className="relative"><label className="block text-[10px] font-bold text-green-700 uppercase mb-1 text-center">Tờ bản đồ</label><input type="text" className="w-full border border-green-200 rounded-lg px-2 py-2 text-center font-bold text-green-800 bg-white outline-none" placeholder="0" value={formData.mapSheet || ''} onChange={(e) => handleChange('mapSheet', e.target.value)} /></div>
                             <div className="relative"><label className="block text-[10px] font-bold text-green-700 uppercase mb-1 text-center">Thửa đất</label><input type="text" className="w-full border border-green-200 rounded-lg px-2 py-2 text-center font-bold text-green-800 bg-white outline-none" placeholder="0" value={formData.landPlot || ''} onChange={(e) => handleChange('landPlot', e.target.value)} /></div>

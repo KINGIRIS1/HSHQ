@@ -17,7 +17,7 @@ interface RecordModalProps {
 
 const RecordModal: React.FC<RecordModalProps> = ({ isOpen, onClose, onSubmit, initialData, employees, currentUser, wards, currentView }) => {
   const defaultState: Partial<RecordFile> = {
-    code: '', customerName: '', phoneNumber: '', cccd: '', content: '', otherDocs: '',
+    code: '', customerName: '', phoneNumber: '', cccd: '', customerAddress: '', content: '', otherDocs: '',
     receivedDate: new Date().toISOString().split('T')[0], deadline: '', assignedTo: '',
     group: GROUPS[0], ward: '', landPlot: '', mapSheet: '', area: 0, address: '',
     recordType: EXTENDED_RECORD_TYPES[0], measurementNumber: '', excerptNumber: '',
@@ -186,6 +186,8 @@ const RecordModal: React.FC<RecordModalProps> = ({ isOpen, onClose, onSubmit, in
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div className="md:col-span-2"><label className="block text-xs font-bold text-gray-700 mb-1">Tên chủ sử dụng <span className="text-red-500">*</span></label><input type="text" required className="w-full border border-gray-300 rounded-md px-3 py-2 font-medium" value={val(formData.customerName)} onChange={(e) => handleChange('customerName', e.target.value)} /></div>
                         <div><label className="block text-xs font-bold text-gray-700 mb-1">Số điện thoại</label><input type="text" className="w-full border border-gray-300 rounded-md px-3 py-2" value={val(formData.phoneNumber)} onChange={(e) => handleChange('phoneNumber', e.target.value)} /></div>
+                        <div className="md:col-span-2"><label className="block text-xs font-bold text-gray-700 mb-1">Địa chỉ chủ sử dụng</label><input type="text" className="w-full border border-gray-300 rounded-md px-3 py-2" value={val(formData.customerAddress)} onChange={(e) => handleChange('customerAddress', e.target.value)} /></div>
+                        <div><label className="block text-xs font-bold text-gray-700 mb-1">CCCD</label><input type="text" className="w-full border border-gray-300 rounded-md px-3 py-2" value={val(formData.cccd)} onChange={(e) => handleChange('cccd', e.target.value)} /></div>
                         <div className="md:col-span-3 grid grid-cols-1 sm:grid-cols-2 gap-2 bg-gray-50 p-2 rounded border border-gray-200">
                             <div><label className="block text-[10px] font-bold text-gray-500 uppercase">Người được ủy quyền</label><input type="text" className="w-full border border-gray-300 rounded px-2 py-1 text-sm" value={val(formData.authorizedBy)} onChange={(e) => handleChange('authorizedBy', e.target.value)} placeholder="Họ tên..." /></div>
                             <div><label className="block text-[10px] font-bold text-gray-500 uppercase">Loại giấy tờ</label><select className="w-full border border-gray-300 rounded px-2 py-1 text-sm bg-white" value={val(formData.authDocType)} onChange={(e) => handleChange('authDocType', e.target.value)}><option value="">-- Chọn giấy tờ --</option><option value="Hợp đồng ủy quyền">Hợp đồng ủy quyền</option><option value="Giấy ủy quyền">Giấy ủy quyền</option><option value="Văn bản ủy quyền">Văn bản ủy quyền</option></select></div>

@@ -280,6 +280,7 @@ const ReceiveRecord: React.FC<ReceiveRecordProps> = ({ onSave, onDelete, wards, 
         PHONE: val(dataToUse.phoneNumber),
         CCCD: val(dataToUse.cccd), 
         CMND: val(dataToUse.cccd),
+        DIA_CHI_CHU_SU_DUNG: val(dataToUse.customerAddress),
 
         DIA_CHI: val(dataToUse.address || getNormalizedWard(dataToUse.ward)),
         DC: val(dataToUse.address || getNormalizedWard(dataToUse.ward)),

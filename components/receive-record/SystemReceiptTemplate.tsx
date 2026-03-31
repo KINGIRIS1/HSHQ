@@ -142,12 +142,13 @@ const SystemReceiptTemplate: React.FC<SystemReceiptTemplateProps> = ({ data, onC
                             <div>Bộ phận tiếp nhận và trả kết quả: <span className="font-bold">Văn phòng Đăng ký Đất đai tỉnh Đồng Nai – Chi nhánh Hớn Quản</span></div>
                             <div>Tiếp nhận hồ sơ của: <span className="font-bold">{data.customerName}</span></div>
                             <div>CCCD/MST: <span className="font-bold">{data.cccd || ''}</span></div>
-                            <div>Địa chỉ: {data.address}</div>
+                            <div>Địa chỉ: {data.customerAddress || ''}</div>
                             <div>Số điện thoại: {data.phoneNumber}</div>
                             <div className="flex">
                                 <div className="w-1/2">Thửa: {data.landPlot}</div>
                                 <div className="w-1/2">Tờ: {data.mapSheet}</div>
                             </div>
+                            <div>Địa chỉ thửa đất: {data.address || ''}</div>
                             <div>Thủ tục hành chính cần giải quyết: <span className="font-bold">{data.recordType}</span></div>
                             
                             <div>1. Thành phần hồ sơ, yêu cầu và số lượng mỗi loại giấy tờ gồm:</div>

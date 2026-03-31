@@ -267,6 +267,7 @@ export const DetailModal: React.FC<DetailModalProps> = ({ isOpen, onClose, recor
         PHONE: val(record.phoneNumber),
         CCCD: val(record.cccd), 
         CMND: val(record.cccd),
+        DIA_CHI_CHU_SU_DUNG: val(record.customerAddress),
 
         // --- NHÓM ĐỊA CHỈ ---
         DIA_CHI: val(record.address || getNormalizedWard(record.ward)),
@@ -454,6 +455,12 @@ export const DetailModal: React.FC<DetailModalProps> = ({ isOpen, onClose, recor
                                 <label className="text-[10px] text-gray-400 uppercase font-bold block mb-1">Số điện thoại</label>
                                 <p className="text-base font-bold text-gray-800">{record.phoneNumber || '---'}</p>
                             </div>
+                            {record.customerAddress && (
+                                <div>
+                                    <label className="text-[10px] text-gray-400 uppercase font-bold block mb-1">Địa chỉ chủ sử dụng</label>
+                                    <p className="text-sm font-bold text-gray-800">{record.customerAddress}</p>
+                                </div>
+                            )}
                         </div>
                     </div>
 

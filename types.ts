@@ -42,6 +42,7 @@ export interface RecordFile {
   customerName: string;   
   phoneNumber?: string | null;   
   cccd?: string | null;          
+  customerAddress?: string | null;
   
   ward?: string | null;          
   landPlot?: string | null;      
@@ -104,6 +105,7 @@ export interface Contract {
   code: string;           
   customerName: string;
   phoneNumber?: string | null;
+  customerAddress?: string | null;
   ward?: string | null;
   address?: string | null;
   landPlot?: string | null;
