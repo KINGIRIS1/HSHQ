@@ -145,9 +145,14 @@ const ReceiveRecord: React.FC<ReceiveRecordProps> = ({ onSave, onDelete, wards, 
       let daysToAdd = 30; 
       const lowerType = type.toLowerCase();
 
-      if (lowerType.includes('trích lục')) daysToAdd = 10; 
-      else if (lowerType.includes('trích đo chỉnh lý')) daysToAdd = 15; 
-      else if (lowerType.includes('trích đo') || lowerType.includes('đo đạc') || lowerType.includes('cắm mốc')) daysToAdd = 30; 
+      if (lowerType.includes('cung cấp tài liệu đất đai') || 
+          lowerType.includes('trích lục quy hoạch') || 
+          lowerType.includes('cung cấp số thửa đất') || 
+          lowerType.includes('trích lục')) {
+          daysToAdd = 10;
+      } else if (lowerType.includes('trích đo') || lowerType.includes('cắm mốc')) {
+          daysToAdd = 30;
+      }
       
       const startDate = new Date(receivedDateStr);
       let count = 0;

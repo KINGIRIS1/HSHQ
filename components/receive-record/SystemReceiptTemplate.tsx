@@ -64,8 +64,13 @@ const SystemReceiptTemplate: React.FC<SystemReceiptTemplateProps> = ({ data, onC
         }
     };
 
+    const now = new Date();
     const rDate = data.receivedDate ? new Date(data.receivedDate) : new Date();
     const dDate = data.deadline ? new Date(data.deadline) : new Date();
+
+    // Set time to current time for exact receipt time
+    rDate.setHours(now.getHours(), now.getMinutes());
+    dDate.setHours(now.getHours(), now.getMinutes());
 
     const formatDateTime = (d: Date) => {
         const hours = d.getHours().toString().padStart(2, '0');
@@ -123,7 +128,7 @@ const SystemReceiptTemplate: React.FC<SystemReceiptTemplateProps> = ({ data, onC
                             <div className="text-center" style={{ width: '50%' }}>
                                 <div className="font-bold text-[15px]">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</div>
                                 <div className="font-bold underline mb-2">Độc lập - Tự do - Hạnh phúc</div>
-                                <div className="italic mt-4">Đồng Nai, {formatDateOnly(new Date())}</div>
+                                <div className="italic mt-4">{wardName}, {formatDateOnly(new Date())}</div>
                             </div>
                         </div>
 
@@ -170,15 +175,15 @@ const SystemReceiptTemplate: React.FC<SystemReceiptTemplateProps> = ({ data, onC
                                     </tr>
                                     <tr>
                                         <td className="border border-black p-1 text-center">3</td>
-                                        <td className="border border-black p-1"></td>
-                                        <td className="border border-black p-1 text-center">Bản chính</td>
-                                        <td className="border border-black p-1 text-center">1</td>
+                                        <td className="border border-black p-1">{data.authDocType?.split('|')[0] || ''}</td>
+                                        <td className="border border-black p-1 text-center">{data.authDocType?.split('|')[0] ? (data.authDocType.split('|')[1] || 'Bản chính') : ''}</td>
+                                        <td className="border border-black p-1 text-center">{data.authDocType?.split('|')[0] ? '1' : ''}</td>
                                     </tr>
                                     <tr>
                                         <td className="border border-black p-1 text-center">4</td>
-                                        <td className="border border-black p-1"></td>
-                                        <td className="border border-black p-1 text-center">Bản chính</td>
-                                        <td className="border border-black p-1 text-center">1</td>
+                                        <td className="border border-black p-1">{data.otherDocs?.split('|')[0] || ''}</td>
+                                        <td className="border border-black p-1 text-center">{data.otherDocs?.split('|')[0] ? (data.otherDocs.split('|')[1] || 'Bản chính') : ''}</td>
+                                        <td className="border border-black p-1 text-center">{data.otherDocs?.split('|')[0] ? '1' : ''}</td>
                                     </tr>
                                 </tbody>
                             </table>
