@@ -54,10 +54,10 @@ const RecordForm: React.FC<RecordFormProps> = ({ onSave, wards, records, holiday
 
   useEffect(() => {
     if (!initialData) {
-        const newCode = generateCode(processingWard, formData.receivedDate || '');
+        const newCode = generateCode(formData.ward || processingWard, formData.receivedDate || '');
         setFormData(prev => ({ ...prev, code: newCode }));
     }
-  }, [processingWard, formData.receivedDate, records, initialData]);
+  }, [formData.ward, processingWard, formData.receivedDate, records, initialData]);
 
   const handleChange = (field: keyof RecordFile, value: any) => {
     setFormData(prev => {
