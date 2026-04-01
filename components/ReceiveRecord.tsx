@@ -410,6 +410,8 @@ const ReceiveRecord: React.FC<ReceiveRecordProps> = ({ onSave, onDelete, wards, 
                 calculateDeadline={calculateDeadline}
                 calculateNextCode={(w, d, exist) => calculateNextCode(w, d, exist)}
                 onPreview={handlePreviewDocx}
+                currentUser={currentUser}
+                employees={employees}
             />
         )}
 
