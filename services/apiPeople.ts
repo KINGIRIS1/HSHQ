@@ -2,7 +2,7 @@
 import { supabase, isConfigured } from './supabaseClient';
 import { Employee, User } from '../types';
 import { MOCK_EMPLOYEES, MOCK_USERS } from '../constants';
-import { logError, getFromCache, saveToCache, CACHE_KEYS, mapEmployeeFromDb, mapEmployeeToDb } from './apiCore';
+import { logError, getFromCache, saveToCache, CACHE_KEYS, mapEmployeeFromDb, mapEmployeeToDb, mapUserFromDb, mapUserToDb } from './apiCore';
 
 // --- EMPLOYEES ---
 export const fetchEmployees = async (): Promise<Employee[]> => {
@@ -56,8 +56,9 @@ export const fetchUsers = async (): Promise<User[]> => {
     try {
         const { data, error } = await supabase.from('users').select('*');
         if (error) throw error;
-        saveToCache(CACHE_KEYS.USERS, data);
-        return data as User[];
+        const mapped = data.map(mapUserFromDb);
+        saveToCache(CACHE_KEYS.USERS, mapped);
+        return mapped;
     } catch (error) {
         logError("fetchUsers", error);
         return getFromCache(CACHE_KEYS.USERS, MOCK_USERS);
@@ -67,14 +68,15 @@ export const fetchUsers = async (): Promise<User[]> => {
 export const saveUserApi = async (user: User, isUpdate: boolean): Promise<User | null> => {
     if (!isConfigured) return user;
     try {
+        const payload = mapUserToDb(user);
         if (isUpdate) {
-            const { data, error } = await supabase.from('users').update(user).eq('username', user.username).select();
+            const { data, error } = await supabase.from('users').update(payload).eq('username', user.username).select();
             if (error) throw error;
-            return data?.[0] as User;
+            return data?.[0] ? mapUserFromDb(data[0]) : null;
         } else {
-            const { data, error } = await supabase.from('users').insert([user]).select();
+            const { data, error } = await supabase.from('users').insert([payload]).select();
             if (error) throw error;
-            return data?.[0] as User;
+            return data?.[0] ? mapUserFromDb(data[0]) : null;
         }
     } catch (error) {
         logError("saveUserApi", error);
