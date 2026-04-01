@@ -92,8 +92,13 @@ export const logError = (context: string, error: any) => {
     } else if (code === '42P01') {
         console.error(`❌ Lỗi tại ${context}: Bảng dữ liệu chưa tồn tại trên Supabase! (Code: 42P01)`);
     } else if (code === '22P02') {
-         console.error(`❌ Lỗi tại ${context}: Sai định dạng dữ liệu (Lỗi 22P02). Kiểm tra các trường Số hoặc Ngày tháng.`);
-         alert(`LỖI DỮ LIỆU: Có trường dữ liệu không đúng định dạng (Ví dụ: Diện tích phải là số).\nHệ thống đã cố gắng tự sửa nhưng vẫn thất bại.`);
+        if (context === 'saveEmployeeApi') {
+            console.error(`❌ Lỗi tại ${context}: Cột 'id' trong bảng 'employees' đang là kiểu UUID.`);
+            alert(`LỖI CẤU TRÚC DATABASE (Kiểu dữ liệu):\nCột 'id' trong bảng 'employees' đang là kiểu 'uuid' (mặc định), nhưng mã nhân viên là chuỗi (ví dụ: NV001).\n\nVui lòng vào SQL Editor trên Supabase và chạy lệnh sau:\n\nALTER TABLE employees ALTER COLUMN id TYPE text USING id::text;`);
+        } else {
+            console.error(`❌ Lỗi tại ${context}: Sai định dạng dữ liệu (Lỗi 22P02). Kiểm tra các trường Số hoặc Ngày tháng.`);
+            alert(`LỖI DỮ LIỆU: Có trường dữ liệu không đúng định dạng (Ví dụ: Diện tích phải là số).\nHệ thống đã cố gắng tự sửa nhưng vẫn thất bại.`);
+        }
     } else if (code === 'PGRST204') {
          console.error(`❌ Lỗi tại ${context}: Cột không tồn tại (Lỗi PGRST204).`);
          // Cập nhật thông báo lỗi hướng dẫn cụ thể SQL
