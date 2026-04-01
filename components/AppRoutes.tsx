@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { RecordFile, Employee, User, UserRole, Holiday } from '../types';
+import { RecordFile, Employee, User, UserRole, Holiday, RolePermissions } from '../types';
 import { STATUS_LABELS } from '../constants';
 import { COLUMN_DEFS } from '../utils/appHelpers';
 
@@ -32,6 +32,7 @@ interface AppRoutesProps {
     users: User[];
     wards: string[];
     holidays: Holiday[]; 
+    rolePermissions: RolePermissions;
     
     // States & Setters passed from App
     setUnreadMessages: (n: number) => void;
@@ -114,11 +115,18 @@ interface AppRoutesProps {
 const AppRoutes: React.FC<AppRoutesProps> = (props) => {
     // Simplify destructuring to avoid TS errors with complex objects
     const { 
-        currentView, currentUser, records, employees, users, wards, holidays
+        currentView, currentUser, records, employees, users, wards, holidays, rolePermissions
     } = props;
+
+    const hasPermission = (permissionId: string) => {
+        if (currentUser.role === UserRole.ADMIN) return true;
+        const perms = rolePermissions[currentUser.role] || [];
+        return perms.includes('*') || perms.includes(permissionId);
+    };
 
     const isAdmin = currentUser.role === UserRole.ADMIN;
     const isSubadmin = currentUser.role === UserRole.SUBADMIN;
+    // canPerformAction is kept for backward compatibility, but we should use hasPermission where possible
     const canPerformAction = isAdmin || isSubadmin || currentUser.role === UserRole.TEAM_LEADER || currentUser.role === UserRole.ONEDOOR;
 
     const [showColumnSelector, setShowColumnSelector] = React.useState(false);

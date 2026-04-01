@@ -106,7 +106,7 @@ function App() {
 
   // --- CUSTOM HOOKS ---
   const { 
-      records, employees, users, wards, holidays, connectionStatus, 
+      records, employees, users, wards, holidays, rolePermissions, connectionStatus, 
       isUpdateAvailable, latestVersion, updateUrl,
       setEmployees, setUsers, setRecords, setWards,
       loadData, handleAddOrUpdateRecord, handleDeleteRecord, handleImportRecords,
@@ -576,6 +576,7 @@ function App() {
         warningCount={recordFilterProps.warningCount}
         activeRemindersCount={activeRemindersCount}
         connectionStatus={connectionStatus}
+        rolePermissions={rolePermissions}
         showUpdateModal={isUpdateAvailable && !updateDeferred}
         updateVersion={latestVersion}
         updateDownloadStatus={updateStatus}
@@ -593,6 +594,7 @@ function App() {
             users={users}
             wards={wards}
             holidays={holidays}
+            rolePermissions={rolePermissions}
             
             setUnreadMessages={setUnreadMessages}
             notificationEnabled={notificationEnabled}

@@ -1,10 +1,10 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { RecordFile, Employee, User, RecordStatus, Holiday } from '../types';
+import { RecordFile, Employee, User, RecordStatus, Holiday, RolePermissions, DEFAULT_ROLE_PERMISSIONS } from '../types';
 import { 
     fetchRecords, fetchEmployees, fetchUsers, fetchUpdateInfo, fetchHolidays,
     createRecordApi, updateRecordApi, deleteRecordApi, createRecordsBatchApi,
-    saveEmployeeApi, deleteEmployeeApi, saveUserApi, deleteUserApi, deleteAllDataApi
+    saveEmployeeApi, deleteEmployeeApi, saveUserApi, deleteUserApi, deleteAllDataApi, getSystemSetting
 } from '../services/api';
 import { DEFAULT_WARDS as STATIC_WARDS, APP_VERSION } from '../constants';
 
@@ -13,6 +13,7 @@ export const useAppData = (currentUser: User | null) => {
     const [employees, setEmployees] = useState<Employee[]>([]);
     const [users, setUsers] = useState<User[]>([]);
     const [holidays, setHolidays] = useState<Holiday[]>([]); // State mới cho ngày nghỉ
+    const [rolePermissions, setRolePermissions] = useState<RolePermissions>(DEFAULT_ROLE_PERMISSIONS);
     const [connectionStatus, setConnectionStatus] = useState<'connected' | 'offline'>('connected');
     
     // Wards State
@@ -39,16 +40,24 @@ export const useAppData = (currentUser: User | null) => {
                 fetchEmployees(),
                 fetchUsers(),
                 fetchUpdateInfo(),
-                fetchHolidays() // Tải thêm danh sách ngày nghỉ
+                fetchHolidays(), // Tải thêm danh sách ngày nghỉ
+                getSystemSetting('role_permissions')
             ]);
 
             // Race giữa fetch data và timeout
-            const [recData, empData, userData, updateInfo, holidayData] = await Promise.race([dataPromise, timeoutPromise]) as any;
+            const [recData, empData, userData, updateInfo, holidayData, permsData] = await Promise.race([dataPromise, timeoutPromise]) as any;
 
             setRecords(recData);
             setEmployees(empData);
             setUsers(userData);
             setHolidays(holidayData); // Cập nhật state holidays
+            if (permsData) {
+                try {
+                    setRolePermissions(JSON.parse(permsData));
+                } catch (e) {
+                    console.error("Failed to parse role_permissions", e);
+                }
+            }
             setConnectionStatus('connected');
 
             if (updateInfo && updateInfo.version && updateInfo.version !== APP_VERSION) {
@@ -163,7 +172,7 @@ export const useAppData = (currentUser: User | null) => {
     };
 
     return {
-        records, employees, users, wards, holidays, connectionStatus,
+        records, employees, users, wards, holidays, rolePermissions, connectionStatus,
         isUpdateAvailable, latestVersion, updateUrl,
         setWards, setEmployees, setUsers, setRecords,
         loadData,

@@ -235,16 +235,31 @@ export const mapEmployeeToDb = (e: Employee) => ({
     name: e.name,
     department: e.department,
     position: e.position,
-    managed_wards: e.managedWards // Map camel to snake case for DB
+    managed_wards: Array.isArray(e.managedWards) ? JSON.stringify(e.managedWards) : e.managedWards
 });
 
-export const mapEmployeeFromDb = (e: any): Employee => ({
-    id: e.id,
-    name: e.name,
-    department: e.department,
-    position: e.position,
-    managedWards: e.managed_wards || e.managedWards || []
-});
+export const mapEmployeeFromDb = (e: any): Employee => {
+    let parsedWards = [];
+    if (typeof e.managed_wards === 'string') {
+        try {
+            parsedWards = JSON.parse(e.managed_wards);
+        } catch (err) {
+            parsedWards = e.managed_wards.split(',').map((w: string) => w.trim()).filter(Boolean);
+        }
+    } else if (Array.isArray(e.managed_wards)) {
+        parsedWards = e.managed_wards;
+    } else if (Array.isArray(e.managedWards)) {
+        parsedWards = e.managedWards;
+    }
+    
+    return {
+        id: e.id,
+        name: e.name,
+        department: e.department,
+        position: e.position,
+        managedWards: parsedWards
+    };
+};
 
 export const mapUserToDb = (u: User) => ({
     username: u.username,

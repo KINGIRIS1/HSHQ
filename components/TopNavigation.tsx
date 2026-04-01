@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { LayoutDashboard, FileText, ClipboardList, Send, BarChart3, Settings, LogOut, UserCircle, Users, Briefcase, BookOpen, UserPlus, ShieldAlert, X, FolderInput, FileSignature, MessageSquare, Loader2, UserCog, ShieldCheck, PenTool, CalendarDays, Archive, FolderArchive, ChevronDown, Bell, FilePlus, Ruler, ChevronRight, User, Shield, Settings2, Layers } from 'lucide-react';
-import { User as UserType, UserRole } from '../types';
+import { User as UserType, UserRole, RolePermissions } from '../types';
 
 interface TopNavigationProps {
   currentView: string;
@@ -14,6 +14,7 @@ interface TopNavigationProps {
   reminderCount: number;
   mobileOpen: boolean;
   setMobileOpen: (open: boolean) => void;
+  rolePermissions: RolePermissions;
 }
 
 const TopNavigation: React.FC<TopNavigationProps> = ({ 
@@ -26,13 +27,20 @@ const TopNavigation: React.FC<TopNavigationProps> = ({
   warningRecordsCount,
   reminderCount,
   mobileOpen,
-  setMobileOpen
+  setMobileOpen,
+  rolePermissions
 }) => {
   const isAdmin = currentUser.role === UserRole.ADMIN;
   const isSubadmin = currentUser.role === UserRole.SUBADMIN;
   const isTeamLeader = currentUser.role === UserRole.TEAM_LEADER;
   const isOneDoor = currentUser.role === UserRole.ONEDOOR;
   const isEmployee = currentUser.role === UserRole.EMPLOYEE;
+
+  const hasPermission = (permissionId: string) => {
+    if (isAdmin) return true;
+    const perms = rolePermissions[currentUser.role] || [];
+    return perms.includes('*') || perms.includes(permissionId);
+  };
 
   // Cập nhật danh sách các view được phép
   const oneDoorAllowedViews = ['dashboard', 'internal_chat', 'receive_record', 'receive_contract', 'all_records', 'other_records', 'personal_profile', 'account_settings', 'utilities', 'handover_list', 'work_schedule', 'archive_records', 'receive_group', 'records_group', 'reports', 'tools_group'];
@@ -47,12 +55,12 @@ const TopNavigation: React.FC<TopNavigationProps> = ({
       id: 'receive_group',
       label: 'Tiếp nhận',
       icon: FolderInput,
-      visible: !isTeamLeader && !isEmployee,
+      visible: hasPermission('ADD_RECORDS') || hasPermission('ADD_CONTRACTS'),
       isDropdown: false,
       isTabGroup: true,
       subItems: [
-        { id: 'receive_record', label: 'Hồ sơ', icon: FilePlus, visible: true },
-        { id: 'receive_contract', label: 'Hợp đồng', icon: FileSignature, visible: true },
+        { id: 'receive_record', label: 'Hồ sơ', icon: FilePlus, visible: hasPermission('ADD_RECORDS') },
+        { id: 'receive_contract', label: 'Hợp đồng', icon: FileSignature, visible: hasPermission('ADD_CONTRACTS') || hasPermission('VIEW_CONTRACTS') },
       ]
     },
 
@@ -61,13 +69,13 @@ const TopNavigation: React.FC<TopNavigationProps> = ({
       id: 'records_group', 
       label: 'Hồ sơ', 
       icon: FileText, 
-      visible: true,
+      visible: hasPermission('VIEW_RECORDS') || hasPermission('VIEW_ARCHIVE'),
       isDropdown: false,
       isTabGroup: true,
       subItems: [
-        { id: 'all_records', label: 'Đo đạc', icon: Ruler, visible: true },
-        { id: 'archive_records', label: 'Lưu trữ', icon: FolderArchive, visible: true },
-        { id: 'other_records', label: 'Khác', icon: Layers, visible: true },
+        { id: 'all_records', label: 'Đo đạc', icon: Ruler, visible: hasPermission('VIEW_RECORDS') },
+        { id: 'archive_records', label: 'Lưu trữ', icon: FolderArchive, visible: hasPermission('VIEW_ARCHIVE') },
+        { id: 'other_records', label: 'Khác', icon: Layers, visible: hasPermission('VIEW_RECORDS') },
       ]
     },
 
@@ -80,7 +88,7 @@ const TopNavigation: React.FC<TopNavigationProps> = ({
       isDropdown: false,
       isTabGroup: true,
       subItems: [
-        { id: 'work_schedule', label: 'Lịch công tác', icon: CalendarDays, visible: true },
+        { id: 'work_schedule', label: 'Lịch công tác', icon: CalendarDays, visible: hasPermission('VIEW_SCHEDULE') },
         { id: 'personal_profile', label: 'Hồ sơ cá nhân', icon: UserCircle, visible: true },
       ]
     },
@@ -94,9 +102,9 @@ const TopNavigation: React.FC<TopNavigationProps> = ({
       isDropdown: false,
       isTabGroup: true,
       subItems: [
-        { id: 'excerpt_management', label: 'Số TL/TĐ', icon: BookOpen, visible: !isOneDoor },
+        { id: 'excerpt_management', label: 'Số TL/TĐ', icon: BookOpen, visible: hasPermission('VIEW_EXCERPTS') || hasPermission('MANAGE_EXCERPTS') },
         { id: 'utilities', label: 'Tiện ích', icon: PenTool, visible: true },
-        { id: 'reports', label: 'Báo cáo', icon: BarChart3, visible: true },
+        { id: 'reports', label: 'Báo cáo', icon: BarChart3, visible: hasPermission('VIEW_REPORTS') },
       ]
     }
   ];

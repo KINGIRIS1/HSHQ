@@ -20,6 +20,36 @@ export enum UserRole {
   ONEDOOR = 'ONEDOOR'    // Bộ phận một cửa (Chỉ tiếp nhận và xem)
 }
 
+export type RolePermissions = Record<string, string[]>;
+
+export const DEFAULT_ROLE_PERMISSIONS: RolePermissions = {
+  [UserRole.ADMIN]: ['*'],
+  [UserRole.SUBADMIN]: ['VIEW_RECORDS', 'ADD_RECORDS', 'EDIT_RECORDS', 'DELETE_RECORDS', 'VIEW_CONTRACTS', 'MANAGE_CONTRACTS', 'VIEW_EXCERPTS', 'MANAGE_EXCERPTS', 'VIEW_ARCHIVE', 'MANAGE_ARCHIVE', 'VIEW_REPORTS', 'MANAGE_EMPLOYEES', 'VIEW_CHAT', 'VIEW_SCHEDULE', 'MANAGE_SCHEDULE'],
+  [UserRole.TEAM_LEADER]: ['VIEW_RECORDS', 'EDIT_RECORDS', 'VIEW_CONTRACTS', 'VIEW_EXCERPTS', 'MANAGE_EXCERPTS', 'VIEW_ARCHIVE', 'VIEW_REPORTS', 'VIEW_CHAT', 'VIEW_SCHEDULE'],
+  [UserRole.ONEDOOR]: ['VIEW_RECORDS', 'ADD_RECORDS', 'VIEW_CONTRACTS', 'ADD_CONTRACTS', 'VIEW_EXCERPTS', 'VIEW_ARCHIVE', 'VIEW_CHAT', 'VIEW_SCHEDULE'],
+  [UserRole.EMPLOYEE]: ['VIEW_RECORDS', 'EDIT_RECORDS', 'VIEW_CONTRACTS', 'VIEW_EXCERPTS', 'VIEW_ARCHIVE', 'VIEW_CHAT', 'VIEW_SCHEDULE']
+};
+
+export const AVAILABLE_PERMISSIONS = [
+  { id: 'VIEW_RECORDS', label: 'Xem hồ sơ' },
+  { id: 'ADD_RECORDS', label: 'Thêm hồ sơ' },
+  { id: 'EDIT_RECORDS', label: 'Sửa hồ sơ' },
+  { id: 'DELETE_RECORDS', label: 'Xóa hồ sơ' },
+  { id: 'VIEW_CONTRACTS', label: 'Xem hợp đồng' },
+  { id: 'MANAGE_CONTRACTS', label: 'Quản lý hợp đồng' },
+  { id: 'VIEW_EXCERPTS', label: 'Xem trích lục' },
+  { id: 'MANAGE_EXCERPTS', label: 'Quản lý trích lục' },
+  { id: 'VIEW_ARCHIVE', label: 'Xem lưu trữ' },
+  { id: 'MANAGE_ARCHIVE', label: 'Quản lý lưu trữ' },
+  { id: 'VIEW_REPORTS', label: 'Xem báo cáo' },
+  { id: 'MANAGE_USERS', label: 'Quản lý người dùng' },
+  { id: 'MANAGE_EMPLOYEES', label: 'Quản lý nhân sự' },
+  { id: 'SYSTEM_SETTINGS', label: 'Cài đặt hệ thống' },
+  { id: 'VIEW_CHAT', label: 'Sử dụng nội bộ' },
+  { id: 'VIEW_SCHEDULE', label: 'Xem lịch công tác' },
+  { id: 'MANAGE_SCHEDULE', label: 'Quản lý lịch công tác' }
+];
+
 export interface User {
   username: string;
   password?: string;

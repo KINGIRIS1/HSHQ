@@ -1,8 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
-import { Database, AlertTriangle, Cloud, Loader2, CheckCircle, Save, Globe, Calendar, Plus, Trash2, ShieldAlert } from 'lucide-react';
-import { Holiday } from '../types';
-import { fetchHolidays, saveHolidays, testDatabaseConnection, saveUpdateInfo, fetchUpdateInfo } from '../services/api';
+import { Database, AlertTriangle, Cloud, Loader2, CheckCircle, Save, Globe, Calendar, Plus, Trash2, ShieldAlert, Key } from 'lucide-react';
+import { Holiday, UserRole, RolePermissions, DEFAULT_ROLE_PERMISSIONS, AVAILABLE_PERMISSIONS } from '../types';
+import { fetchHolidays, saveHolidays, testDatabaseConnection, saveUpdateInfo, fetchUpdateInfo, getSystemSetting, saveSystemSetting } from '../services/api';
 import { APP_VERSION } from '../constants';
 import { confirmAction } from '../utils/appHelpers';
 
@@ -15,7 +15,7 @@ const SystemSettingsView: React.FC<SystemSettingsViewProps> = ({
   onDeleteAllData,
   onHolidaysChanged
 }) => {
-  const [activeTab, setActiveTab] = useState<'general' | 'holidays' | 'data'>('general');
+  const [activeTab, setActiveTab] = useState<'general' | 'holidays' | 'permissions' | 'data'>('general');
   const [isDeletingData, setIsDeletingData] = useState(false);
   const [dbTestStatus, setDbTestStatus] = useState<'idle' | 'testing' | 'success' | 'error'>('idle');
   const [dbTestMsg, setDbTestMsg] = useState('');
@@ -35,10 +35,49 @@ const SystemSettingsView: React.FC<SystemSettingsViewProps> = ({
   
   const [savingHolidays, setSavingHolidays] = useState(false);
 
+  // Permissions States
+  const [rolePermissions, setRolePermissions] = useState<RolePermissions>(DEFAULT_ROLE_PERMISSIONS);
+  const [selectedRole, setSelectedRole] = useState<UserRole>(UserRole.SUBADMIN);
+  const [isSavingPermissions, setIsSavingPermissions] = useState(false);
+
   useEffect(() => {
       loadHolidays();
       loadUpdateConfig();
+      loadPermissions();
   }, []);
+
+  const loadPermissions = async () => {
+      const savedPerms = await getSystemSetting('role_permissions');
+      if (savedPerms) {
+          try {
+              setRolePermissions(JSON.parse(savedPerms));
+          } catch (e) {
+              console.error("Failed to parse role_permissions", e);
+          }
+      }
+  };
+
+  const handleSavePermissions = async () => {
+      setIsSavingPermissions(true);
+      const success = await saveSystemSetting('role_permissions', JSON.stringify(rolePermissions));
+      setIsSavingPermissions(false);
+      if (success) {
+          alert('Đã lưu cấu hình phân quyền thành công! Cần tải lại trang để áp dụng.');
+      } else {
+          alert('Lỗi khi lưu cấu hình phân quyền.');
+      }
+  };
+
+  const togglePermission = (role: UserRole, permissionId: string) => {
+      if (role === UserRole.ADMIN) return; // Cannot edit ADMIN permissions
+      setRolePermissions(prev => {
+          const currentPerms = prev[role] || [];
+          const newPerms = currentPerms.includes(permissionId)
+              ? currentPerms.filter(p => p !== permissionId)
+              : [...currentPerms, permissionId];
+          return { ...prev, [role]: newPerms };
+      });
+  };
 
   const loadHolidays = async () => {
       const data = await fetchHolidays();
@@ -161,6 +200,12 @@ const SystemSettingsView: React.FC<SystemSettingsViewProps> = ({
                 className={`px-4 py-3 text-xs md:text-sm font-black uppercase tracking-widest flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap ${activeTab === 'holidays' ? 'border-orange-600 text-orange-700 bg-white' : 'border-transparent text-gray-400 hover:text-gray-600'}`}
             >
                 <Calendar size={16} /> Ngày nghỉ lễ
+            </button>
+            <button 
+                onClick={() => setActiveTab('permissions')}
+                className={`px-4 py-3 text-xs md:text-sm font-black uppercase tracking-widest flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap ${activeTab === 'permissions' ? 'border-purple-600 text-purple-700 bg-white' : 'border-transparent text-gray-400 hover:text-gray-600'}`}
+            >
+                <Key size={16} /> Phân quyền
             </button>
             <button 
                 onClick={() => setActiveTab('data')}
@@ -318,6 +363,63 @@ const SystemSettingsView: React.FC<SystemSettingsViewProps> = ({
                             {holidays.length === 0 && (
                                 <div className="p-8 text-center text-gray-400 italic font-medium">Chưa có dữ liệu ngày lễ</div>
                             )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {activeTab === 'permissions' && (
+                <div className="space-y-6 max-w-4xl mx-auto">
+                    <div className="bg-white border border-purple-100 rounded-2xl p-5 flex flex-col md:flex-row gap-4 items-center justify-between shadow-sm">
+                        <div className="text-center md:text-left">
+                            <h3 className="font-black text-purple-800 flex items-center justify-center md:justify-start gap-2 mb-1 tracking-tight"> <Key size={18} /> Phân quyền hệ thống </h3>
+                            <p className="text-xs text-purple-600 font-medium">Cấu hình quyền truy cập cho từng nhóm người dùng.</p>
+                        </div>
+                        <button 
+                            onClick={handleSavePermissions}
+                            disabled={isSavingPermissions}
+                            className="w-full md:w-auto px-6 py-2.5 bg-purple-600 text-white font-black text-xs uppercase tracking-widest rounded-xl hover:bg-purple-700 transition-all shadow-md shadow-purple-100 disabled:opacity-50 flex items-center justify-center gap-2 active:scale-95"
+                        >
+                            {isSavingPermissions ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />}
+                            Lưu phân quyền
+                        </button>
+                    </div>
+
+                    <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
+                        <div className="flex border-b border-gray-200 bg-gray-50 px-2 overflow-x-auto no-scrollbar">
+                            {Object.values(UserRole).filter(r => r !== UserRole.ADMIN).map(role => (
+                                <button
+                                    key={role}
+                                    onClick={() => setSelectedRole(role)}
+                                    className={`px-4 py-3 text-xs md:text-sm font-black uppercase tracking-widest flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap ${selectedRole === role ? 'border-purple-600 text-purple-700 bg-white' : 'border-transparent text-gray-400 hover:text-gray-600'}`}
+                                >
+                                    {role}
+                                </button>
+                            ))}
+                        </div>
+                        <div className="p-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {AVAILABLE_PERMISSIONS.map(perm => {
+                                    const hasPerm = rolePermissions[selectedRole]?.includes(perm.id) || rolePermissions[selectedRole]?.includes('*');
+                                    return (
+                                        <label key={perm.id} className={`flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition-colors ${hasPerm ? 'bg-purple-50 border-purple-200' : 'bg-gray-50 border-gray-200 hover:bg-gray-100'}`}>
+                                            <div className="mt-0.5">
+                                                <input 
+                                                    type="checkbox" 
+                                                    className="w-4 h-4 text-purple-600 rounded border-gray-300 focus:ring-purple-500"
+                                                    checked={hasPerm}
+                                                    onChange={() => togglePermission(selectedRole, perm.id)}
+                                                    disabled={selectedRole === UserRole.ADMIN}
+                                                />
+                                            </div>
+                                            <div>
+                                                <div className={`text-sm font-bold ${hasPerm ? 'text-purple-900' : 'text-gray-700'}`}>{perm.label}</div>
+                                                <div className="text-xs text-gray-500 mt-0.5 font-mono">{perm.id}</div>
+                                            </div>
+                                        </label>
+                                    );
+                                })}
+                            </div>
                         </div>
                     </div>
                 </div>

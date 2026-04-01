@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import TopNavigation from '../TopNavigation';
 import { Menu, WifiOff, ShieldCheck, UserCircle, LogOut, UserCog, ChevronDown, Settings } from 'lucide-react';
-import { User, UserRole } from '../../types';
+import { User, UserRole, RolePermissions } from '../../types';
 import UpdateRequiredModal from '../UpdateRequiredModal';
 
 interface MainLayoutProps {
@@ -22,6 +22,7 @@ interface MainLayoutProps {
     unreadMessages: number;
     warningCount: { overdue: number; approaching: number };
     activeRemindersCount: number;
+    rolePermissions: RolePermissions;
     
     // Connection status
     connectionStatus: 'connected' | 'offline';
@@ -51,6 +52,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
     unreadMessages,
     warningCount,
     activeRemindersCount,
+    rolePermissions,
     connectionStatus,
     // Update props defaults
     showUpdateModal = false,
@@ -182,6 +184,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                     unreadMessagesCount={unreadMessages}
                     warningRecordsCount={warningCount.overdue + warningCount.approaching}
                     reminderCount={activeRemindersCount}
+                    rolePermissions={rolePermissions}
                 />
 
                 {/* CONTENT */}
