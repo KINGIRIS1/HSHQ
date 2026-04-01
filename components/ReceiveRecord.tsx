@@ -86,6 +86,11 @@ const ReceiveRecord: React.FC<ReceiveRecordProps> = ({ onSave, onDelete, wards, 
           .replace(/^(xã|phường|thị trấn|tt\.|p\.|x\.)\s+/g, '')
           .replace(/\s+(xã|phường|thị trấn)\s+/g, ' ');
 
+      if (cleanName.includes('tân khai') || cleanName.includes('tankhai')) return 'TK';
+      if (cleanName.includes('tân hưng') || cleanName.includes('tanhung')) return 'TH';
+      if (cleanName.includes('minh đức') || cleanName.includes('minhduc')) return 'MĐ';
+      if (cleanName.includes('tân quan') || cleanName.includes('tanquan')) return 'TQ';
+
       if (cleanName.includes('minh hưng') || cleanName.includes('minhhung')) return 'MH';
       if (cleanName.includes('chơn thành') || cleanName.includes('chonthanh') || cleanName.includes('hưng long')) return 'CT';
       if (cleanName.includes('nha bích') || cleanName.includes('nhabich')) return 'NB';
@@ -94,7 +99,6 @@ const ReceiveRecord: React.FC<ReceiveRecordProps> = ({ onSave, onDelete, wards, 
       if (cleanName.includes('quang minh') || cleanName.includes('quangminh')) return 'QM';
       if (cleanName.includes('thành tâm') || cleanName.includes('thanhtam')) return 'TT';
       if (cleanName.includes('minh long') || cleanName.includes('minhlong')) return 'MLO';
-      if (cleanName.includes('tân khai') || cleanName.includes('tankhai')) return 'TK';
       
       return 'CT';
   };
