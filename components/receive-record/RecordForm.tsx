@@ -84,6 +84,9 @@ const RecordForm: React.FC<RecordFormProps> = ({ onSave, wards, records, holiday
     setLoading(false);
     if (success) {
         setNotification({ type: 'success', message: initialData ? `Cập nhật thành công: ${recordToSave.code}` : `Đã tiếp nhận mới: ${recordToSave.code}` });
+        if (!initialData && onPrint) {
+            onPrint(recordToSave);
+        }
         if (initialData && onCancelEdit) onCancelEdit(); else handleReset(true);
     } else {
         setNotification({ type: 'error', message: "Lỗi khi lưu hồ sơ." });
@@ -125,9 +128,9 @@ const RecordForm: React.FC<RecordFormProps> = ({ onSave, wards, records, holiday
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            {/* CỘT 1 */}
-            <div className="col-span-1 lg:col-span-4 space-y-6">
-                <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
+            {/* CỘT 1: Người nộp hồ sơ */}
+            <div className="col-span-1 lg:col-span-3 space-y-6">
+                <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden h-full">
                     <div className="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
                     <h3 className="text-sm font-bold text-slate-800 uppercase mb-5 flex items-center gap-2"><span className="p-1.5 bg-blue-100 text-blue-600 rounded-lg"><UserIcon size={16} /></span> Người nộp hồ sơ</h3>
                     <div className="space-y-4">
@@ -148,21 +151,10 @@ const RecordForm: React.FC<RecordFormProps> = ({ onSave, wards, records, holiday
                         </div>
                     </div>
                 </div>
-                <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
-                    <div className="absolute top-0 left-0 w-1 h-full bg-purple-500"></div>
-                    <h3 className="text-sm font-bold text-slate-800 uppercase mb-5 flex items-center gap-2"><span className="p-1.5 bg-purple-100 text-purple-600 rounded-lg"><Calendar size={16} /></span> Thời gian & Mã</h3>
-                    <div className="space-y-4">
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="relative"><label className={labelClass}>Ngày nhận</label><Calendar size={16} className={iconWrapperClass} /><input type="date" required className={inputClass} value={formData.receivedDate || ''} onChange={(e) => handleChange('receivedDate', e.target.value)} /></div>
-                            <div className="relative"><label className={`${labelClass} text-purple-600`}>Hẹn trả <span className="text-red-500">*</span></label><Clock size={16} className={`${iconWrapperClass} text-purple-400`} /><input type="date" required className={`${inputClass} bg-purple-50 border-purple-200 text-purple-700 font-bold`} value={formData.deadline || ''} onChange={(e) => handleChange('deadline', e.target.value)} /></div>
-                        </div>
-                        <div className="relative"><label className={labelClass}>Mã hồ sơ</label><Hash size={16} className={iconWrapperClass} /><input type="text" readOnly={!initialData} className={`${inputClass} font-mono ${initialData ? 'bg-white font-bold text-blue-700' : 'bg-slate-100 text-slate-500 cursor-not-allowed'}`} value={formData.code || ''} onChange={(e) => initialData && handleChange('code', e.target.value)} /></div>
-                    </div>
-                </div>
             </div>
 
-            {/* CỘT 2 */}
-            <div className="col-span-1 lg:col-span-4 space-y-6">
+            {/* CỘT 2: Thông tin giấy chứng nhận */}
+            <div className="col-span-1 lg:col-span-3 space-y-6">
                 <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden h-full flex flex-col">
                     <div className="absolute top-0 left-0 w-1 h-full bg-green-500"></div>
                     <h3 className="text-sm font-bold text-slate-800 uppercase mb-5 flex items-center gap-2"><span className="p-1.5 bg-green-100 text-green-600 rounded-lg"><MapPin size={16} /></span> Thông tin giấy chứng nhận</h3>
@@ -184,8 +176,8 @@ const RecordForm: React.FC<RecordFormProps> = ({ onSave, wards, records, holiday
                 </div>
             </div>
 
-            {/* CỘT 3 */}
-            <div className="col-span-1 lg:col-span-4 space-y-6">
+            {/* CỘT 3: Nội dung yêu cầu */}
+            <div className="col-span-1 lg:col-span-3 space-y-6">
                 <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden h-full flex flex-col">
                     <div className="absolute top-0 left-0 w-1 h-full bg-orange-500"></div>
                     <h3 className="text-sm font-bold text-slate-800 uppercase mb-5 flex items-center gap-2"><span className="p-1.5 bg-orange-100 text-orange-600 rounded-lg"><FileCheck size={16} /></span> Nội dung yêu cầu</h3>
@@ -202,10 +194,28 @@ const RecordForm: React.FC<RecordFormProps> = ({ onSave, wards, records, holiday
                             </div>
                         </div>
                     </div>
-                    <div className="mt-6 pt-6 border-t border-slate-100 grid grid-cols-2 gap-3">
-                        <button type="submit" disabled={loading} className="col-span-2 flex items-center justify-center gap-2 px-4 py-3.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-lg font-bold transition-all active:scale-95 disabled:opacity-70"><Save size={20} /> {loading ? 'Đang xử lý...' : (initialData ? 'CẬP NHẬT' : 'LƯU HỒ SƠ')}</button>
-                        {onPrint && <button type="button" onClick={() => onPrint(formData)} className="px-4 py-3 bg-white text-purple-700 rounded-xl hover:bg-purple-50 transition-colors shadow-sm font-bold border border-purple-200 flex items-center justify-center gap-2"><Printer size={18} /> In Phiếu</button>}
-                        <button type="button" onClick={() => handleReset(false)} className="px-4 py-3 bg-white text-slate-600 rounded-xl hover:bg-slate-100 transition-colors shadow-sm font-bold border border-slate-200 flex items-center justify-center gap-2">{initialData ? <><XCircle size={18} className="text-red-500" /> Hủy</> : <><RotateCcw size={18} /> Làm mới</>}</button>
+                </div>
+            </div>
+
+            {/* CỘT 4: Thời gian & Mã + Buttons */}
+            <div className="col-span-1 lg:col-span-3 space-y-6">
+                <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden h-full flex flex-col">
+                    <div className="absolute top-0 left-0 w-1 h-full bg-purple-500"></div>
+                    <h3 className="text-sm font-bold text-slate-800 uppercase mb-5 flex items-center gap-2"><span className="p-1.5 bg-purple-100 text-purple-600 rounded-lg"><Calendar size={16} /></span> Thời gian & Mã</h3>
+                    <div className="space-y-4 flex-1">
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="relative"><label className={labelClass}>Ngày nhận</label><Calendar size={16} className={iconWrapperClass} /><input type="date" required className={inputClass} value={formData.receivedDate || ''} onChange={(e) => handleChange('receivedDate', e.target.value)} /></div>
+                            <div className="relative"><label className={`${labelClass} text-purple-600`}>Hẹn trả <span className="text-red-500">*</span></label><Clock size={16} className={`${iconWrapperClass} text-purple-400`} /><input type="date" required className={`${inputClass} bg-purple-50 border-purple-200 text-purple-700 font-bold`} value={formData.deadline || ''} onChange={(e) => handleChange('deadline', e.target.value)} /></div>
+                        </div>
+                        <div className="relative"><label className={labelClass}>Mã hồ sơ</label><Hash size={16} className={iconWrapperClass} /><input type="text" readOnly={!initialData} className={`${inputClass} font-mono ${initialData ? 'bg-white font-bold text-blue-700' : 'bg-slate-100 text-slate-500 cursor-not-allowed'}`} value={formData.code || ''} onChange={(e) => initialData && handleChange('code', e.target.value)} /></div>
+                    </div>
+                    <div className="mt-6 pt-6 border-t border-slate-100 flex flex-col gap-3">
+                        <button type="submit" disabled={loading} className="w-full flex items-center justify-center gap-2 px-4 py-3.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-lg font-bold transition-all active:scale-95 disabled:opacity-70">
+                            <Save size={20} /> {loading ? 'Đang xử lý...' : (initialData ? 'CẬP NHẬT' : 'LƯU VÀ IN')}
+                        </button>
+                        <button type="button" onClick={() => handleReset(false)} className="w-full px-4 py-3 bg-white text-slate-600 rounded-xl hover:bg-slate-100 transition-colors shadow-sm font-bold border border-slate-200 flex items-center justify-center gap-2">
+                            {initialData ? <><XCircle size={18} className="text-red-500" /> Hủy</> : <><RotateCcw size={18} /> Làm mới</>}
+                        </button>
                     </div>
                 </div>
             </div>
