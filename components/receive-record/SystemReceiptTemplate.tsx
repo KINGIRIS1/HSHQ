@@ -201,7 +201,7 @@ const SystemReceiptTemplate: React.FC<SystemReceiptTemplateProps> = ({ data, onC
                         </div>
 
                         {/* Signatures */}
-                        <div className="flex justify-between mt-8 text-center">
+                        <div className="flex justify-between mt-8 text-center mb-24">
                             <div className="w-1/2">
                                 <div className="font-bold">NGƯỜI NỘP HỒ SƠ</div>
                                 <div className="italic">(Ký và ghi rõ họ tên)</div>
@@ -213,7 +213,7 @@ const SystemReceiptTemplate: React.FC<SystemReceiptTemplateProps> = ({ data, onC
                         </div>
 
                         {/* Footer */}
-                        <div className="mt-32 pt-4 border-t border-gray-400">
+                        <div className="pt-4 border-t border-gray-400">
                             <div><span className="font-bold">Chú ý:</span> Công dân đến nhận kết quả mang theo phiếu hẹn, CMTND/CCCD, lệ phí và giấy ủy quyền</div>
                             <div className="mt-1">(Trong trường hợp không phải chính chủ đến nhận)</div>
                             
