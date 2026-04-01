@@ -5,7 +5,7 @@ import { MOCK_RECORDS, API_BASE_URL } from '../constants';
 import { logError, getFromCache, saveToCache, CACHE_KEYS, sanitizeData, normalizeCode } from './apiCore';
 
 const RECORD_DB_COLUMNS = [
-    'id', 'code', 'customerName', 'phoneNumber', 'cccd', 'ward', 'landPlot', 'mapSheet', 
+    'id', 'code', 'customerName', 'phoneNumber', 'cccd', 'customerAddress', 'ward', 'landPlot', 'mapSheet', 
     'area', 'address', 'group', 'content', 'recordType', 'receivedDate', 'deadline', 
     'assignedDate', 'submissionDate', 'approvalDate', 'completedDate', 'status', 'assignedTo', 
     'notes', 'privateNotes', 'personalNotes', 
