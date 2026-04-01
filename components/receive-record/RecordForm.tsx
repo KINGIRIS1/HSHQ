@@ -111,7 +111,7 @@ const RecordForm: React.FC<RecordFormProps> = ({ onSave, wards, records, holiday
   const iconWrapperClass = "absolute left-3 top-[34px] text-slate-400 pointer-events-none";
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-7xl mx-auto space-y-6 animate-fade-in relative pb-10">
+    <form onSubmit={handleSubmit} className="w-full space-y-6 animate-fade-in relative pb-10">
         <div ref={topRef} />
         {notification && (
             <div className={`p-4 rounded-xl border shadow-lg flex items-start gap-3 transition-all duration-300 animate-fade-in-up ${notification.type === 'success' ? 'bg-green-50 border-green-200 text-green-800' : 'bg-red-50 border-red-200 text-red-800'}`}>
