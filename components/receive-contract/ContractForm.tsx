@@ -395,7 +395,7 @@ const ContractForm: React.FC<ContractFormProps> = ({ initialData, onSave, onPrin
   const displayTotalAmount = isLiquidationMode ? (formData.liquidationAmount || 0) : (formData.totalAmount || 0);
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 animate-fade-in relative pb-10">
+    <form onSubmit={handleSubmit} className="w-full grid grid-cols-1 lg:grid-cols-12 gap-6 animate-fade-in relative pb-10">
         <div ref={topRef} className="absolute -top-20" />
         
         {/* NOTIFICATION */}
