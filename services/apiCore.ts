@@ -1,6 +1,6 @@
 
 import { supabase, isConfigured } from './supabaseClient';
-import { Contract, PriceItem, Employee } from '../types';
+import { Contract, PriceItem, Employee, User } from '../types';
 import { API_BASE_URL } from '../constants'; 
 
 // --- CACHE KEYS ---
@@ -244,6 +244,22 @@ export const mapEmployeeFromDb = (e: any): Employee => ({
     department: e.department,
     position: e.position,
     managedWards: e.managed_wards || e.managedWards || []
+});
+
+export const mapUserToDb = (u: User) => ({
+    username: u.username,
+    password: u.password,
+    name: u.name,
+    role: u.role,
+    employeeid: u.employeeId
+});
+
+export const mapUserFromDb = (u: any): User => ({
+    username: u.username,
+    password: u.password,
+    name: u.name,
+    role: u.role,
+    employeeId: u.employeeid || u.employeeId
 });
 
 export const mapPriceFromDb = (item: any): PriceItem => ({
