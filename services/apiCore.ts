@@ -102,7 +102,7 @@ export const logError = (context: string, error: any) => {
     } else if (code === 'PGRST204') {
          console.error(`❌ Lỗi tại ${context}: Cột không tồn tại (Lỗi PGRST204).`);
          // Cập nhật thông báo lỗi hướng dẫn cụ thể SQL
-         alert(`LỖI CẤU TRÚC DATABASE (Thiếu cột):\nDatabase trên Cloud đang thiếu các cột mới (Thanh lý hợp đồng).\n\nVui lòng vào SQL Editor trên Supabase và chạy lệnh sau:\n\nALTER TABLE contracts ADD COLUMN liquidation_area numeric;\nALTER TABLE contracts ADD COLUMN liquidation_amount numeric;`);
+         alert(`LỖI CẤU TRÚC DATABASE (Thiếu cột):\nDatabase trên Cloud đang thiếu các cột mới.\n\nVui lòng vào SQL Editor trên Supabase và chạy lệnh sau:\n\nALTER TABLE land_records ADD COLUMN issueNumber text;\nALTER TABLE land_records ADD COLUMN entryNumber text;\nALTER TABLE land_records ADD COLUMN issueDate date;\nALTER TABLE land_records ADD COLUMN residentialArea numeric;`);
     } else if (code === '406') {
          console.warn(`⚠️ [Info] ${context}: Không tìm thấy dữ liệu (406).`);
     } else if (code === '22007' || code === '22008') {
