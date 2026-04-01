@@ -201,7 +201,7 @@ const SystemReceiptTemplate: React.FC<SystemReceiptTemplateProps> = ({ data, onC
                         </div>
 
                         {/* Signatures */}
-                        <div className="flex justify-between mt-8 text-center mb-24">
+                        <div className="flex justify-between mt-8 text-center">
                             <div className="w-1/2">
                                 <div className="font-bold">NGƯỜI NỘP HỒ SƠ</div>
                                 <div className="italic">(Ký và ghi rõ họ tên)</div>
@@ -211,6 +211,9 @@ const SystemReceiptTemplate: React.FC<SystemReceiptTemplateProps> = ({ data, onC
                                 <div className="italic">(Ký và ghi rõ họ tên)</div>
                             </div>
                         </div>
+
+                        {/* Spacer for signatures to ensure it shows in print */}
+                        <div style={{ height: '120px' }}></div>
 
                         {/* Footer */}
                         <div className="pt-4 border-t border-gray-400">
