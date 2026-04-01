@@ -7,6 +7,7 @@
   "description": "Phan mem quan ly ho so dia chinh",
   "scripts": {
     "dev": "concurrently \"vite\" \"npm run electron:dev\"",
+    "start": "tsx server.ts",
     "server": "node server/index.js",
     "build": "tsc && vite build",
     "lint": "tsc --noEmit",
@@ -18,11 +19,13 @@
     "@google/genai": "^1.0.0",
     "@supabase/supabase-js": "^2.39.7",
     "buffer": "^6.0.3",
+    "cors": "^2.8.6",
     "docx": "^9.6.0",
     "docx-preview": "^0.3.2",
     "docxtemplater": "^3.46.0",
     "electron-log": "^5.1.0",
     "electron-updater": "^6.1.7",
+    "express": "^5.2.1",
     "file-saver": "^2.0.5",
     "json-server": "^0.17.4",
     "jszip": "^3.10.1",
@@ -34,6 +37,8 @@
     "react-dom": "^18.2.0",
     "react-image-crop": "^11.0.5",
     "recharts": "^2.12.2",
+    "tsx": "^4.21.0",
+    "vite": "^5.1.4",
     "xlsx-js-style": "^1.2.0"
   },
   "devDependencies": {
@@ -46,15 +51,11 @@
     "@vitejs/plugin-react": "^4.2.1",
     "autoprefixer": "^10.4.18",
     "concurrently": "^8.2.2",
-    "cors": "^2.8.6",
     "electron": "^29.1.0",
     "electron-builder": "^24.13.3",
-    "express": "^5.2.1",
     "postcss": "^8.4.35",
     "tailwindcss": "^3.4.1",
-    "tsx": "^4.21.0",
     "typescript": "^5.2.2",
-    "vite": "^5.1.4",
     "wait-on": "^7.2.0"
   },
   "build": {

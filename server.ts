@@ -11,7 +11,18 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const server = jsonServer.create();
-const dbFile = process.env.DB_PATH || path.join(__dirname, 'server/db.json');
+let dbFile = process.env.DB_PATH || path.join(__dirname, 'server/db.json');
+
+// In production (Cloud Run), the filesystem is read-only except for /tmp
+if (process.env.NODE_ENV === 'production') {
+    dbFile = '/tmp/db.json';
+    // Copy initial db.json to /tmp if it doesn't exist
+    const initialDbFile = path.join(__dirname, 'server/db.json');
+    if (!fs.existsSync(dbFile) && fs.existsSync(initialDbFile)) {
+        fs.copyFileSync(initialDbFile, dbFile);
+    }
+}
+
 const router = jsonServer.router(dbFile);
 const middlewares = jsonServer.defaults();
 
@@ -172,6 +183,15 @@ const startServer = async () => {
     } else {
         const distPath = path.join(__dirname, 'dist');
         server.use(express.static(distPath));
+        
+        // SPA fallback for HTML requests
+        server.use((req: Request, res: Response, next: NextFunction) => {
+            if (req.method === 'GET' && req.headers.accept?.includes('text/html')) {
+                res.sendFile(path.join(distPath, 'index.html'));
+            } else {
+                next();
+            }
+        });
     }
 
     // Use router AFTER custom routes and Vite middleware (for API fallback)

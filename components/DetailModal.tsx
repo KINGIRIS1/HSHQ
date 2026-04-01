@@ -7,6 +7,7 @@ import { X, MapPin, FileText, User as UserIcon, Receipt, DollarSign, CheckCircle
 import { generateDocxBlobAsync, hasTemplate, STORAGE_KEYS } from '../services/docxService';
 import DocxPreviewModal from './DocxPreviewModal';
 import { updateRecordApi, fetchContracts } from '../services/api';
+import SystemReceiptTemplate from './receive-record/SystemReceiptTemplate';
 
 interface DetailModalProps {
   isOpen: boolean;
@@ -24,6 +25,7 @@ export const DetailModal: React.FC<DetailModalProps> = ({ isOpen, onClose, recor
   const [previewBlob, setPreviewBlob] = useState<Blob | null>(null);
   const [previewFileName, setPreviewFileName] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [systemReceiptData, setSystemReceiptData] = useState<Partial<RecordFile> | null>(null);
   
   // State cho Ghi chú cá nhân
   const [personalNote, setPersonalNote] = useState('');
@@ -171,7 +173,7 @@ export const DetailModal: React.FC<DetailModalProps> = ({ isOpen, onClose, recor
     if (!currentUser) return;
     
     if (!hasTemplate(STORAGE_KEYS.RECEIPT_TEMPLATE)) {
-        alert('Chưa có mẫu biên nhận. Vui lòng vào mục "Tiếp nhận hồ sơ" để cấu hình mẫu in trước.');
+        setSystemReceiptData(record);
         return;
     }
 
@@ -726,6 +728,12 @@ export const DetailModal: React.FC<DetailModalProps> = ({ isOpen, onClose, recor
             docxBlob={previewBlob}
             fileName={previewFileName}
         />
+        {systemReceiptData && (
+            <SystemReceiptTemplate 
+                data={systemReceiptData} 
+                onClose={() => setSystemReceiptData(null)} 
+            />
+        )}
       </div>
     </div>
   );

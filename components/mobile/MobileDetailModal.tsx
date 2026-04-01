@@ -13,6 +13,7 @@ import {
 import { generateDocxBlobAsync, hasTemplate, STORAGE_KEYS } from '../../services/docxService';
 import DocxPreviewModal from '../DocxPreviewModal';
 import { updateRecordApi, fetchContracts } from '../../services/api';
+import SystemReceiptTemplate from '../receive-record/SystemReceiptTemplate';
 
 interface MobileDetailModalProps {
   isOpen: boolean;
@@ -32,6 +33,7 @@ export const MobileDetailModal: React.FC<MobileDetailModalProps> = ({
   const [previewBlob, setPreviewBlob] = useState<Blob | null>(null);
   const [previewFileName, setPreviewFileName] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [systemReceiptData, setSystemReceiptData] = useState<Partial<RecordFile> | null>(null);
   
   const [personalNote, setPersonalNote] = useState('');
   const [isSavingNote, setIsSavingNote] = useState(false);
@@ -121,8 +123,9 @@ export const MobileDetailModal: React.FC<MobileDetailModalProps> = ({
   };
 
   const handlePrintReceipt = async () => {
-    if (!currentUser || !hasTemplate(STORAGE_KEYS.RECEIPT_TEMPLATE)) {
-      alert('Chưa có mẫu biên nhận.');
+    if (!currentUser) return;
+    if (!hasTemplate(STORAGE_KEYS.RECEIPT_TEMPLATE)) {
+      setSystemReceiptData(record);
       return;
     }
     setIsProcessing(true);
@@ -593,6 +596,12 @@ export const MobileDetailModal: React.FC<MobileDetailModalProps> = ({
         docxBlob={previewBlob}
         fileName={previewFileName}
       />
+      {systemReceiptData && (
+        <SystemReceiptTemplate 
+            data={systemReceiptData} 
+            onClose={() => setSystemReceiptData(null)} 
+        />
+      )}
     </div>
   );
 };
