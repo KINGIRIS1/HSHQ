@@ -599,6 +599,7 @@ export const MobileDetailModal: React.FC<MobileDetailModalProps> = ({
       {systemReceiptData && (
         <SystemReceiptTemplate 
             data={systemReceiptData} 
+            receivingWard={employees.find(e => e.id === currentUser?.employeeId)?.managedWards?.[0] || 'Tân Khai'}
             onClose={() => setSystemReceiptData(null)} 
         />
       )}

@@ -6,10 +6,11 @@ import { Printer } from 'lucide-react';
 
 interface SystemReceiptTemplateProps {
     data: Partial<RecordFile>;
+    receivingWard: string;
     onClose: () => void;
 }
 
-const SystemReceiptTemplate: React.FC<SystemReceiptTemplateProps> = ({ data, onClose }) => {
+const SystemReceiptTemplate: React.FC<SystemReceiptTemplateProps> = ({ data, receivingWard, onClose }) => {
     const printRef = useRef<HTMLDivElement>(null);
 
     const handlePrint = () => {
@@ -117,7 +118,7 @@ const SystemReceiptTemplate: React.FC<SystemReceiptTemplateProps> = ({ data, onC
                                 <div className="font-bold text-[15px]">VĂN PHÒNG ĐKĐĐ TỈNH ĐỒNG NAI</div>
                                 <div className="font-bold text-[16px]">CHI NHÁNH HỚN QUẢN</div>
                                 <div className="text-[14px]">TRUNG TÂM PHỤC VỤ HÀNH CHÍNH CÔNG</div>
-                                <div className="text-[14px] font-bold">XÃ TÂN HƯNG</div>
+                                <div className="text-[14px] font-bold">XÃ {getNormalizedWard(receivingWard).toUpperCase()}</div>
                                 
                                 {data.code && (
                                     <div className="mt-2 text-center" style={{ display: 'block' }}>
@@ -131,7 +132,7 @@ const SystemReceiptTemplate: React.FC<SystemReceiptTemplateProps> = ({ data, onC
                             <div className="text-center" style={{ width: '50%' }}>
                                 <div className="font-bold text-[15px]">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</div>
                                 <div className="font-bold underline mb-2">Độc lập - Tự do - Hạnh phúc</div>
-                                <div className="italic mt-4">Tân Hưng, {formatDateOnly(new Date())}</div>
+                                <div className="italic mt-4">{getNormalizedWard(receivingWard)}, {formatDateOnly(new Date())}</div>
                             </div>
                         </div>
 
@@ -151,7 +152,7 @@ const SystemReceiptTemplate: React.FC<SystemReceiptTemplateProps> = ({ data, onC
                                 <div className="w-1/2">Thửa: {data.landPlot}</div>
                                 <div className="w-1/2">Tờ: {data.mapSheet}</div>
                             </div>
-                            <div>Địa chỉ thửa đất: {data.address || ''} (theo thông tin trên GCN)</div>
+                            <div>Địa chỉ thửa đất: {data.ward || ''}</div>
                             <div>Thủ tục hành chính cần giải quyết: <span className="font-bold">{data.recordType}</span></div>
                             
                             <div>1. Thành phần hồ sơ, yêu cầu và số lượng mỗi loại giấy tờ gồm:</div>
@@ -195,7 +196,7 @@ const SystemReceiptTemplate: React.FC<SystemReceiptTemplateProps> = ({ data, onC
                             <div>2. Số lượng hồ sơ: 01 (bộ)</div>
                             <div>3. Thời gian nhận hồ sơ: <span className="font-bold">{formatDateTime(rDate)}</span></div>
                             <div>4. Thời gian trả kết quả giải quyết hồ sơ: <span className="font-bold">{formatDateTime(dDate)}</span></div>
-                            <div>5. Đăng ký trả kết quả tại: Trung tâm phục vụ hành chính công xã Tân Hưng</div>
+                            <div>5. Đăng ký trả kết quả tại: Trung tâm phục vụ hành chính công xã {getNormalizedWard(receivingWard)}</div>
                             <div>6. Phí, lệ phí (nếu có): <span className="font-bold">Chưa thanh toán</span></div>
                             <div>Vào sổ theo dõi hồ sơ, Quyển số: .................... Số thứ tự:............(nếu có)</div>
                         </div>

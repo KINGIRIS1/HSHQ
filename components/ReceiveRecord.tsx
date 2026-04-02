@@ -433,6 +433,7 @@ const ReceiveRecord: React.FC<ReceiveRecordProps> = ({ onSave, onDelete, wards, 
       {systemReceiptData && (
           <SystemReceiptTemplate 
               data={systemReceiptData} 
+              receivingWard={employees.find(e => e.id === currentUser.employeeId)?.managedWards?.[0] || 'Tân Khai'}
               onClose={() => setSystemReceiptData(null)} 
           />
       )}
