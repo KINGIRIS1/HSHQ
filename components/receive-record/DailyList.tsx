@@ -9,6 +9,7 @@ interface DailyListProps {
   records: RecordFile[];
   wards: string[];
   currentUser: any;
+  employees?: any[];
   onPreviewExcel: (wb: XLSX.WorkBook, name: string) => void;
   // New Handlers
   onEdit: (record: RecordFile) => void;
@@ -40,7 +41,7 @@ const getShortCode = (ward: string) => {
     return 'CT'; // Mặc định
 };
 
-const DailyList: React.FC<DailyListProps> = ({ records, wards, onPreviewExcel, onEdit, onDelete, onPrint }) => {
+const DailyList: React.FC<DailyListProps> = ({ records, wards, currentUser, employees, onPreviewExcel, onEdit, onDelete, onPrint }) => {
   const [filterDate, setFilterDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [filterWard, setFilterWard] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -51,6 +52,15 @@ const DailyList: React.FC<DailyListProps> = ({ records, wards, onPreviewExcel, o
       
       // Lọc danh sách
       const list = records.filter(r => {
+          // 0. Lọc theo quyền ONEDOOR
+          if (currentUser?.role === 'ONEDOOR') {
+              const emp = employees?.find(e => e.id === currentUser.employeeId);
+              const managedWards = emp?.managedWards || [];
+              if (r.ward && !managedWards.includes(r.ward)) {
+                  return false;
+              }
+          }
+
           // 1. Lọc theo ngày nhận
           if (r.receivedDate !== filterDate) return false;
           
@@ -275,9 +285,11 @@ const DailyList: React.FC<DailyListProps> = ({ records, wards, onPreviewExcel, o
                                             <button onClick={() => onPrint(r)} className="p-1.5 text-purple-600 hover:bg-purple-100 rounded transition-colors" title="In biên nhận">
                                                 <Printer size={16} />
                                             </button>
-                                            <button onClick={() => onDelete(r)} className="p-1.5 text-red-500 hover:bg-red-100 rounded transition-colors" title="Xóa">
-                                                <Trash2 size={16} />
-                                            </button>
+                                            {(currentUser?.role === 'ADMIN' || currentUser?.role === 'SUBADMIN') && (
+                                                <button onClick={() => onDelete(r)} className="p-1.5 text-red-500 hover:bg-red-100 rounded transition-colors" title="Xóa">
+                                                    <Trash2 size={16} />
+                                                </button>
+                                            )}
                                         </div>
                                     </td>
                                 </tr>

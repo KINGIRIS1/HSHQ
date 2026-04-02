@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { RecordFile, RecordStatus, Employee, User, UserRole, Message } from './types';
 import { DEFAULT_WARDS as STATIC_WARDS } from './constants';
 import Login from './components/Login'; 
@@ -106,12 +106,21 @@ function App() {
 
   // --- CUSTOM HOOKS ---
   const { 
-      records, employees, users, wards, holidays, rolePermissions, connectionStatus, 
+      records: rawRecords, employees, users, wards, holidays, rolePermissions, connectionStatus, 
       isUpdateAvailable, latestVersion, updateUrl,
       setEmployees, setUsers, setRecords, setWards,
       loadData, handleAddOrUpdateRecord, handleDeleteRecord, handleImportRecords,
       handleSaveEmployee, handleDeleteEmployee, handleDeleteAllData, handleUpdateUser, handleDeleteUser
   } = useAppData(currentUser);
+
+  const records = useMemo(() => {
+      if (currentUser?.role === UserRole.ONEDOOR) {
+          const emp = employees.find(e => e.id === currentUser.employeeId);
+          const managedWards = emp?.managedWards || [];
+          return rawRecords.filter(r => r.ward && managedWards.includes(r.ward));
+      }
+      return rawRecords;
+  }, [rawRecords, currentUser, employees]);
 
   // Reminder System
   const handleUpdateRecordState = useCallback((updatedRecord: RecordFile) => {

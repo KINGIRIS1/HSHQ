@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { RecordFile, Contract, PriceItem, SplitItem, User } from '../types';
+import { RecordFile, Contract, PriceItem, SplitItem, User, Employee } from '../types';
 import { fetchPriceList, deleteContractApi, updateContractApi, createContractApi, fetchContracts } from '../services/api';
 import { FileSignature, LayoutList, Settings, Settings2, FileCheck, FileText, ClipboardList } from 'lucide-react';
 import PriceConfigModal from './PriceConfigModal';
@@ -18,6 +18,7 @@ interface ReceiveContractProps {
   onSave: (record: RecordFile) => Promise<boolean>; 
   wards: string[];
   currentUser: User;
+  employees: Employee[];
   records: RecordFile[]; 
   // New props for handling external liquidation request
   recordToLiquidate: RecordFile | null;
@@ -58,7 +59,7 @@ function _nd(s: string): string {
     return String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim();
 }
 
-const ReceiveContract: React.FC<ReceiveContractProps> = ({ wards, currentUser, records, recordToLiquidate, onClearRecordToLiquidate }) => {
+const ReceiveContract: React.FC<ReceiveContractProps> = ({ wards, currentUser, employees, records, recordToLiquidate, onClearRecordToLiquidate }) => {
   // Thay đổi: activeModule giờ bao gồm cả 'list' và 'liquidation_list'
   const [activeModule, setActiveModule] = useState<'contract' | 'liquidation' | 'list' | 'liquidation_list'>('list'); 
   const [priceList, setPriceList] = useState<PriceItem[]>([]);
@@ -544,6 +545,8 @@ const ReceiveContract: React.FC<ReceiveContractProps> = ({ wards, currentUser, r
                     onPrint={handlePreviewDocx} 
                     onCreateLiquidation={handleCreateLiquidation} // Nút tạo thanh lý từ danh sách
                     viewMode='contract'
+                    currentUser={currentUser}
+                    employees={employees}
                 />
             )}
 
@@ -554,6 +557,8 @@ const ReceiveContract: React.FC<ReceiveContractProps> = ({ wards, currentUser, r
                     onPrint={handlePreviewDocx} 
                     onCreateLiquidation={handleCreateLiquidation}
                     viewMode='liquidation'
+                    currentUser={currentUser}
+                    employees={employees}
                 />
             )}
         </div>

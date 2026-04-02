@@ -412,6 +412,7 @@ const AppRoutes: React.FC<AppRoutesProps> = (props) => {
                                     visibleColumns={props.visibleColumns} 
                                     isSelected={props.selectedRecordIds.has(r.id)} 
                                     canPerformAction={canPerformAction} 
+                                    currentUser={currentUser}
                                     onToggleSelect={props.toggleSelectRecord} 
                                     onView={props.handleViewRecord} 
                                     onEdit={(rec) => { props.setEditingRecord(rec); props.setIsModalOpen(true); }} 
@@ -502,6 +503,7 @@ const AppRoutes: React.FC<AppRoutesProps> = (props) => {
                     onSave={(r) => props.handleAddOrUpdateRecord(r)}
                     wards={wards}
                     currentUser={currentUser}
+                    employees={employees}
                     records={records}
                     recordToLiquidate={props.recordToLiquidate}
                     onClearRecordToLiquidate={() => props.setRecordToLiquidate(null)}

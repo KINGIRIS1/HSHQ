@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Contract } from '../../types';
+import { Contract, User, Employee, UserRole } from '../../types';
 import { fetchContracts } from '../../services/api';
 import { Search, RotateCcw, Edit, Printer, FileCheck, Trash2, Loader2, DollarSign, ExternalLink } from 'lucide-react';
 import { confirmAction } from '../../utils/appHelpers';
@@ -11,9 +11,11 @@ interface ContractListProps {
   onPrint: (c: Contract, type: 'contract' | 'liquidation') => void;
   onCreateLiquidation: (c: Contract) => void;
   viewMode: 'contract' | 'liquidation'; // Prop mới
+  currentUser: User;
+  employees: Employee[];
 }
 
-const ContractList: React.FC<ContractListProps> = ({ onEdit, onDelete, onPrint, onCreateLiquidation, viewMode }) => {
+const ContractList: React.FC<ContractListProps> = ({ onEdit, onDelete, onPrint, onCreateLiquidation, viewMode, currentUser, employees }) => {
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(false);
@@ -29,6 +31,14 @@ const ContractList: React.FC<ContractListProps> = ({ onEdit, onDelete, onPrint, 
 
   const filtered = useMemo(() => {
       let list = contracts;
+      
+      // Lọc theo quyền ONEDOOR
+      if (currentUser?.role === UserRole.ONEDOOR) {
+          const emp = employees?.find(e => e.id === currentUser.employeeId);
+          const managedWards = emp?.managedWards || [];
+          list = list.filter(c => c.ward && managedWards.includes(c.ward));
+      }
+
       // Nếu ở chế độ danh sách thanh lý, có thể lọc những HĐ đã thanh lý nếu muốn
       // Nhưng thường user muốn xem hết. Ở đây ta lọc cơ bản.
       
@@ -129,7 +139,9 @@ const ContractList: React.FC<ContractListProps> = ({ onEdit, onDelete, onPrint, 
                                             </>
                                         )}
                                         
-                                        <button onClick={async () => { if(await confirmAction('Xóa hợp đồng này?')) { onDelete(c.id); } }} className="p-1.5 text-red-500 hover:bg-red-100 rounded transition-colors" title="Xóa"><Trash2 size={16} /></button>
+                                        {(currentUser?.role === UserRole.ADMIN || currentUser?.role === UserRole.SUBADMIN) && (
+                                            <button onClick={async () => { if(await confirmAction('Xóa hợp đồng này?')) { onDelete(c.id); } }} className="p-1.5 text-red-500 hover:bg-red-100 rounded transition-colors" title="Xóa"><Trash2 size={16} /></button>
+                                        )}
                                     </div>
                                 </td>
                             </tr>
