@@ -149,8 +149,8 @@ const SystemReceiptTemplate: React.FC<SystemReceiptTemplateProps> = ({ data, rec
                             <div>Địa chỉ: {data.customerAddress || ''}</div>
                             <div>Số điện thoại: {data.phoneNumber}</div>
                             <div className="flex">
-                                <div className="w-1/2">Thửa: {data.landPlot}</div>
-                                <div className="w-1/2">Tờ: {data.mapSheet}</div>
+                                <div style={{ width: '50%' }}>Thửa: {data.landPlot}</div>
+                                <div style={{ width: '50%' }}>Tờ: {data.mapSheet}</div>
                             </div>
                             <div>Địa chỉ thửa đất: {data.ward || ''}</div>
                             <div>Thủ tục hành chính cần giải quyết: <span className="font-bold">{data.recordType}</span></div>

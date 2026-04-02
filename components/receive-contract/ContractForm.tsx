@@ -338,6 +338,10 @@ const ContractForm: React.FC<ContractFormProps> = ({ initialData, onSave, onPrin
       if (success) {
           const msg = initialData ? 'Cập nhật thành công!' : 'Đã tạo mới thành công!';
           setNotification({ type: 'success', message: msg });
+          
+          // Tự động in sau khi lưu thành công
+          handlePrintClick(mode);
+
           if (!initialData) handleReset(true); 
       } else {
           setNotification({ type: 'error', message: 'Lỗi khi lưu. Vui lòng thử lại.' });
@@ -709,22 +713,10 @@ const ContractForm: React.FC<ContractFormProps> = ({ initialData, onSave, onPrin
                     </div>
 
                     {/* ACTION BUTTONS */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
-                        <div className="flex gap-2">
-                            {mode === 'contract' ? (
-                                <button type="button" onClick={() => handlePrintClick('contract')} className="flex-1 px-4 py-3 bg-white text-indigo-700 rounded-xl font-bold hover:bg-indigo-50 flex items-center justify-center gap-2 shadow-sm transition-all border border-indigo-200">
-                                    <ExternalLink size={18} /> Mở Hợp đồng
-                                </button>
-                            ) : (
-                                <button type="button" onClick={() => handlePrintClick('liquidation')} className="flex-1 px-4 py-3 bg-white text-green-700 rounded-xl font-bold hover:bg-green-50 flex items-center justify-center gap-2 shadow-sm transition-all border border-green-200">
-                                    <ExternalLink size={18} /> Mở Thanh lý
-                                </button>
-                            )}
-                        </div>
-                        
+                    <div className="grid grid-cols-1 gap-3 pt-2">
                         <div className="flex gap-2">
                             <button type="submit" disabled={loading} className={`flex-1 text-white py-3 rounded-xl font-bold text-lg shadow-lg transition-all active:scale-95 disabled:opacity-70 flex items-center justify-center gap-2 ${isLiquidationMode ? 'bg-orange-600 hover:bg-orange-700 shadow-orange-500/30' : 'bg-purple-600 hover:bg-purple-700 shadow-purple-500/30'}`}>
-                                <Save size={20} /> {loading ? 'Đang xử lý...' : (initialData ? (isLiquidationMode ? 'LƯU THANH LÝ' : 'CẬP NHẬT HỢP ĐỒNG') : 'LƯU HỢP ĐỒNG')}
+                                <Save size={20} /> {loading ? 'Đang xử lý...' : (initialData ? (isLiquidationMode ? 'CẬP NHẬT VÀ IN THANH LÝ' : 'CẬP NHẬT VÀ IN HỢP ĐỒNG') : (isLiquidationMode ? 'LƯU VÀ IN THANH LÝ' : 'LƯU VÀ IN HỢP ĐỒNG'))}
                             </button>
                             <button type="button" onClick={() => handleReset(false)} className="px-4 py-3 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 transition-colors shadow-sm font-bold border border-slate-200" title="Làm mới form">
                                 {initialData ? <X size={20} className="text-red-500" /> : <RotateCcw size={20} />}
