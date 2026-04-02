@@ -64,7 +64,7 @@ const SystemReceiptTemplate: React.FC<SystemReceiptTemplateProps> = ({ data, rec
             setTimeout(() => {
                 printWindow.print();
                 printWindow.close();
-            }, 500);
+            }, 1500);
         }
     };
 
