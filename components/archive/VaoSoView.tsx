@@ -174,7 +174,6 @@ const VaoSoView: React.FC<VaoSoViewProps> = ({ currentUser, wards }) => {
             data: {
                 so_vao_so: '',
                 ma_ho_so: '',
-                ten_chuyen_quyen: '',
                 ten_chu_su_dung: '',
                 loai_bien_dong: '',
                 loai_gcn: 'GCN mới',
@@ -318,7 +317,6 @@ const VaoSoView: React.FC<VaoSoViewProps> = ({ currentUser, wards }) => {
                 const colMap = {
                     so_vao_so: findCol(['số vào sổ', 'svs', 'số vào']),
                     ma_ho_so: findCol(['mã hồ sơ', 'mã hs', 'số hồ sơ']),
-                    ten_chuyen_quyen: findCol(['chuyển quyền', 'chuyển nhượng', 'bên a', 'bên chuyển', 'người chuyển', 'chủ cũ']),
                     ten_chu_su_dung: tenChuSuDungIdx,
                     loai_bien_dong: findCol(['biến động', 'loại hồ sơ', 'nội dung']),
                     loai_gcn: findCol(['loại gcn', 'gcn']),
@@ -354,7 +352,6 @@ const VaoSoView: React.FC<VaoSoViewProps> = ({ currentUser, wards }) => {
                     const recordData = {
                         so_vao_so: getValue(colMap.so_vao_so),
                         ma_ho_so: getValue(colMap.ma_ho_so),
-                        ten_chuyen_quyen: getValue(colMap.ten_chuyen_quyen),
                         ten_chu_su_dung: getValue(colMap.ten_chu_su_dung),
                         loai_bien_dong: getValue(colMap.loai_bien_dong),
                         loai_gcn: getValue(colMap.loai_gcn) || 'GCN mới',
@@ -471,7 +468,6 @@ const VaoSoView: React.FC<VaoSoViewProps> = ({ currentUser, wards }) => {
                 'STT': idx + 1,
                 'Số vào sổ': r.data?.so_vao_so,
                 'Mã hồ sơ': r.data?.ma_ho_so,
-                'Tên chuyển quyền': r.data?.ten_chuyen_quyen,
                 'Tên chủ sử dụng': r.data?.ten_chu_su_dung,
                 'Loại biến động': r.data?.loai_bien_dong,
                 'Loại GCN': r.data?.loai_gcn,
@@ -497,6 +493,123 @@ const VaoSoView: React.FC<VaoSoViewProps> = ({ currentUser, wards }) => {
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "DanhSach");
         XLSX.writeFile(wb, `VaoSo_${activeTab}_${new Date().toISOString().split('T')[0]}.xlsx`);
+    };
+
+    const renderMultiInput = (value: string, onChange: (val: string) => void, onBlur: () => void, placeholder: string) => {
+        const items = value ? value.split('\n') : [''];
+        return (
+            <div className="flex flex-col gap-1 w-full">
+                {items.map((item, index) => (
+                    <div key={index} className="flex items-center gap-1 w-full">
+                        <input
+                            type="text"
+                            className="flex-1 min-w-0 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-teal-500 outline-none"
+                            value={item}
+                            placeholder={placeholder}
+                            onChange={(e) => {
+                                const newItems = [...items];
+                                newItems[index] = e.target.value;
+                                onChange(newItems.join('\n'));
+                            }}
+                            onBlur={onBlur}
+                        />
+                        {items.length > 1 && (
+                            <button
+                                onClick={() => {
+                                    const newItems = items.filter((_, i) => i !== index);
+                                    onChange(newItems.join('\n'));
+                                    setTimeout(onBlur, 0);
+                                }}
+                                className="text-red-500 hover:text-red-700 p-1"
+                            >
+                                <X size={14} />
+                            </button>
+                        )}
+                    </div>
+                ))}
+                <button
+                    onClick={() => {
+                        onChange([...items, ''].join('\n'));
+                        setTimeout(onBlur, 0);
+                    }}
+                    className="text-xs text-teal-600 hover:text-teal-800 flex items-center gap-1 self-start mt-1 bg-teal-50 px-2 py-1 rounded"
+                >
+                    <Plus size={12} /> Thêm mới
+                </button>
+            </div>
+        );
+    };
+
+    const renderOwnerInput = (value: string, onChange: (val: string) => void, onBlur: () => void) => {
+        const items = value ? value.split('\n') : [''];
+        return (
+            <div className="flex flex-col gap-2 w-full">
+                {items.map((item, index) => {
+                    // Parse "Name CCCD: 123" or similar format
+                    let name = item;
+                    let cccd = '';
+                    const cccdMatch = item.match(/^(.*?)\s+CCCD:\s*(.*)$/);
+                    if (cccdMatch) {
+                        name = cccdMatch[1];
+                        cccd = cccdMatch[2];
+                    }
+
+                    return (
+                        <div key={index} className="flex flex-col gap-1 w-full border border-gray-200 p-1.5 rounded bg-gray-50">
+                            <div className="flex items-center gap-1 w-full">
+                                <input
+                                    type="text"
+                                    className="flex-1 min-w-0 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-teal-500 outline-none"
+                                    value={name}
+                                    placeholder="Tên chủ sử dụng (VD: ông: Nguyễn Văn A)"
+                                    onChange={(e) => {
+                                        const newItems = [...items];
+                                        newItems[index] = cccd ? `${e.target.value} CCCD: ${cccd}` : e.target.value;
+                                        onChange(newItems.join('\n'));
+                                    }}
+                                    onBlur={onBlur}
+                                />
+                                {items.length > 1 && (
+                                    <button
+                                        onClick={() => {
+                                            const newItems = items.filter((_, i) => i !== index);
+                                            onChange(newItems.join('\n'));
+                                            setTimeout(onBlur, 0);
+                                        }}
+                                        className="text-red-500 hover:text-red-700 p-1"
+                                    >
+                                        <X size={14} />
+                                    </button>
+                                )}
+                            </div>
+                            <div className="flex items-center gap-1 w-full">
+                                <input
+                                    type="text"
+                                    className="flex-1 min-w-0 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-teal-500 outline-none"
+                                    value={cccd}
+                                    placeholder="Số CCCD"
+                                    onChange={(e) => {
+                                        const newItems = [...items];
+                                        newItems[index] = e.target.value ? `${name} CCCD: ${e.target.value}` : name;
+                                        onChange(newItems.join('\n'));
+                                    }}
+                                    onBlur={onBlur}
+                                />
+                            </div>
+                        </div>
+                    );
+                })}
+                <button
+                    onClick={() => {
+                        onChange([...items, ''].join('\n'));
+                        setTimeout(onBlur, 0);
+                    }}
+                    className="text-xs text-teal-600 hover:text-teal-800 flex items-center gap-1 self-start mt-1 bg-teal-50 px-2 py-1 rounded"
+                >
+                    <Plus size={12} /> Thêm chủ sử dụng
+                </button>
+            </div>
+        );
     };
 
     return (
@@ -671,10 +784,12 @@ const VaoSoView: React.FC<VaoSoViewProps> = ({ currentUser, wards }) => {
                                                 return (
                                                     <td key={`${r.id}-${col.key}`} className="p-2 border-r border-gray-200 align-top">
                                                         <div className="flex flex-col gap-1">
-                                                            <div className="text-xs text-gray-500">Chuyển quyền:</div>
-                                                            <div className="text-sm font-medium text-gray-800 mb-2 whitespace-pre-wrap">{r.data?.ten_chuyen_quyen}</div>
-                                                            <div className="text-xs text-teal-600 font-bold border-t border-gray-100 pt-1">Chủ sử dụng:</div>
-                                                            <div className="text-sm font-bold text-teal-800 whitespace-pre-wrap">{r.data?.ten_chu_su_dung}</div>
+                                                            <div className="text-xs text-teal-600 font-bold mb-1">Chủ sử dụng:</div>
+                                                            {isEditing ? (
+                                                                renderOwnerInput(r.data?.ten_chu_su_dung || '', (val) => handleCellChange(r.id, 'ten_chu_su_dung', val), () => handleBlur(r))
+                                                            ) : (
+                                                                <div className="text-sm font-bold text-teal-800 whitespace-pre-wrap">{r.data?.ten_chu_su_dung}</div>
+                                                            )}
                                                         </div>
                                                     </td>
                                                 );
@@ -683,28 +798,75 @@ const VaoSoView: React.FC<VaoSoViewProps> = ({ currentUser, wards }) => {
                                                 return (
                                                     <td key={`${r.id}-${col.key}`} className="p-2 border-r border-gray-200 align-top">
                                                         <div className="text-xs text-gray-500 mb-0.5">Loại hồ sơ:</div>
-                                                        <div className="text-sm font-medium text-blue-700 mb-2 whitespace-pre-wrap leading-tight">{r.data?.loai_bien_dong}</div>
+                                                        {isEditing ? (
+                                                            <input
+                                                                type="text"
+                                                                className="w-full px-2 py-1 text-sm border border-gray-300 rounded mb-2 focus:ring-2 focus:ring-teal-500 outline-none"
+                                                                value={r.data?.loai_bien_dong || ''}
+                                                                onChange={(e) => handleCellChange(r.id, 'loai_bien_dong', e.target.value)}
+                                                                onBlur={() => handleBlur(r)}
+                                                            />
+                                                        ) : (
+                                                            <div className="text-sm font-medium text-blue-700 mb-2 whitespace-pre-wrap leading-tight">{r.data?.loai_bien_dong}</div>
+                                                        )}
                                                         <div className="text-xs text-gray-500 mb-0.5">Ngày nhận:</div>
-                                                        <div className="text-sm font-bold text-gray-800 flex items-center gap-1">
-                                                            <Calendar size={14} className="text-gray-400" />
-                                                            {r.data?.ngay_nhan ? new Date(r.data.ngay_nhan).toLocaleDateString('vi-VN') : ''}
-                                                        </div>
+                                                        {isEditing ? (
+                                                            <input
+                                                                type="date"
+                                                                className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-teal-500 outline-none"
+                                                                value={r.data?.ngay_nhan || ''}
+                                                                onChange={(e) => handleCellChange(r.id, 'ngay_nhan', e.target.value)}
+                                                                onBlur={() => handleBlur(r)}
+                                                            />
+                                                        ) : (
+                                                            <div className="text-sm font-bold text-gray-800 flex items-center gap-1">
+                                                                <Calendar size={14} className="text-gray-400" />
+                                                                {r.data?.ngay_nhan ? new Date(r.data.ngay_nhan).toLocaleDateString('vi-VN') : ''}
+                                                            </div>
+                                                        )}
                                                     </td>
                                                 );
                                             }
                                             if (col.key === 'group_thua_dat') {
                                                 return (
                                                     <td key={`${r.id}-${col.key}`} className="p-2 border-r border-gray-200 align-top">
-                                                        <div className="flex items-center gap-2 mb-2">
-                                                            <span className="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded text-xs border border-gray-200 whitespace-nowrap">Tờ: <b>{r.data?.so_to}</b></span>
-                                                            <span className="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded text-xs border border-gray-200 whitespace-nowrap">Thửa: <b>{r.data?.so_thua}</b></span>
-                                                        </div>
-                                                        <div className="text-xs text-gray-600 mb-1">
-                                                            DT: <b>{r.data?.tong_dien_tich ? `${r.data.tong_dien_tich} m²` : ''}</b>
-                                                        </div>
-                                                        <div className="text-xs text-gray-600">
-                                                            Đất ở: <b>{r.data?.dien_tich_tho_cu ? `${r.data.dien_tich_tho_cu} m²` : ''}</b>
-                                                        </div>
+                                                        {isEditing ? (
+                                                            <div className="flex flex-col gap-2">
+                                                                <div className="flex items-center gap-2">
+                                                                    <div className="flex-1">
+                                                                        <div className="text-xs text-gray-500">Tờ bản đồ:</div>
+                                                                        <input type="text" className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-teal-500 outline-none" value={r.data?.so_to || ''} onChange={(e) => handleCellChange(r.id, 'so_to', e.target.value)} onBlur={() => handleBlur(r)} />
+                                                                    </div>
+                                                                    <div className="flex-1">
+                                                                        <div className="text-xs text-gray-500">Số thửa:</div>
+                                                                        <input type="text" className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-teal-500 outline-none" value={r.data?.so_thua || ''} onChange={(e) => handleCellChange(r.id, 'so_thua', e.target.value)} onBlur={() => handleBlur(r)} />
+                                                                    </div>
+                                                                </div>
+                                                                <div className="flex items-center gap-2">
+                                                                    <div className="flex-1">
+                                                                        <div className="text-xs text-gray-500">Tổng DT:</div>
+                                                                        <input type="text" className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-teal-500 outline-none" value={r.data?.tong_dien_tich || ''} onChange={(e) => handleCellChange(r.id, 'tong_dien_tich', e.target.value)} onBlur={() => handleBlur(r)} />
+                                                                    </div>
+                                                                    <div className="flex-1">
+                                                                        <div className="text-xs text-gray-500">Đất ở:</div>
+                                                                        <input type="text" className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-teal-500 outline-none" value={r.data?.dien_tich_tho_cu || ''} onChange={(e) => handleCellChange(r.id, 'dien_tich_tho_cu', e.target.value)} onBlur={() => handleBlur(r)} />
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        ) : (
+                                                            <>
+                                                                <div className="flex items-center gap-2 mb-2">
+                                                                    <span className="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded text-xs border border-gray-200 whitespace-nowrap">Tờ: <b>{r.data?.so_to}</b></span>
+                                                                    <span className="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded text-xs border border-gray-200 whitespace-nowrap">Thửa: <b>{r.data?.so_thua}</b></span>
+                                                                </div>
+                                                                <div className="text-xs text-gray-600 mb-1">
+                                                                    DT: <b>{r.data?.tong_dien_tich ? `${r.data.tong_dien_tich} m²` : ''}</b>
+                                                                </div>
+                                                                <div className="text-xs text-gray-600">
+                                                                    Đất ở: <b>{r.data?.dien_tich_tho_cu ? `${r.data.dien_tich_tho_cu} m²` : ''}</b>
+                                                                </div>
+                                                            </>
+                                                        )}
                                                     </td>
                                                 );
                                             }
@@ -735,7 +897,7 @@ const VaoSoView: React.FC<VaoSoViewProps> = ({ currentUser, wards }) => {
                                                                 </button>
                                                             )}
                                                         </div>
-                                                    ) : (col.key === 'ten_chuyen_quyen' || col.key === 'ten_chu_su_dung') ? (
+                                                    ) : col.key === 'ten_chu_su_dung' ? (
                                                         <textarea
                                                             className="w-full h-full px-2 py-2 text-sm bg-transparent border-none focus:ring-2 focus:ring-inset focus:ring-teal-500 outline-none resize-none whitespace-pre-wrap"
                                                             value={r.data?.[col.key] || ''}

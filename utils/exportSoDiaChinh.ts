@@ -77,16 +77,21 @@ export const generateSoDiaChinhBlob = async (records: ArchiveRecord[], quyenSo: 
             const leftPageNum = leftIndex + 1;
             const rightPageNum = rightIndex + 1;
 
+            const formatNameForTOC = (nameStr: string) => {
+                if (!nameStr) return "";
+                return nameStr.split('\n').map(line => line.replace(/\s+CCCD:.*$/, '')).join(', ');
+            };
+
             tocTableRows.push(
                 new TableRow({
                     children: [
                         createCell(leftRecord ? (leftIndex + 1).toString() : "", 5, false, AlignmentType.CENTER),
-                        createCell(leftRecord?.data?.ten_chu_su_dung || leftRecord?.noi_nhan_gui || "", 25, false, AlignmentType.LEFT),
+                        createCell(formatNameForTOC(leftRecord?.data?.ten_chu_su_dung || leftRecord?.noi_nhan_gui || ""), 25, false, AlignmentType.LEFT),
                         createCell(leftRecord ? quyenSo : "", 10, false, AlignmentType.CENTER),
                         createCell(leftRecord ? leftPageNum.toString() : "", 10, false, AlignmentType.CENTER),
                         
                         createCell(rightRecord ? (rightIndex + 1).toString() : "", 5, false, AlignmentType.CENTER),
-                        createCell(rightRecord?.data?.ten_chu_su_dung || rightRecord?.noi_nhan_gui || "", 25, false, AlignmentType.LEFT),
+                        createCell(formatNameForTOC(rightRecord?.data?.ten_chu_su_dung || rightRecord?.noi_nhan_gui || ""), 25, false, AlignmentType.LEFT),
                         createCell(rightRecord ? quyenSo : "", 10, false, AlignmentType.CENTER),
                         createCell(rightRecord ? rightPageNum.toString() : "", 10, false, AlignmentType.CENTER),
                     ],
@@ -310,10 +315,20 @@ export const generateSoDiaChinhBlob = async (records: ArchiveRecord[], quyenSo: 
                         new TableRow({
                             children: [
                                 new TableCell({
-                                    children: [
-                                        new Paragraph({ children: [new TextRun({ text: `Ông: ${data.ten_chu_su_dung || record.noi_nhan_gui || ""}`, bold: true, size: 22, font: "Arial" })] }),
-                                        new Paragraph({ children: [new TextRun({ text: `CCCD: ${data.cccd || ""}`, size: 22, font: "Arial" })] }),
-                                    ],
+                                    children: (data.ten_chu_su_dung || record.noi_nhan_gui || "").split('\n').map((ownerLine: string) => {
+                                        const cccdMatch = ownerLine.match(/^(.*?)\s+(CCCD:\s*.*)$/);
+                                        if (cccdMatch) {
+                                            return new Paragraph({
+                                                children: [
+                                                    new TextRun({ text: cccdMatch[1] + " ", bold: true, size: 22, font: "Arial" }),
+                                                    new TextRun({ text: cccdMatch[2], bold: false, size: 22, font: "Arial" })
+                                                ]
+                                            });
+                                        }
+                                        return new Paragraph({
+                                            children: [new TextRun({ text: ownerLine, bold: true, size: 22, font: "Arial" })]
+                                        });
+                                    }),
                                     columnSpan: 10,
                                     margins: { top: 100, bottom: 100, left: 100, right: 100 },
                                 }),
@@ -409,7 +424,7 @@ export const generateSoDiaChinhBlob = async (records: ArchiveRecord[], quyenSo: 
                                     verticalAlign: VerticalAlign.CENTER,
                                     children: [
                                         new Paragraph({
-                                            children: [new TextRun({ text: `Nhận ${data.loai_ho_so || "chuyển nhượng"} của ${data.ten_chuyen_quyen || ""}`, size: 22, font: "Arial" })],
+                                            children: [new TextRun({ text: `Nhận ${data.loai_ho_so || "chuyển nhượng"}`, size: 22, font: "Arial" })],
                                             alignment: AlignmentType.LEFT,
                                         }),
                                     ],

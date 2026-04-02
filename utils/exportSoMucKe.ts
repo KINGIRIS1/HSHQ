@@ -45,7 +45,11 @@ export const exportSoMucKe = async (records: ArchiveRecord[], wardName: string, 
         const dataRows = toRecords.map(record => {
             const data = record.data || {};
             const soThua = data.so_thua || "";
-            const tenChuSuDung = data.ten_chu_su_dung || "";
+            const formatNameForSMK = (nameStr: string) => {
+                if (!nameStr) return "";
+                return nameStr.split('\n').map(line => line.replace(/\s+CCCD:.*$/, '')).join(', ');
+            };
+            const tenChuSuDung = formatNameForSMK(data.ten_chu_su_dung || "");
             const maDoiTuong = "GDC"; // Default as per image
 
             const tongDienTich = parseFloat(data.tong_dien_tich || "0");
@@ -64,8 +68,7 @@ export const exportSoMucKe = async (records: ArchiveRecord[], wardName: string, 
             }
 
             const loaiBienDong = data.loai_bien_dong ? data.loai_bien_dong.toLowerCase() : "chuyển nhượng";
-            const tenChuyenQuyen = data.ten_chuyen_quyen || "";
-            const ghiChu = `Thửa đất số ${soThua} Nhận ${loaiBienDong} quyền sử dụng đất của ${tenChuyenQuyen}`;
+            const ghiChu = `Thửa đất số ${soThua} Nhận ${loaiBienDong} quyền sử dụng đất`;
 
             return new TableRow({
                 children: [
