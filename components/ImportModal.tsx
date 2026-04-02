@@ -181,6 +181,15 @@ const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImport, em
             const addressRaw = getVal(['ĐỊA CHỈ', 'ADDRESS']);
             if (addressRaw !== undefined) record.address = String(addressRaw);
 
+            const cccdRaw = getVal(['CCCD', 'CMND']);
+            if (cccdRaw !== undefined) record.cccd = String(cccdRaw);
+
+            const authByRaw = getVal(['NGƯỜI ỦY QUYỀN', 'ỦY QUYỀN']);
+            const authTypeRaw = getVal(['LOẠI ỦY QUYỀN', 'GIẤY ỦY QUYỀN']);
+            if (authByRaw !== undefined || authTypeRaw !== undefined) {
+                record.authDocType = `${authByRaw || ''}|${authTypeRaw || ''}`;
+            }
+
             const wardRaw = getVal(['XÃ', 'PHƯỜNG', 'WARD']);
             if (wardRaw !== undefined) record.ward = String(wardRaw);
 
@@ -193,8 +202,23 @@ const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImport, em
             const areaRaw = getVal(['DIỆN TÍCH', 'AREA']);
             if (areaRaw !== undefined) record.area = parseFloat(String(areaRaw)) || 0;
 
+            const resAreaRaw = getVal(['ĐẤT Ở', 'THỔ CƯ']);
+            if (resAreaRaw !== undefined) record.residentialArea = parseFloat(String(resAreaRaw)) || 0;
+
+            const issueNumRaw = getVal(['SỐ PHÁT HÀNH']);
+            if (issueNumRaw !== undefined) record.issueNumber = String(issueNumRaw);
+
+            const entryNumRaw = getVal(['SỐ VÀO SỔ']);
+            if (entryNumRaw !== undefined) record.entryNumber = String(entryNumRaw);
+
+            const issueDateRaw = getVal(['NGÀY CẤP']);
+            if (issueDateRaw !== undefined) record.issueDate = parseExcelDate(issueDateRaw);
+
             const contentRaw = getVal(['NỘI DUNG', 'GHI CHÚ']);
             if (contentRaw !== undefined) record.content = String(contentRaw);
+
+            const otherDocsRaw = getVal(['GIẤY TỜ KÈM THEO', 'GIẤY TỜ']);
+            if (otherDocsRaw !== undefined) record.otherDocs = String(otherDocsRaw);
 
             // 2. NGÀY THÁNG
             const receivedRaw = getVal(['NGÀY NHẬN', 'NGÀY NỘP']);
@@ -294,11 +318,21 @@ const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImport, em
   };
 
   const handleDownloadTemplate = () => {
-      const wsData = [
-          ['Mã HS', 'Tên chủ sử dụng', 'Xã/Phường', 'SĐT', 'Thửa', 'Tờ', 'Diện tích', 'Loại HS', 'Ngày nhận', 'Ngày hẹn trả', 'Số phát hành', 'Số vào sổ', 'Ngày cấp', 'Khu dân cư', 'Ghi chú'],
-          ['HS001', 'Nguyễn Văn A', 'Tân Khai', '0901234567', '123', '45', '100.5', 'Đo đạc', '2024-01-01', '2024-01-15', 'CD 123456', 'CH 01234', '2024-01-01', '1', 'Ghi chú mẫu']
+      const headers = [
+          'MÃ HỒ SƠ', 'CHỦ SỬ DỤNG', 'CCCD', 'SĐT', 'ĐỊA CHỈ', 'NGƯỜI ỦY QUYỀN', 'LOẠI ỦY QUYỀN', 
+          'XÃ', 'THỬA', 'TỜ', 'DIỆN TÍCH', 'ĐẤT Ở', 'SỐ PHÁT HÀNH', 'SỐ VÀO SỔ', 'NGÀY CẤP', 
+          'LOẠI HỒ SƠ', 'NỘI DUNG', 'GIẤY TỜ KÈM THEO', 'NGÀY NHẬN', 'HẸN TRẢ', 
+          'TRẠNG THÁI', 'NGÀY XUẤT', 'ĐỢT', 'NGƯỜI XỬ LÝ'
       ];
-      const ws = XLSX.utils.aoa_to_sheet(wsData);
+      
+      const sampleData = [
+          ['HS001', 'Nguyễn Văn A', '070012345678', '0901234567', 'Tổ 1, KP 2', 'Lê Văn C', 'Giấy ủy quyền', 
+           'Tân Khai', '123', '45', '100.5', '50', 'CD 123456', 'CH 01234', '2024-01-01', 
+           'Đo đạc', 'Đo đạc cắm mốc', 'Sổ đỏ|Bản chính', '2024-01-01', '2024-01-15', 
+           'Đã nhận', '', '', '']
+      ];
+
+      const ws = XLSX.utils.aoa_to_sheet([headers, ...sampleData]);
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, 'Mau_Nhap_Ho_So');
       XLSX.writeFile(wb, 'Mau_Nhap_Ho_So.xlsx');
