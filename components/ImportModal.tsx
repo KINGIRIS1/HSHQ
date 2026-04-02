@@ -293,6 +293,17 @@ const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImport, em
       onClose();
   };
 
+  const handleDownloadTemplate = () => {
+      const wsData = [
+          ['Mã HS', 'Tên chủ sử dụng', 'Xã/Phường', 'SĐT', 'Thửa', 'Tờ', 'Diện tích', 'Loại HS', 'Ngày nhận', 'Ngày hẹn trả', 'Số phát hành', 'Số vào sổ', 'Ngày cấp', 'Khu dân cư', 'Ghi chú'],
+          ['HS001', 'Nguyễn Văn A', 'Tân Khai', '0901234567', '123', '45', '100.5', 'Đo đạc', '2024-01-01', '2024-01-15', 'CD 123456', 'CH 01234', '2024-01-01', '1', 'Ghi chú mẫu']
+      ];
+      const ws = XLSX.utils.aoa_to_sheet(wsData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Mau_Nhap_Ho_So');
+      XLSX.writeFile(wb, 'Mau_Nhap_Ho_So.xlsx');
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -356,6 +367,9 @@ const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImport, em
                         <Upload size={18} /> Chọn File Excel
                     </button>
                 </div>
+                <button onClick={handleDownloadTemplate} className="flex items-center gap-2 text-blue-600 bg-blue-50 px-4 py-2 rounded-lg hover:bg-blue-100 transition-colors shadow-sm font-medium border border-blue-200">
+                    <FileSpreadsheet size={18} /> Tải File Mẫu
+                </button>
                 {fileName && <span className="text-sm text-gray-600 font-medium">{fileName}</span>}
                 {previewData.length > 0 && <div className="ml-auto flex items-center gap-2 text-sm text-blue-700 bg-blue-100 px-3 py-1.5 rounded-full"><Check size={16} /> Đã đọc <strong>{previewData.length}</strong> dòng hợp lệ</div>}
             </div>
