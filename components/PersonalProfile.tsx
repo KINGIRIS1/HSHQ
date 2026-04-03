@@ -15,6 +15,7 @@ interface PersonalProfileProps {
   onViewRecord: (record: RecordFile) => void;
   onCreateLiquidation?: (record: RecordFile) => void; 
   onMapCorrection?: (record: RecordFile) => void; // New Handler Prop
+  onApproveRecord?: (record: RecordFile) => void;
   employees: Employee[];
 }
 
@@ -35,7 +36,7 @@ function removeVietnameseTones(str: string): string {
     return str;
 }
 
-const PersonalProfile: React.FC<PersonalProfileProps> = ({ user, records, employees, onUpdateStatus, onViewRecord, onCreateLiquidation, onMapCorrection }) => {
+const PersonalProfile: React.FC<PersonalProfileProps> = ({ user, records, employees, onUpdateStatus, onViewRecord, onCreateLiquidation, onMapCorrection, onApproveRecord }) => {
   const isDirector = useMemo(() => {
       if (!user.employeeId) return false;
       const emp = employees.find(e => e.id === user.employeeId);
@@ -590,7 +591,11 @@ const PersonalProfile: React.FC<PersonalProfileProps> = ({ user, records, employ
                                                 </button>
                                             )}
                                             
-                                            {/* Tab Chờ ký không có nút hành động (chỉ xem) */}
+                                            {activeTab === 'pending_sign' && onApproveRecord && (
+                                                <button onClick={() => onApproveRecord(r)} title="Hoàn tất ký duyệt" className="px-3 py-1.5 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 text-xs font-bold flex items-center gap-2 shadow-sm transition-all">
+                                                    Ký duyệt <FileSignature size={14} />
+                                                </button>
+                                            )}
                                         </div>
                                     </td>
                                 </tr>

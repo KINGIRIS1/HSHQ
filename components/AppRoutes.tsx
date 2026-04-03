@@ -506,6 +506,10 @@ const AppRoutes: React.FC<AppRoutesProps> = (props) => {
                         props.setCurrentView('receive_contract'); 
                     }}
                     onMapCorrection={props.handleMapCorrectionRequest}
+                    onApproveRecord={(r) => {
+                        const todayStr = new Date().toISOString().split('T')[0];
+                        props.handleAddOrUpdateRecord({ ...r, status: RecordStatus.SIGNED, approvalDate: todayStr, completedDate: null });
+                    }}
                 />
             );
         case 'receive_record':

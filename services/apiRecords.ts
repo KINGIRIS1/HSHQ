@@ -8,7 +8,7 @@ const RECORD_DB_COLUMNS = [
     'id', 'code', 'customerName', 'phoneNumber', 'cccd', 'customerAddress', 'ward', 'landPlot', 'mapSheet', 
     'area', 'address', 'group', 'content', 'recordType', 'receivedDate', 'deadline', 
     'assignedDate', 'submissionDate', 'approvalDate', 'completedDate', 'status', 'assignedTo', 
-    'notes', 'privateNotes', 'personalNotes', 
+    'notes', 'privateNotes', 'personalNotes', 'submittedTo',
     'authorizedBy', 'authDocType', 'otherDocs', 'exportBatch', 'exportDate', 
     'measurementNumber', 'excerptNumber',
     'reminderDate', 'lastRemindedAt',
