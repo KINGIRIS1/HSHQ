@@ -475,9 +475,9 @@ export const MobileDetailModal: React.FC<MobileDetailModalProps> = ({
                   icon={Send}
                   colorClass={{text: 'text-purple-600', border: 'border-purple-600', bg: 'bg-purple-600'}}
                   subText={record.submittedTo ? (() => {
-                      const director = users.find(u => u.employeeId === record.submittedTo);
+                      const director = employees.find(e => e.id === record.submittedTo);
                       if (!director) return undefined;
-                      return `${director.name} (${director.role === UserRole.ADMIN ? 'Giám đốc' : 'Phó giám đốc'})`;
+                      return `${director.position || 'Giám đốc'} ${director.name}`;
                   })() : undefined}
                 />
                 <TimelineItem 
@@ -485,6 +485,11 @@ export const MobileDetailModal: React.FC<MobileDetailModalProps> = ({
                   label="KÝ DUYỆT" 
                   icon={FileSignature}
                   colorClass={{text: 'text-indigo-600', border: 'border-indigo-600', bg: 'bg-indigo-600'}}
+                  subText={(record.approvalDate && record.submittedTo) ? (() => {
+                      const director = employees.find(e => e.id === record.submittedTo);
+                      if (!director) return undefined;
+                      return `${director.position || 'Giám đốc'} ${director.name}`;
+                  })() : undefined}
                 />
                 <TimelineItem 
                   date={record.completedDate} 

@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { RecordFile, RecordStatus, User } from '../types';
+import { RecordFile, RecordStatus, User, Employee } from '../types';
 import StatusBadge from './StatusBadge';
 import { Briefcase, ArrowRight, CheckCircle, Clock, Send, AlertTriangle, UserCog, ChevronLeft, ChevronRight, AlertCircle, Search, ArrowUp, ArrowDown, ArrowUpDown, Bell, CalendarClock, FileCheck, Map, CheckSquare } from 'lucide-react';
 import { getShortRecordType } from '../constants';
@@ -15,6 +15,7 @@ interface PersonalProfileProps {
   onViewRecord: (record: RecordFile) => void;
   onCreateLiquidation?: (record: RecordFile) => void; 
   onMapCorrection?: (record: RecordFile) => void; // New Handler Prop
+  employees: Employee[];
 }
 
 function removeVietnameseTones(str: string): string {
@@ -34,9 +35,15 @@ function removeVietnameseTones(str: string): string {
     return str;
 }
 
-const PersonalProfile: React.FC<PersonalProfileProps> = ({ user, records, onUpdateStatus, onViewRecord, onCreateLiquidation, onMapCorrection }) => {
+const PersonalProfile: React.FC<PersonalProfileProps> = ({ user, records, employees, onUpdateStatus, onViewRecord, onCreateLiquidation, onMapCorrection }) => {
+  const isDirector = useMemo(() => {
+      if (!user.employeeId) return false;
+      const emp = employees.find(e => e.id === user.employeeId);
+      return emp?.department?.trim().toLowerCase() === 'ban giám đốc';
+  }, [employees, user.employeeId]);
+
   // Thêm tab 'completed_work' và 'pending_sign'
-  const [activeTab, setActiveTab] = useState<'pending' | 'completed_work' | 'pending_sign' | 'finished' | 'reminder'>('pending');
+  const [activeTab, setActiveTab] = useState<'pending' | 'completed_work' | 'pending_sign' | 'finished' | 'reminder'>(isDirector ? 'pending_sign' : 'pending');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   
@@ -58,7 +65,13 @@ const PersonalProfile: React.FC<PersonalProfileProps> = ({ user, records, onUpda
   }, []);
 
   const myRecords = useMemo(() => {
-    const mainRecords = records.filter(r => user.employeeId && r.assignedTo === user.employeeId);
+    const mainRecords = records.filter(r => {
+        if (!user.employeeId) return false;
+        if (isDirector) {
+            return r.submittedTo === user.employeeId;
+        }
+        return r.assignedTo === user.employeeId;
+    });
     
     const mappedArchives = archiveRecords
         .filter(r => r.data?.assigned_to === user.employeeId)
@@ -421,22 +434,26 @@ const PersonalProfile: React.FC<PersonalProfileProps> = ({ user, records, onUpda
         {/* TABS & SEARCH */}
         <div className="p-4 border-b border-gray-100 bg-gray-50 flex flex-col md:flex-row justify-between items-center gap-4 shrink-0">
             <div className="flex bg-white rounded-lg p-1 border border-gray-200 shadow-sm overflow-x-auto max-w-full">
-                <button 
-                    onClick={() => { setActiveTab('pending'); setCurrentPage(1); setSearchTerm(''); }}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-bold transition-all whitespace-nowrap ${
-                        activeTab === 'pending' ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-100'
-                    }`}
-                >
-                    <Clock size={16} /> Đang thực hiện ({pendingRecords.length})
-                </button>
-                <button 
-                    onClick={() => { setActiveTab('completed_work'); setCurrentPage(1); setSearchTerm(''); }}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-bold transition-all whitespace-nowrap ${
-                        activeTab === 'completed_work' ? 'bg-cyan-600 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-100'
-                    }`}
-                >
-                    <CheckSquare size={16} /> Đã thực hiện ({completedWorkRecords.length})
-                </button>
+                {!isDirector && (
+                    <>
+                        <button 
+                            onClick={() => { setActiveTab('pending'); setCurrentPage(1); setSearchTerm(''); }}
+                            className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-bold transition-all whitespace-nowrap ${
+                                activeTab === 'pending' ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-100'
+                            }`}
+                        >
+                            <Clock size={16} /> Đang thực hiện ({pendingRecords.length})
+                        </button>
+                        <button 
+                            onClick={() => { setActiveTab('completed_work'); setCurrentPage(1); setSearchTerm(''); }}
+                            className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-bold transition-all whitespace-nowrap ${
+                                activeTab === 'completed_work' ? 'bg-cyan-600 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-100'
+                            }`}
+                        >
+                            <CheckSquare size={16} /> Đã thực hiện ({completedWorkRecords.length})
+                        </button>
+                    </>
+                )}
                 <button 
                     onClick={() => { setActiveTab('pending_sign'); setCurrentPage(1); setSearchTerm(''); }}
                     className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-bold transition-all whitespace-nowrap ${
@@ -453,14 +470,16 @@ const PersonalProfile: React.FC<PersonalProfileProps> = ({ user, records, onUpda
                 >
                     <FileCheck size={16} /> Hoàn thành ({finishedRecords.length})
                 </button>
-                <button 
-                    onClick={() => { setActiveTab('reminder'); setCurrentPage(1); setSearchTerm(''); }}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-bold transition-all whitespace-nowrap ${
-                        activeTab === 'reminder' ? 'bg-pink-600 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-100'
-                    }`}
-                >
-                    <Bell size={16} /> Nhắc việc ({reminderRecords.length})
-                </button>
+                {!isDirector && (
+                    <button 
+                        onClick={() => { setActiveTab('reminder'); setCurrentPage(1); setSearchTerm(''); }}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-bold transition-all whitespace-nowrap ${
+                            activeTab === 'reminder' ? 'bg-pink-600 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-100'
+                        }`}
+                    >
+                        <Bell size={16} /> Nhắc việc ({reminderRecords.length})
+                    </button>
+                )}
             </div>
             
             <div className="relative w-full md:w-64">

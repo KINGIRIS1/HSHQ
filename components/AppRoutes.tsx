@@ -498,6 +498,7 @@ const AppRoutes: React.FC<AppRoutesProps> = (props) => {
                 <PersonalProfile
                     user={currentUser}
                     records={records}
+                    employees={employees}
                     onUpdateStatus={(r, status) => props.handleQuickUpdate(r.id, 'status', status)}
                     onViewRecord={props.handleViewRecord}
                     onCreateLiquidation={(r) => { 
