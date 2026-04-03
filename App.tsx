@@ -23,6 +23,7 @@ import { useGlobalChatListener } from './hooks/useGlobalChatListener';
 import { useIsMobile } from './hooks/useIsMobile';
 import MobileLayout from './components/layout/MobileLayout';
 import MobileRoutes from './components/mobile/MobileRoutes';
+import SubmitModal from './components/receive-record/SubmitModal';
 
 function App() {
   const isMobile = useIsMobile(768);
@@ -52,6 +53,8 @@ function App() {
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [assignTargetRecords, setAssignTargetRecords] = useState<RecordFile[]>([]);
+  const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
+  const [submitTargetRecords, setSubmitTargetRecords] = useState<RecordFile[]>([]);
   const [viewingRecord, setViewingRecord] = useState<RecordFile | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deletingRecord, setDeletingRecord] = useState<RecordFile | null>(null);
@@ -425,6 +428,11 @@ function App() {
           setIsAssignModalOpen(true); 
           return; 
       }
+      if (record.status === RecordStatus.COMPLETED_WORK) {
+          setSubmitTargetRecords([record]);
+          setIsSubmitModalOpen(true);
+          return;
+      }
       // UPDATE: Thêm COMPLETED_WORK vào luồng
       const flow = [RecordStatus.RECEIVED, RecordStatus.ASSIGNED, RecordStatus.IN_PROGRESS, RecordStatus.COMPLETED_WORK, RecordStatus.PENDING_SIGN, RecordStatus.SIGNED, RecordStatus.HANDOVER];
       const idx = flow.indexOf(record.status);
@@ -549,6 +557,7 @@ function App() {
             confirmReturnResult={handleConfirmReturnResult}
 
             employees={employees}
+            users={users}
             currentUser={currentUser}
             wards={wards}
             filteredRecords={recordFilterProps.filteredRecords}
@@ -649,6 +658,8 @@ function App() {
             handleConfirmSignBatch={handleConfirmSignBatch}
             setAssignTargetRecords={setAssignTargetRecords}
             setIsAssignModalOpen={setIsAssignModalOpen}
+            setSubmitTargetRecords={setSubmitTargetRecords}
+            setIsSubmitModalOpen={setIsSubmitModalOpen}
             setExportModalType={setExportModalType}
             setIsExportModalOpen={setIsExportModalOpen}
             setDeletingRecord={setDeletingRecord}
@@ -694,6 +705,7 @@ function App() {
             confirmReturnResult={handleConfirmReturnResult}
 
             employees={employees}
+            users={users}
             currentUser={currentUser}
             wards={wards}
             filteredRecords={recordFilterProps.filteredRecords}
@@ -702,6 +714,32 @@ function App() {
             canPerformAction={canPerformAction}
             selectedRecordsForBulk={records.filter(r => selectedRecordIds.has(r.id))}
             currentView={currentView}
+        />
+
+        <SubmitModal 
+            isOpen={isSubmitModalOpen}
+            onClose={() => setIsSubmitModalOpen(false)}
+            records={submitTargetRecords}
+            users={users}
+            onConfirm={async (directorId) => {
+                try {
+                    const updates = submitTargetRecords.map(r => ({
+                        ...r,
+                        status: RecordStatus.PENDING_SIGN,
+                        submissionDate: new Date().toISOString(),
+                        submittedTo: directorId
+                    }));
+                    await forceUpdateRecordsBatchApi(updates);
+                    setToast({ type: 'success', message: `Đã trình ký ${updates.length} hồ sơ thành công!` });
+                    setIsSubmitModalOpen(false);
+                    setSubmitTargetRecords([]);
+                    setSelectedRecordIds(new Set());
+                    loadData();
+                } catch (error) {
+                    console.error("Lỗi khi trình ký:", error);
+                    setToast({ type: 'error', message: 'Có lỗi xảy ra khi trình ký.' });
+                }
+            }}
         />
 
         {toast && (

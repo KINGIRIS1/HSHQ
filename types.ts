@@ -94,6 +94,7 @@ export interface RecordFile {
   assignedDate?: string | null;  
   
   submissionDate?: string | null; // Ngày trình ký
+  submittedTo?: string | null;    // Người được trình ký (ID của giám đốc)
   approvalDate?: string | null;   // Ngày ký duyệt
   completedDate?: string | null; 
   

@@ -20,6 +20,7 @@ interface MobileDetailModalProps {
   onClose: () => void;
   record: RecordFile | null;
   employees: Employee[];
+  users: User[];
   currentUser: User | null;
   onEdit?: (record: RecordFile) => void;
   onDelete?: (record: RecordFile) => void;
@@ -27,7 +28,7 @@ interface MobileDetailModalProps {
 }
 
 export const MobileDetailModal: React.FC<MobileDetailModalProps> = ({ 
-  isOpen, onClose, record, employees, currentUser, onEdit, onDelete, onCreateLiquidation 
+  isOpen, onClose, record, employees, users, currentUser, onEdit, onDelete, onCreateLiquidation 
 }) => {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [previewBlob, setPreviewBlob] = useState<Blob | null>(null);
@@ -238,7 +239,7 @@ export const MobileDetailModal: React.FC<MobileDetailModalProps> = ({
     }
   };
 
-  const TimelineItem = ({ date, label, icon: Icon, isLast, colorClass, forceActive }: any) => {
+  const TimelineItem = ({ date, label, icon: Icon, isLast, colorClass, forceActive, subText }: any) => {
     const isActive = !!date || !!forceActive;
     return (
       <div className="relative flex gap-4">
@@ -256,6 +257,7 @@ export const MobileDetailModal: React.FC<MobileDetailModalProps> = ({
               {date ? formatDate(date) : (forceActive ? 'Đã hoàn tất' : 'Chưa thực hiện')}
             </span>
           </div>
+          {subText && <p className="text-[11px] text-indigo-600 mt-1 italic">{subText}</p>}
         </div>
       </div>
     );
@@ -472,6 +474,11 @@ export const MobileDetailModal: React.FC<MobileDetailModalProps> = ({
                   label="TRÌNH KÝ" 
                   icon={Send}
                   colorClass={{text: 'text-purple-600', border: 'border-purple-600', bg: 'bg-purple-600'}}
+                  subText={record.submittedTo ? (() => {
+                      const director = users.find(u => u.employeeId === record.submittedTo);
+                      if (!director) return undefined;
+                      return `${director.name} (${director.role === UserRole.ADMIN ? 'Giám đốc' : 'Phó giám đốc'})`;
+                  })() : undefined}
                 />
                 <TimelineItem 
                   date={record.approvalDate} 

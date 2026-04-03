@@ -78,7 +78,14 @@ export const useRecordFilter = (
 
         // View-based filtering
         if (currentView === 'check_list' || currentView === 'other_check_list') {
-            result = result.filter(r => r.status === RecordStatus.PENDING_SIGN);
+            if (currentUser?.role === UserRole.ADMIN || currentUser?.role === UserRole.SUBADMIN) {
+                // Giám đốc chỉ thấy hồ sơ trình cho mình
+                result = result.filter(r => r.status === RecordStatus.PENDING_SIGN && r.submittedTo === currentUser.employeeId);
+            } else {
+                result = result.filter(r => r.status === RecordStatus.PENDING_SIGN);
+            }
+        } else if (currentView === 'completed_list') {
+            result = result.filter(r => r.status === RecordStatus.COMPLETED_WORK);
         } else if (currentView === 'handover_list' || currentView === 'other_handover_list') {
             if (handoverTab === 'today') {
                 // Tab chờ giao: Bao gồm Đã ký HOẶC (Đã rút VÀ chưa có đợt xuất)
@@ -120,7 +127,7 @@ export const useRecordFilter = (
 
         // Filter by recordType based on view group
         const isOtherView = ['other_records', 'other_assign_tasks', 'other_check_list', 'other_handover_list'].includes(currentView);
-        const isMeasurementView = ['all_records', 'assign_tasks', 'check_list', 'handover_list'].includes(currentView);
+        const isMeasurementView = ['all_records', 'assign_tasks', 'completed_list', 'check_list', 'handover_list'].includes(currentView);
         
         if (isOtherView) {
             result = result.filter(r => ['CMD', 'Tòa án', 'Thi hành án'].includes(r.recordType || ''));
@@ -205,7 +212,7 @@ export const useRecordFilter = (
         let approaching = 0;
         if (records.length > 0 && currentUser) {
             const isOtherView = ['other_records', 'other_assign_tasks', 'other_check_list', 'other_handover_list'].includes(currentView);
-            const isMeasurementView = ['all_records', 'assign_tasks', 'check_list', 'handover_list'].includes(currentView);
+            const isMeasurementView = ['all_records', 'assign_tasks', 'completed_list', 'check_list', 'handover_list'].includes(currentView);
 
             records.forEach(r => {
                 if (r.status === RecordStatus.HANDOVER || r.status === RecordStatus.WITHDRAWN) return; 

@@ -104,6 +104,8 @@ interface AppRoutesProps {
     handleConfirmSignBatch: () => void;
     setAssignTargetRecords: (r: RecordFile[]) => void;
     setIsAssignModalOpen: (b: boolean) => void;
+    setSubmitTargetRecords: (r: RecordFile[]) => void;
+    setIsSubmitModalOpen: (b: boolean) => void;
     setExportModalType: (t: 'handover' | 'check_list') => void;
     setIsExportModalOpen: (b: boolean) => void;
     setDeletingRecord: (r: RecordFile | null) => void;
@@ -134,13 +136,14 @@ const AppRoutes: React.FC<AppRoutesProps> = (props) => {
     // --- RENDER RECORD LIST (Extracted to be used in switch) ---
     const renderRecordList = () => {
         // Kiểm tra xem có đang ở chế độ xem Hồ sơ đo đạc (bao gồm tất cả các tab con)
-        const isMeasurementView = ['all_records', 'assign_tasks', 'check_list', 'handover_list'].includes(currentView);
+        const isMeasurementView = ['all_records', 'assign_tasks', 'completed_list', 'check_list', 'handover_list'].includes(currentView);
         const isOtherView = ['other_records', 'other_assign_tasks', 'other_check_list', 'other_handover_list'].includes(currentView);
         
         let title = 'Danh sách Hồ sơ';
         if (currentView === 'check_list' || currentView === 'other_check_list') title = 'Danh sách Trình Ký';
         else if (currentView === 'handover_list' || currentView === 'other_handover_list') title = 'Danh sách Giao 1 cửa';
         else if (currentView === 'assign_tasks' || currentView === 'other_assign_tasks') title = 'Hồ sơ chưa giao';
+        else if (currentView === 'completed_list') title = 'Hồ sơ đã thực hiện';
         else if (currentView === 'all_records') title = 'Hồ sơ đo đạc';
         else if (currentView === 'other_records') title = 'Hồ sơ khác';
 
@@ -165,6 +168,13 @@ const AppRoutes: React.FC<AppRoutesProps> = (props) => {
                                 <UserPlusIcon size={16} /> Chưa giao
                             </button>
                         )}
+
+                        <button 
+                            onClick={() => props.setCurrentView('completed_list')}
+                            className={`px-4 py-3 text-sm font-bold flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap ${currentView === 'completed_list' ? 'border-blue-600 text-blue-700 bg-white' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                        >
+                            <CheckSquare size={16} /> Đã thực hiện
+                        </button>
 
                         {(isAdmin || isSubadmin) && (
                             <button 
@@ -363,6 +373,18 @@ const AppRoutes: React.FC<AppRoutesProps> = (props) => {
                         {canPerformAction && (currentView === 'check_list' || currentView === 'other_check_list') && props.filteredRecords.length > 0 && (
                             <button onClick={props.handleConfirmSignBatch} className="flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 font-bold shadow-md">
                                 <FileSignature size={18} /> Ký Duyệt Tất Cả ({props.filteredRecords.length})
+                            </button>
+                        )}
+                        {canPerformAction && currentView === 'completed_list' && props.selectedRecordIds.size > 0 && (
+                            <button 
+                                onClick={() => {
+                                    const targets = records.filter(r => props.selectedRecordIds.has(r.id));
+                                    props.setSubmitTargetRecords(targets);
+                                    props.setIsSubmitModalOpen(true);
+                                }}
+                                className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 font-bold shadow-md transition-all animate-pulse"
+                            >
+                                <FileSignature size={18} /> Trình Ký Duyệt ({props.selectedRecordIds.size})
                             </button>
                         )}
                         {canPerformAction && (currentView === 'assign_tasks' || currentView === 'other_assign_tasks' || currentView === 'all_records' || currentView === 'other_records') && props.selectedRecordIds.size > 0 && (

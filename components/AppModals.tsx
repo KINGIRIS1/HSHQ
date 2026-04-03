@@ -74,6 +74,7 @@ interface AppModalsProps {
 
     // Shared Data
     employees: Employee[];
+    users: User[];
     currentUser: User;
     wards: string[];
     filteredRecords: RecordFile[];
@@ -123,6 +124,7 @@ const AppModals: React.FC<AppModalsProps> = (props) => {
                     onClose={() => props.setViewingRecord(null)} 
                     record={props.viewingRecord} 
                     employees={props.employees} 
+                    users={props.users}
                     currentUser={props.currentUser} 
                     onEdit={props.canPerformAction ? (r) => { props.setEditingRecord(r); props.setIsModalOpen(true); } : undefined}
                     onDelete={props.canPerformAction ? props.confirmDelete : undefined}
@@ -134,6 +136,7 @@ const AppModals: React.FC<AppModalsProps> = (props) => {
                     onClose={() => props.setViewingRecord(null)} 
                     record={props.viewingRecord} 
                     employees={props.employees} 
+                    users={props.users}
                     currentUser={props.currentUser} 
                     onEdit={props.canPerformAction ? (r) => { props.setEditingRecord(r); props.setIsModalOpen(true); } : undefined}
                     onDelete={props.canPerformAction ? props.confirmDelete : undefined}
