@@ -720,6 +720,7 @@ function App() {
             isOpen={isSubmitModalOpen}
             onClose={() => setIsSubmitModalOpen(false)}
             records={submitTargetRecords}
+            users={users}
             employees={employees}
             onConfirm={async (directorId) => {
                 try {

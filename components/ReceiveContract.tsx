@@ -15,7 +15,7 @@ import ContractForm from './receive-contract/ContractForm';
 import ContractList from './receive-contract/ContractList';
 
 interface ReceiveContractProps {
-  onSave: (record: RecordFile) => Promise<boolean>; 
+  onSave: (record: RecordFile) => Promise<RecordFile | null>; 
   wards: string[];
   currentUser: User;
   employees: Employee[];

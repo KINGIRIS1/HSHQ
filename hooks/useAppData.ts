@@ -87,22 +87,22 @@ export const useAppData = (currentUser: User | null) => {
     }, [loadData]);
 
     // --- Record Handlers ---
-    const handleAddOrUpdateRecord = async (recordData: any) => {
+    const handleAddOrUpdateRecord = async (recordData: any): Promise<RecordFile | null> => {
         const isEdit = recordData.id && records.find(r => r.id === recordData.id);
         if (isEdit) {
             const updated = await updateRecordApi(recordData);
             if (updated) {
                 setRecords(prev => prev.map(r => r.id === updated.id ? updated : r));
-                return true;
+                return updated;
             }
         } else {
             const newRecord = await createRecordApi({ ...recordData, id: Math.random().toString(36).substr(2, 9) });
             if (newRecord) {
                 setRecords(prev => [newRecord, ...prev]);
-                return true;
+                return newRecord;
             }
         }
-        return false;
+        return null;
     };
 
     const handleDeleteRecord = async (id: string) => {

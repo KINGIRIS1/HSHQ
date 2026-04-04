@@ -40,6 +40,7 @@ const SystemReceiptTemplate: React.FC<SystemReceiptTemplateProps> = ({ data, rec
                         .font-bold { font-weight: bold; }
                         .italic { font-style: italic; }
                         .underline { text-decoration: underline; }
+                        .uppercase { text-transform: uppercase; }
                         .mb-1 { margin-bottom: 4px; }
                         .mb-2 { margin-bottom: 8px; }
                         .mb-4 { margin-bottom: 16px; }
@@ -52,6 +53,8 @@ const SystemReceiptTemplate: React.FC<SystemReceiptTemplateProps> = ({ data, rec
                         th { text-align: center; font-weight: bold; }
                         .text-gray { color: #666; }
                         .footer-line { border-top: 1px solid #000; margin-top: 40px; padding-top: 10px; }
+                        .print-page-break { page-break-before: always; }
+                        .avoid-break { page-break-inside: avoid; }
                     </style>
                 </head>
                 <body>
@@ -94,14 +97,38 @@ const SystemReceiptTemplate: React.FC<SystemReceiptTemplateProps> = ({ data, rec
 
     const wardName = getNormalizedWard(data.ward || '');
 
+    const emptyRows = Array(11).fill(0).map((_, i) => (
+        <tr key={i} className="avoid-break">
+            <td style={{ width: '12%', border: '1px solid black' }}></td>
+            <td style={{ width: '58%', border: '1px solid black', padding: 0 }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <tbody>
+                        <tr>
+                            <td colSpan={3} style={{ borderBottom: '1px solid black', padding: '6px', textAlign: 'left', whiteSpace: 'nowrap' }}>
+                                1.Giao &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ..... giờ ..... phút, ngày..... tháng ..... năm......
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style={{ width: '15%', borderRight: '1px solid black', padding: '6px', textAlign: 'left', verticalAlign: 'top' }}>2.Nhận</td>
+                            <td style={{ width: '42.5%', borderRight: '1px solid black', padding: '6px', textAlign: 'center', verticalAlign: 'top' }}>Người giao<br/><br/><br/><br/></td>
+                            <td style={{ width: '42.5%', padding: '6px', textAlign: 'center', verticalAlign: 'top' }}>Người nhận<br/><br/><br/><br/></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </td>
+            <td style={{ width: '15%', border: '1px solid black' }}></td>
+            <td style={{ width: '15%', border: '1px solid black' }}></td>
+        </tr>
+    ));
+
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col">
                 <div className="flex justify-between items-center p-4 border-b">
-                    <h2 className="text-xl font-bold">In Biên Nhận (Mẫu Hệ Thống)</h2>
+                    <h2 className="text-xl font-bold">In Biên Nhận & Phiếu Kiểm Soát</h2>
                     <div className="flex space-x-2">
                         <button onClick={handlePrint} className="flex items-center px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-                            <Printer className="w-4 h-4 mr-2" /> In Biên Nhận
+                            <Printer className="w-4 h-4 mr-2" /> In Tất Cả
                         </button>
                         <button onClick={onClose} className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300">
                             Đóng
@@ -110,15 +137,14 @@ const SystemReceiptTemplate: React.FC<SystemReceiptTemplateProps> = ({ data, rec
                 </div>
                 
                 <div className="p-8 overflow-y-auto flex-1 bg-gray-50">
-                    <div className="bg-white p-10 shadow-sm border border-gray-200 mx-auto text-black" style={{ maxWidth: '210mm', minHeight: '297mm', fontFamily: "'Times New Roman', Times, serif", fontSize: '14px', lineHeight: '1.3' }} ref={printRef}>
-                        
-                        {/* Header */}
+                    <div ref={printRef}>
+                        <div className="bg-white p-10 shadow-sm border border-gray-200 mx-auto text-black" style={{ maxWidth: '210mm', minHeight: '297mm', fontFamily: "'Times New Roman', Times, serif", fontSize: '14px', lineHeight: '1.3' }}>
+                            
+                            {/* Header */}
                         <div className="flex justify-between mb-4">
                             <div className="text-center" style={{ width: '45%' }}>
-                                <div className="font-bold text-[15px]">VĂN PHÒNG ĐKĐĐ TỈNH ĐỒNG NAI</div>
-                                <div className="font-bold text-[16px]">CHI NHÁNH HỚN QUẢN</div>
-                                <div className="text-[14px]">TRUNG TÂM PHỤC VỤ HÀNH CHÍNH CÔNG</div>
-                                <div className="text-[14px] font-bold">XÃ {getNormalizedWard(receivingWard).toUpperCase()}</div>
+                                <div className="font-bold text-[15px]">SỞ NÔNG NGHIỆP VÀ MÔI TRƯỜNG</div>
+                                <div className="font-bold text-[16px]">BỘ PHẬN TIẾP NHẬN VÀ TRẢ KẾT QUẢ</div>
                                 
                                 {data.code && (
                                     <div className="mt-2 text-center" style={{ display: 'block' }}>
@@ -143,16 +169,15 @@ const SystemReceiptTemplate: React.FC<SystemReceiptTemplateProps> = ({ data, rec
 
                         {/* Content */}
                         <div className="space-y-[6px]">
-                            <div>Bộ phận tiếp nhận và trả kết quả: <span className="font-bold">Văn phòng Đăng ký Đất đai tỉnh Đồng Nai – Chi nhánh Hớn Quản</span></div>
+                            <div>Bộ phận tiếp nhận và trả kết quả: <span className="font-bold">Sở Nông nghiệp và Môi trường</span></div>
                             <div>Tiếp nhận hồ sơ của: <span className="font-bold">{data.customerName}</span></div>
                             <div>CCCD/MST: <span className="font-bold">{data.cccd || ''}</span></div>
-                            <div>Địa chỉ: {data.customerAddress || ''}</div>
                             <div>Số điện thoại: {data.phoneNumber}</div>
                             <div className="flex">
-                                <div style={{ width: '50%' }}>Thửa: {data.landPlot}</div>
-                                <div style={{ width: '50%' }}>Tờ: {data.mapSheet}</div>
+                                <div style={{ marginRight: '2cm' }}>Tờ: {data.mapSheet}</div>
+                                <div>Thửa: {data.landPlot}</div>
                             </div>
-                            <div>Địa chỉ thửa đất: {data.ward || ''}</div>
+                            <div>Địa chỉ thửa đất: <span className="font-bold uppercase">XÃ {getNormalizedWard(data.ward || '').toUpperCase()}</span></div>
                             <div>Thủ tục hành chính cần giải quyết: <span className="font-bold">{data.recordType}</span></div>
                             
                             <div>1. Thành phần hồ sơ, yêu cầu và số lượng mỗi loại giấy tờ gồm:</div>
@@ -227,6 +252,65 @@ const SystemReceiptTemplate: React.FC<SystemReceiptTemplateProps> = ({ data, rec
                             </div>
                         </div>
 
+                    </div>
+
+                    <div style={{ pageBreakBefore: 'always', marginTop: '20px' }} className="print-page-break"></div>
+                    
+                    <div className="bg-white p-10 shadow-sm border border-gray-200 mx-auto text-black mt-8" style={{ maxWidth: '210mm', minHeight: '297mm', fontFamily: "'Times New Roman', Times, serif", fontSize: '14px', lineHeight: '1.3' }}>
+                        {/* Control Slip Header */}
+                        <div className="flex justify-between mb-4">
+                            <div className="text-center" style={{ width: '45%' }}>
+                                <div className="font-bold text-[15px]">VĂN PHÒNG ĐKĐĐ TỈNH ĐỒNG NAI</div>
+                                <div className="font-bold text-[16px]">CHI NHÁNH HỚN QUẢN</div>
+                            </div>
+                            <div className="text-center" style={{ width: '50%' }}>
+                                <div className="font-bold text-[15px]">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</div>
+                                <div className="font-bold underline mb-2">Độc lập - Tự do - Hạnh phúc</div>
+                            </div>
+                        </div>
+
+                        {/* Control Slip Title */}
+                        <div className="text-center mt-6 mb-4">
+                            <div className="font-bold text-[18px]">PHIẾU KIỂM SOÁT QUÁ TRÌNH GIẢI QUYẾT HỒ SƠ</div>
+                            <div className="font-bold mt-2">Mã hồ sơ: {data.code || data.id}</div>
+                        </div>
+
+                        {/* Control Slip Table */}
+                        <table className="w-full border-collapse border border-black mt-4">
+                            <thead>
+                                <tr>
+                                    <th style={{ width: '12%', border: '1px solid black', padding: '6px', textAlign: 'center' }}>TÊN CƠ<br/>QUAN</th>
+                                    <th style={{ width: '58%', border: '1px solid black', padding: '6px', textAlign: 'center' }}>THỜI GIAN GIAO, NHẬN HỒ SƠ</th>
+                                    <th style={{ width: '15%', border: '1px solid black', padding: '6px', textAlign: 'center' }}>KẾT QUẢ</th>
+                                    <th style={{ width: '15%', border: '1px solid black', padding: '6px', textAlign: 'center' }}>Ghi chú</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr className="avoid-break">
+                                    <td style={{ width: '12%', border: '1px solid black' }}></td>
+                                    <td style={{ width: '58%', border: '1px solid black', padding: 0 }}>
+                                        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                            <tbody>
+                                                <tr>
+                                                    <td colSpan={3} style={{ borderBottom: '1px solid black', padding: '6px', textAlign: 'left', whiteSpace: 'nowrap' }}>
+                                                        1.Giao &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {formatDateTime(rDate)}
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td style={{ width: '15%', borderRight: '1px solid black', padding: '6px', textAlign: 'left', verticalAlign: 'top' }}>2.Nhận</td>
+                                                    <td style={{ width: '42.5%', borderRight: '1px solid black', padding: '6px', textAlign: 'center', verticalAlign: 'top' }}>Người giao<br/><br/><br/><br/></td>
+                                                    <td style={{ width: '42.5%', padding: '6px', textAlign: 'center', verticalAlign: 'top' }}>Người nhận<br/><br/><br/><br/></td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </td>
+                                    <td style={{ width: '15%', border: '1px solid black' }}></td>
+                                    <td style={{ width: '15%', border: '1px solid black' }}></td>
+                                </tr>
+                                {emptyRows}
+                            </tbody>
+                        </table>
+                    </div>
                     </div>
                 </div>
             </div>

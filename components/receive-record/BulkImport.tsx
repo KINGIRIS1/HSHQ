@@ -7,7 +7,7 @@ import { Upload, FileSpreadsheet, Wand2, Save, Printer, X, Check, Download } fro
 import { confirmAction } from '../../utils/appHelpers';
 
 interface BulkImportProps {
-  onSave: (record: RecordFile) => Promise<boolean>;
+  onSave: (record: RecordFile) => Promise<RecordFile | null>;
   calculateDeadline: (type: string, date: string) => string;
   calculateNextCode: (ward: string, date: string, existingCodes: string[]) => string;
   onPreview: (record: Partial<RecordFile>) => void;
@@ -173,8 +173,8 @@ const BulkImport: React.FC<BulkImportProps> = ({ onSave, calculateDeadline, calc
           status: RecordStatus.RECEIVED
       } as RecordFile;
 
-      const success = await onSave(newRecord);
-      if (success) {
+      const savedRecord = await onSave(newRecord);
+      if (savedRecord) {
           setBulkRecords(prev => prev.filter(r => r.tempId !== record.tempId));
       } else {
           alert("Lỗi khi lưu.");

@@ -1,20 +1,25 @@
 import React, { useState } from 'react';
 import { X, CheckCircle, AlertCircle, FileSignature } from 'lucide-react';
-import { RecordFile, Employee } from '../../types';
+import { RecordFile, UserRole, User, Employee } from '../../types';
 
 interface SubmitModalProps {
     isOpen: boolean;
     onClose: () => void;
     records: RecordFile[];
     onConfirm: (directorId: string) => void;
+    users: User[];
     employees: Employee[];
 }
 
-const SubmitModal: React.FC<SubmitModalProps> = ({ isOpen, onClose, records, onConfirm, employees }) => {
+const SubmitModal: React.FC<SubmitModalProps> = ({ isOpen, onClose, records, onConfirm, users, employees }) => {
     const [selectedDirector, setSelectedDirector] = useState<string>('');
 
-    // Lọc ra các nhân viên thuộc phòng ban "Ban giám đốc"
-    const directors = employees.filter((e: Employee) => e.department?.trim().toLowerCase() === 'ban giám đốc');
+    // Lọc ra các user thuộc Ban giám đốc (dựa vào phòng ban của nhân viên)
+    const directors = users.filter((u: User) => {
+        if (!u.employeeId) return false;
+        const emp = employees.find(e => e.id === u.employeeId);
+        return emp && (emp.department?.trim().toLowerCase() === 'ban giám đốc' || emp.department?.trim().toLowerCase() === 'ban lãnh đạo');
+    });
 
     if (!isOpen) return null;
 
@@ -50,22 +55,24 @@ const SubmitModal: React.FC<SubmitModalProps> = ({ isOpen, onClose, records, onC
                         </p>
                         
                         <div className="space-y-2">
-                            {directors.map((director: Employee) => (
+                            {directors.map((director: User) => (
                                 <label 
-                                    key={director.id} 
-                                    className={`flex items-center p-3 border rounded-xl cursor-pointer transition-all ${selectedDirector === director.id ? 'border-indigo-500 bg-indigo-50 shadow-sm' : 'border-gray-200 hover:border-indigo-300 hover:bg-gray-50'}`}
+                                    key={director.employeeId} 
+                                    className={`flex items-center p-3 border rounded-xl cursor-pointer transition-all ${selectedDirector === director.employeeId ? 'border-indigo-500 bg-indigo-50 shadow-sm' : 'border-gray-200 hover:border-indigo-300 hover:bg-gray-50'}`}
                                 >
                                     <input 
                                         type="radio" 
                                         name="director" 
-                                        value={director.id} 
-                                        checked={selectedDirector === director.id}
+                                        value={director.employeeId} 
+                                        checked={selectedDirector === director.employeeId}
                                         onChange={(e) => setSelectedDirector(e.target.value)}
                                         className="w-4 h-4 text-indigo-600 border-gray-300 focus:ring-indigo-500"
                                     />
                                     <div className="ml-3">
                                         <span className="block text-sm font-medium text-gray-900">{director.name}</span>
-                                        <span className="block text-xs text-gray-500">{director.position || 'Ban giám đốc'}</span>
+                                        <span className="block text-xs text-gray-500">
+                                            {employees.find(e => e.id === director.employeeId)?.position || (director.role === UserRole.ADMIN ? 'Giám đốc' : 'Phó giám đốc')}
+                                        </span>
                                     </div>
                                 </label>
                             ))}

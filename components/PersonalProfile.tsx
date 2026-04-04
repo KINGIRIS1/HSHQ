@@ -7,16 +7,19 @@ import { getShortRecordType } from '../constants';
 import { confirmAction } from '../utils/appHelpers';
 import { updateRecordApi } from '../services/api';
 import { fetchArchiveRecords, ArchiveRecord, saveArchiveRecord } from '../services/apiArchive';
+import SubmitModal from './receive-record/SubmitModal';
 
 interface PersonalProfileProps {
   user: User;
   records: RecordFile[];
+  isDirector?: boolean;
+  users: User[];
+  employees: Employee[];
   onUpdateStatus: (record: RecordFile, newStatus: RecordStatus) => void;
+  onUpdateRecord?: (record: RecordFile) => Promise<RecordFile | null>;
   onViewRecord: (record: RecordFile) => void;
   onCreateLiquidation?: (record: RecordFile) => void; 
   onMapCorrection?: (record: RecordFile) => void; // New Handler Prop
-  onApproveRecord?: (record: RecordFile) => void;
-  employees: Employee[];
 }
 
 function removeVietnameseTones(str: string): string {
@@ -36,13 +39,7 @@ function removeVietnameseTones(str: string): string {
     return str;
 }
 
-const PersonalProfile: React.FC<PersonalProfileProps> = ({ user, records, employees, onUpdateStatus, onViewRecord, onCreateLiquidation, onMapCorrection, onApproveRecord }) => {
-  const isDirector = useMemo(() => {
-      if (!user.employeeId) return false;
-      const emp = employees.find(e => e.id === user.employeeId);
-      return emp?.department?.trim().toLowerCase() === 'ban giám đốc';
-  }, [employees, user.employeeId]);
-
+const PersonalProfile: React.FC<PersonalProfileProps> = ({ user, records, isDirector, users, employees, onUpdateStatus, onUpdateRecord, onViewRecord, onCreateLiquidation, onMapCorrection }) => {
   // Thêm tab 'completed_work' và 'pending_sign'
   const [activeTab, setActiveTab] = useState<'pending' | 'completed_work' | 'pending_sign' | 'finished' | 'reminder'>(isDirector ? 'pending_sign' : 'pending');
   const [currentPage, setCurrentPage] = useState(1);
@@ -55,6 +52,8 @@ const PersonalProfile: React.FC<PersonalProfileProps> = ({ user, records, employ
   });
 
   const [archiveRecords, setArchiveRecords] = useState<ArchiveRecord[]>([]);
+  const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
+  const [submitTargetRecords, setSubmitTargetRecords] = useState<RecordFile[]>([]);
 
   useEffect(() => {
     const loadArchive = async () => {
@@ -75,7 +74,13 @@ const PersonalProfile: React.FC<PersonalProfileProps> = ({ user, records, employ
     });
     
     const mappedArchives = archiveRecords
-        .filter(r => r.data?.assigned_to === user.employeeId)
+        .filter(r => {
+            if (!user.employeeId) return false;
+            if (isDirector) {
+                return r.data?.submitted_to === user.employeeId; // Assuming archive has submitted_to
+            }
+            return r.data?.assigned_to === user.employeeId;
+        })
         .map(r => {
             // Map status
             let status = RecordStatus.RECEIVED;
@@ -276,36 +281,61 @@ const PersonalProfile: React.FC<PersonalProfileProps> = ({ user, records, employ
   };
 
   const handleForwardToSign = async (record: RecordFile) => {
-    if (await confirmAction(`Bạn muốn chuyển hồ sơ ${record.code} sang trạng thái "Chờ ký duyệt"?`)) {
-        if (record.recordType === 'Sao lục' || record.recordType === 'Công văn') {
-             // Handle Archive Record
-            const historyEntry = {
-                action: 'Trình ký',
-                status: 'pending_sign',
-                timestamp: new Date().toISOString(),
-                user: user.name
-            };
+    setSubmitTargetRecords([record]);
+    setIsSubmitModalOpen(true);
+  };
 
-            const currentArchive = archiveRecords.find(r => r.id === record.id);
-            if (currentArchive) {
-                 const oldHistory = Array.isArray(currentArchive.data?.history) ? currentArchive.data.history : [];
-                 const newHistory = [...oldHistory, historyEntry];
-                 
-                 await saveArchiveRecord({
-                     id: record.id,
-                     status: 'pending_sign',
-                     data: { ...currentArchive.data, history: newHistory }
-                 });
-                 
-                 // Refresh data
-                 const saoluc = await fetchArchiveRecords('saoluc');
-                 const congvan = await fetchArchiveRecords('congvan');
-                 setArchiveRecords([...saoluc, ...congvan]);
+  const handleConfirmSubmit = async (directorId: string) => {
+    try {
+        for (const record of submitTargetRecords) {
+            if (record.recordType === 'Sao lục' || record.recordType === 'Công văn') {
+                 // Handle Archive Record
+                const historyEntry = {
+                    action: 'Trình ký',
+                    status: 'pending_sign',
+                    timestamp: new Date().toISOString(),
+                    user: user.name
+                };
+
+                const currentArchive = archiveRecords.find(r => r.id === record.id);
+                if (currentArchive) {
+                     const oldHistory = Array.isArray(currentArchive.data?.history) ? currentArchive.data.history : [];
+                     const newHistory = [...oldHistory, historyEntry];
+                     
+                     await saveArchiveRecord({
+                         id: record.id,
+                         status: 'pending_sign',
+                         data: { ...currentArchive.data, history: newHistory, submitted_to: directorId }
+                     });
+                }
+            } else {
+                // Normal Record
+                const updatedRecord = {
+                    ...record,
+                    status: RecordStatus.PENDING_SIGN,
+                    submittedTo: directorId,
+                    submissionDate: new Date().toISOString().split('T')[0]
+                };
+                
+                if (onUpdateRecord) {
+                    await onUpdateRecord(updatedRecord);
+                } else {
+                    await updateRecordApi(updatedRecord);
+                    onUpdateStatus(record, RecordStatus.PENDING_SIGN); // Fallback local state update
+                }
             }
-        } else {
-            // Normal Record
-            onUpdateStatus(record, RecordStatus.PENDING_SIGN);
         }
+        
+        // Refresh archive data
+        const saoluc = await fetchArchiveRecords('saoluc');
+        const congvan = await fetchArchiveRecords('congvan');
+        setArchiveRecords([...saoluc, ...congvan]);
+        
+        setIsSubmitModalOpen(false);
+        setSubmitTargetRecords([]);
+    } catch (error) {
+        console.error("Error submitting records:", error);
+        alert("Có lỗi xảy ra khi trình ký.");
     }
   };
 
@@ -591,11 +621,7 @@ const PersonalProfile: React.FC<PersonalProfileProps> = ({ user, records, employ
                                                 </button>
                                             )}
                                             
-                                            {activeTab === 'pending_sign' && onApproveRecord && (
-                                                <button onClick={() => onApproveRecord(r)} title="Hoàn tất ký duyệt" className="px-3 py-1.5 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 text-xs font-bold flex items-center gap-2 shadow-sm transition-all">
-                                                    Ký duyệt <FileSignature size={14} />
-                                                </button>
-                                            )}
+                                            {/* Tab Chờ ký không có nút hành động (chỉ xem) */}
                                         </div>
                                     </td>
                                 </tr>
@@ -625,6 +651,15 @@ const PersonalProfile: React.FC<PersonalProfileProps> = ({ user, records, employ
             </div>
         )}
       </div>
+
+      <SubmitModal 
+          isOpen={isSubmitModalOpen}
+          onClose={() => setIsSubmitModalOpen(false)}
+          records={submitTargetRecords}
+          users={users}
+          employees={employees}
+          onConfirm={handleConfirmSubmit}
+      />
     </div>
   );
 };

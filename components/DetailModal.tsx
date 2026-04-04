@@ -684,9 +684,10 @@ export const DetailModal: React.FC<DetailModalProps> = ({ isOpen, onClose, recor
                                 icon={Send}
                                 colorClass={{text: 'text-purple-700', border: 'border-purple-600', bg: 'bg-purple-600'}}
                                 subText={record.submittedTo ? (() => {
-                                    const director = employees.find(e => e.id === record.submittedTo);
+                                    const director = users.find(u => u.employeeId === record.submittedTo);
                                     if (!director) return undefined;
-                                    return `${director.position || 'Giám đốc'} ${director.name}`;
+                                    const emp = employees.find(e => e.id === director.employeeId);
+                                    return `${director.name} (${emp?.position || (director.role === UserRole.ADMIN ? 'Giám đốc' : 'Phó giám đốc')})`;
                                 })() : undefined}
                             />
                             
@@ -695,11 +696,6 @@ export const DetailModal: React.FC<DetailModalProps> = ({ isOpen, onClose, recor
                                 label="KÝ DUYỆT" 
                                 icon={FileSignature}
                                 colorClass={{text: 'text-indigo-700', border: 'border-indigo-600', bg: 'bg-indigo-600'}}
-                                subText={(record.approvalDate && record.submittedTo) ? (() => {
-                                    const director = employees.find(e => e.id === record.submittedTo);
-                                    if (!director) return undefined;
-                                    return `${director.position || 'Giám đốc'} ${director.name}`;
-                                })() : undefined}
                             />
                             
                             <TimelineItem 

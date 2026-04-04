@@ -5,7 +5,7 @@ import { RECORD_TYPES } from '../../constants';
 import { Save, User as UserIcon, Calendar, MapPin, FileCheck, Loader2, Printer, RotateCcw, XCircle, CheckCircle, AlertCircle, X, Phone, FileText, BookOpen, Clock, Hash, Map } from 'lucide-react';
 
 interface RecordFormProps {
-  onSave: (record: RecordFile) => Promise<boolean>;
+  onSave: (record: RecordFile) => Promise<RecordFile | null>;
   wards: string[];
   records: RecordFile[];
   holidays: Holiday[];
@@ -80,12 +80,12 @@ const RecordForm: React.FC<RecordFormProps> = ({ onSave, wards, records, holiday
     }
     setLoading(true);
     const recordToSave: RecordFile = { ...formData, id: formData.id || Math.random().toString(36).substr(2, 9), status: formData.status || RecordStatus.RECEIVED } as RecordFile;
-    const success = await onSave(recordToSave);
+    const savedRecord = await onSave(recordToSave);
     setLoading(false);
-    if (success) {
-        setNotification({ type: 'success', message: initialData ? `Cập nhật thành công: ${recordToSave.code}` : `Đã tiếp nhận mới: ${recordToSave.code}` });
+    if (savedRecord) {
+        setNotification({ type: 'success', message: initialData ? `Cập nhật thành công: ${savedRecord.code}` : `Đã tiếp nhận mới: ${savedRecord.code}` });
         if (!initialData && onPrint) {
-            onPrint(recordToSave);
+            onPrint(savedRecord);
         }
         if (initialData && onCancelEdit) onCancelEdit(); else handleReset(true);
     } else {

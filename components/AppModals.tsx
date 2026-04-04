@@ -57,7 +57,7 @@ interface AppModalsProps {
     setReturnRecord: (r: RecordFile | null) => void;
 
     // Handlers
-    handleAddOrUpdate: (data: any) => Promise<boolean>;
+    handleAddOrUpdate: (data: any) => Promise<RecordFile | null>;
     handleImportRecords: (data: RecordFile[], mode: 'create' | 'update') => Promise<boolean>;
     handleSaveEmployee: (emp: Employee) => void;
     handleDeleteEmployee: (id: string) => void;

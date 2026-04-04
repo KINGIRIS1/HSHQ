@@ -7,8 +7,8 @@ import { logError, getFromCache, saveToCache, CACHE_KEYS, sanitizeData, normaliz
 const RECORD_DB_COLUMNS = [
     'id', 'code', 'customerName', 'phoneNumber', 'cccd', 'customerAddress', 'ward', 'landPlot', 'mapSheet', 
     'area', 'address', 'group', 'content', 'recordType', 'receivedDate', 'deadline', 
-    'assignedDate', 'submissionDate', 'approvalDate', 'completedDate', 'status', 'assignedTo', 
-    'notes', 'privateNotes', 'personalNotes', 'submittedTo',
+    'assignedDate', 'submissionDate', 'approvalDate', 'completedDate', 'status', 'assignedTo', 'submittedTo',
+    'notes', 'privateNotes', 'personalNotes', 
     'authorizedBy', 'authDocType', 'otherDocs', 'exportBatch', 'exportDate', 
     'measurementNumber', 'excerptNumber',
     'reminderDate', 'lastRemindedAt',
@@ -76,10 +76,109 @@ export const fetchRecords = async (): Promise<RecordFile[]> => {
   }
 };
 
+export const getShortCode = (ward: string) => {
+    const normalized = ward.toLowerCase().trim();
+    const cleanName = normalized
+        .replace(/^(xã|phường|thị trấn|tt\.|p\.|x\.)\s+/g, '')
+        .replace(/\s+(xã|phường|thị trấn)\s+/g, ' ');
+
+    if (cleanName.includes('tân khai') || cleanName.includes('tankhai')) return 'TK';
+    if (cleanName.includes('tân hưng') || cleanName.includes('tanhung')) return 'TH';
+    if (cleanName.includes('minh đức') || cleanName.includes('minhduc')) return 'MĐ';
+    if (cleanName.includes('tân quan') || cleanName.includes('tanquan')) return 'TQ';
+
+    if (cleanName.includes('minh hưng') || cleanName.includes('minhhung')) return 'MH';
+    if (cleanName.includes('chơn thành') || cleanName.includes('chonthanh') || cleanName.includes('hưng long')) return 'CT';
+    if (cleanName.includes('nha bích') || cleanName.includes('nhabich')) return 'NB';
+    if (cleanName.includes('minh lập') || cleanName.includes('minhlap')) return 'ML';
+    if (cleanName.includes('minh thắng') || cleanName.includes('minhthang')) return 'MT';
+    if (cleanName.includes('quang minh') || cleanName.includes('quangminh')) return 'QM';
+    if (cleanName.includes('thành tâm') || cleanName.includes('thanhtam')) return 'TT';
+    if (cleanName.includes('minh long') || cleanName.includes('minhlong')) return 'MLO';
+    
+    return 'CT';
+};
+
+export const getNextGlobalRecordCode = async (wardName: string, dateStr: string): Promise<string> => {
+    const prefix = getShortCode(wardName);
+    if (!isConfigured) {
+        const d = new Date(dateStr);
+        const yy = d.getFullYear().toString().slice(-2);
+        const mm = ('0' + (d.getMonth() + 1)).slice(-2);
+        const dd = ('0' + d.getDate()).slice(-2);
+        return `${prefix}-${yy}${mm}${dd}-${Math.floor(Math.random() * 1000).toString().padStart(4, '0')}`;
+    }
+
+    const d = new Date(dateStr);
+    const year = d.getFullYear().toString();
+    const yy = year.slice(-2);
+    const mm = ('0' + (d.getMonth() + 1)).slice(-2);
+    const dd = ('0' + d.getDate()).slice(-2);
+    const datePrefix = `${yy}${mm}${dd}`;
+    
+    const key = `record_counter_${year}`;
+    let nextSeq = 1;
+    let success = false;
+    let attempts = 0;
+
+    while (!success && attempts < 5) {
+        attempts++;
+        try {
+            const { data } = await supabase.from('system_settings').select('value').eq('key', key).single();
+            
+            let currentVal = 0;
+            if (data && data.value) {
+                currentVal = parseInt(data.value, 10);
+                if (isNaN(currentVal)) currentVal = 0;
+            }
+
+            nextSeq = currentVal + 1;
+
+            if (data) {
+                const { data: updatedData, error } = await supabase
+                    .from('system_settings')
+                    .update({ value: nextSeq.toString() })
+                    .eq('key', key)
+                    .eq('value', data.value)
+                    .select();
+                    
+                if (!error && updatedData && updatedData.length > 0) {
+                    success = true;
+                }
+            } else {
+                const { data: insertedData, error } = await supabase
+                    .from('system_settings')
+                    .insert([{ key, value: nextSeq.toString() }])
+                    .select();
+                    
+                if (!error && insertedData && insertedData.length > 0) {
+                    success = true;
+                }
+            }
+        } catch (e) {
+            // Ignore and retry
+        }
+
+        if (!success) {
+            await new Promise(resolve => setTimeout(resolve, 300 + Math.random() * 500));
+        }
+    }
+
+    const seqStr = nextSeq.toString().padStart(4, '0');
+    return `${prefix}-${datePrefix}-${seqStr}`;
+};
+
 export const createRecordApi = async (record: RecordFile): Promise<RecordFile | null> => {
     if (!isConfigured) return record;
     try {
-        const payload = sanitizeData(record, RECORD_DB_COLUMNS);
+        let finalCode = record.code;
+        const isGeneratedFormat = finalCode && /^[A-ZĐ]{2,3}-\d{6}-\d{3,4}$/.test(finalCode);
+        
+        if (!finalCode || finalCode.includes('?') || isGeneratedFormat) {
+            finalCode = await getNextGlobalRecordCode(record.ward || '', record.receivedDate || new Date().toISOString());
+        }
+        
+        const payload = sanitizeData({ ...record, code: finalCode }, RECORD_DB_COLUMNS);
         const { data, error } = await supabase.from('land_records').insert([payload]).select();
         if (error) throw error;
         return data?.[0] as RecordFile;
@@ -117,7 +216,15 @@ export const deleteRecordApi = async (id: string): Promise<boolean> => {
 export const createRecordsBatchApi = async (records: RecordFile[]): Promise<boolean> => {
     if (!isConfigured) return true;
     try {
-        const payload = records.map(r => sanitizeData(r, RECORD_DB_COLUMNS));
+        const payload = [];
+        for (const r of records) {
+            let finalCode = r.code;
+            const isGeneratedFormat = finalCode && /^[A-ZĐ]{2,3}-\d{6}-\d{3,4}$/.test(finalCode);
+            if (!finalCode || finalCode.includes('?') || isGeneratedFormat) {
+                finalCode = await getNextGlobalRecordCode(r.ward || '', r.receivedDate || new Date().toISOString());
+            }
+            payload.push(sanitizeData({ ...r, code: finalCode }, RECORD_DB_COLUMNS));
+        }
         const { error } = await supabase.from('land_records').insert(payload);
         if (error) throw error;
         return true;

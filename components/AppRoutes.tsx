@@ -45,7 +45,7 @@ interface AppRoutesProps {
     // Handlers
     handleViewRecord: (r: RecordFile) => void;
     handleMapCorrectionRequest: (r: RecordFile) => void;
-    handleAddOrUpdateRecord: (r: RecordFile) => Promise<boolean>;
+    handleAddOrUpdateRecord: (r: RecordFile) => Promise<RecordFile | null>;
     handleDeleteRecord: (id: string) => Promise<boolean>;
     handleUpdateUser: (u: User, isUpdate: boolean) => void;
     handleDeleteUser: (username: string) => void;
@@ -128,19 +128,28 @@ const AppRoutes: React.FC<AppRoutesProps> = (props) => {
 
     const isAdmin = currentUser.role === UserRole.ADMIN;
     const isSubadmin = currentUser.role === UserRole.SUBADMIN;
+    
+    // Xác định xem user có thuộc Ban giám đốc không
+    const isDirector = React.useMemo(() => {
+        if (!currentUser.employeeId) return false;
+        const emp = employees.find(e => e.id === currentUser.employeeId);
+        return emp ? (emp.department?.trim().toLowerCase() === 'ban giám đốc' || emp.department?.trim().toLowerCase() === 'ban lãnh đạo') : false;
+    }, [currentUser.employeeId, employees]);
+
     // canPerformAction is kept for backward compatibility, but we should use hasPermission where possible
-    const canPerformAction = isAdmin || isSubadmin || currentUser.role === UserRole.TEAM_LEADER || currentUser.role === UserRole.ONEDOOR;
+    const canPerformAction = isAdmin || isSubadmin || currentUser.role === UserRole.TEAM_LEADER || currentUser.role === UserRole.ONEDOOR || isDirector;
 
     const [showColumnSelector, setShowColumnSelector] = React.useState(false);
 
     // --- RENDER RECORD LIST (Extracted to be used in switch) ---
     const renderRecordList = () => {
         // Kiểm tra xem có đang ở chế độ xem Hồ sơ đo đạc (bao gồm tất cả các tab con)
-        const isMeasurementView = ['all_records', 'assign_tasks', 'completed_list', 'check_list', 'handover_list'].includes(currentView);
-        const isOtherView = ['other_records', 'other_assign_tasks', 'other_check_list', 'other_handover_list'].includes(currentView);
+        const isMeasurementView = ['all_records', 'assign_tasks', 'completed_list', 'check_list', 'handover_list', 'director_completed'].includes(currentView);
+        const isOtherView = ['other_records', 'other_assign_tasks', 'other_check_list', 'other_handover_list', 'other_director_completed'].includes(currentView);
         
         let title = 'Danh sách Hồ sơ';
-        if (currentView === 'check_list' || currentView === 'other_check_list') title = 'Danh sách Trình Ký';
+        if (currentView === 'check_list' || currentView === 'other_check_list') title = isDirector ? 'Danh sách Chờ ký' : 'Danh sách Trình Ký';
+        else if (currentView === 'director_completed' || currentView === 'other_director_completed') title = 'Danh sách Hoàn thành';
         else if (currentView === 'handover_list' || currentView === 'other_handover_list') title = 'Danh sách Giao 1 cửa';
         else if (currentView === 'assign_tasks' || currentView === 'other_assign_tasks') title = 'Hồ sơ chưa giao';
         else if (currentView === 'completed_list') title = 'Hồ sơ đã thực hiện';
@@ -153,39 +162,52 @@ const AppRoutes: React.FC<AppRoutesProps> = (props) => {
                 {/* SUB-HEADER TABS FOR MEASUREMENT RECORDS */}
                 {isMeasurementView && (
                     <div className="flex border-b border-gray-200 bg-gray-50 px-4 overflow-x-auto">
-                        <button 
-                            onClick={() => props.setCurrentView('all_records')}
-                            className={`px-4 py-3 text-sm font-bold flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap ${currentView === 'all_records' ? 'border-blue-600 text-blue-700 bg-white' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
-                        >
-                            <FileText size={16} /> Tất cả hồ sơ
-                        </button>
-                        
-                        {(isAdmin || isSubadmin || currentUser.role === UserRole.TEAM_LEADER) && (
-                            <button 
-                                onClick={() => props.setCurrentView('assign_tasks')}
-                                className={`px-4 py-3 text-sm font-bold flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap ${currentView === 'assign_tasks' ? 'border-blue-600 text-blue-700 bg-white' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
-                            >
-                                <UserPlusIcon size={16} /> Chưa giao
-                            </button>
+                        {!isDirector && (
+                            <>
+                                <button 
+                                    onClick={() => props.setCurrentView('all_records')}
+                                    className={`px-4 py-3 text-sm font-bold flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap ${currentView === 'all_records' ? 'border-blue-600 text-blue-700 bg-white' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                                >
+                                    <FileText size={16} /> Tất cả hồ sơ
+                                </button>
+                                
+                                {(isAdmin || isSubadmin || currentUser.role === UserRole.TEAM_LEADER) && (
+                                    <button 
+                                        onClick={() => props.setCurrentView('assign_tasks')}
+                                        className={`px-4 py-3 text-sm font-bold flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap ${currentView === 'assign_tasks' ? 'border-blue-600 text-blue-700 bg-white' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                                    >
+                                        <UserPlusIcon size={16} /> Chưa giao
+                                    </button>
+                                )}
+
+                                <button 
+                                    onClick={() => props.setCurrentView('completed_list')}
+                                    className={`px-4 py-3 text-sm font-bold flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap ${currentView === 'completed_list' ? 'border-blue-600 text-blue-700 bg-white' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                                >
+                                    <CheckSquare size={16} /> Đã thực hiện
+                                </button>
+                            </>
                         )}
 
-                        <button 
-                            onClick={() => props.setCurrentView('completed_list')}
-                            className={`px-4 py-3 text-sm font-bold flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap ${currentView === 'completed_list' ? 'border-blue-600 text-blue-700 bg-white' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
-                        >
-                            <CheckSquare size={16} /> Đã thực hiện
-                        </button>
-
-                        {(isAdmin || isSubadmin) && (
+                        {(isAdmin || isSubadmin || isDirector) && (
                             <button 
                                 onClick={() => props.setCurrentView('check_list')}
                                 className={`px-4 py-3 text-sm font-bold flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap ${currentView === 'check_list' ? 'border-purple-600 text-purple-700 bg-white' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
                             >
-                                <ClipboardList size={16} /> Trình ký
+                                <ClipboardList size={16} /> {isDirector ? 'Chờ ký' : 'Trình ký'}
                             </button>
                         )}
 
-                        {(isAdmin || isSubadmin || currentUser.role === UserRole.ONEDOOR) && (
+                        {isDirector && (
+                            <button 
+                                onClick={() => props.setCurrentView('director_completed')}
+                                className={`px-4 py-3 text-sm font-bold flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap ${currentView === 'director_completed' ? 'border-green-600 text-green-700 bg-white' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                            >
+                                <CheckSquare size={16} /> Hoàn thành
+                            </button>
+                        )}
+
+                        {!isDirector && (isAdmin || isSubadmin || currentUser.role === UserRole.ONEDOOR) && (
                             <button 
                                 onClick={() => props.setCurrentView('handover_list')}
                                 className={`px-4 py-3 text-sm font-bold flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap ${currentView === 'handover_list' ? 'border-green-600 text-green-700 bg-white' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
@@ -199,32 +221,45 @@ const AppRoutes: React.FC<AppRoutesProps> = (props) => {
                 {/* SUB-HEADER TABS FOR OTHER RECORDS */}
                 {isOtherView && (
                     <div className="flex border-b border-gray-200 bg-gray-50 px-4 overflow-x-auto">
-                        <button 
-                            onClick={() => props.setCurrentView('other_records')}
-                            className={`px-4 py-3 text-sm font-bold flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap ${currentView === 'other_records' ? 'border-blue-600 text-blue-700 bg-white' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
-                        >
-                            <FileText size={16} /> Tất cả hồ sơ
-                        </button>
-                        
-                        {(isAdmin || isSubadmin || currentUser.role === UserRole.TEAM_LEADER) && (
-                            <button 
-                                onClick={() => props.setCurrentView('other_assign_tasks')}
-                                className={`px-4 py-3 text-sm font-bold flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap ${currentView === 'other_assign_tasks' ? 'border-blue-600 text-blue-700 bg-white' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
-                            >
-                                <UserPlusIcon size={16} /> Chưa giao
-                            </button>
+                        {!isDirector && (
+                            <>
+                                <button 
+                                    onClick={() => props.setCurrentView('other_records')}
+                                    className={`px-4 py-3 text-sm font-bold flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap ${currentView === 'other_records' ? 'border-blue-600 text-blue-700 bg-white' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                                >
+                                    <FileText size={16} /> Tất cả hồ sơ
+                                </button>
+                                
+                                {(isAdmin || isSubadmin || currentUser.role === UserRole.TEAM_LEADER) && (
+                                    <button 
+                                        onClick={() => props.setCurrentView('other_assign_tasks')}
+                                        className={`px-4 py-3 text-sm font-bold flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap ${currentView === 'other_assign_tasks' ? 'border-blue-600 text-blue-700 bg-white' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                                    >
+                                        <UserPlusIcon size={16} /> Chưa giao
+                                    </button>
+                                )}
+                            </>
                         )}
 
-                        {(isAdmin || isSubadmin) && (
+                        {(isAdmin || isSubadmin || isDirector) && (
                             <button 
                                 onClick={() => props.setCurrentView('other_check_list')}
                                 className={`px-4 py-3 text-sm font-bold flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap ${currentView === 'other_check_list' ? 'border-purple-600 text-purple-700 bg-white' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
                             >
-                                <ClipboardList size={16} /> Trình ký
+                                <ClipboardList size={16} /> {isDirector ? 'Chờ ký' : 'Trình ký'}
                             </button>
                         )}
 
-                        {(isAdmin || isSubadmin || currentUser.role === UserRole.ONEDOOR) && (
+                        {isDirector && (
+                            <button 
+                                onClick={() => props.setCurrentView('other_director_completed')}
+                                className={`px-4 py-3 text-sm font-bold flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap ${currentView === 'other_director_completed' ? 'border-green-600 text-green-700 bg-white' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                            >
+                                <CheckSquare size={16} /> Hoàn thành
+                            </button>
+                        )}
+
+                        {!isDirector && (isAdmin || isSubadmin || currentUser.role === UserRole.ONEDOOR) && (
                             <button 
                                 onClick={() => props.setCurrentView('other_handover_list')}
                                 className={`px-4 py-3 text-sm font-bold flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap ${currentView === 'other_handover_list' ? 'border-green-600 text-green-700 bg-white' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
@@ -498,18 +533,17 @@ const AppRoutes: React.FC<AppRoutesProps> = (props) => {
                 <PersonalProfile
                     user={currentUser}
                     records={records}
+                    isDirector={isDirector}
+                    users={users}
                     employees={employees}
                     onUpdateStatus={(r, status) => props.handleQuickUpdate(r.id, 'status', status)}
+                    onUpdateRecord={props.handleAddOrUpdateRecord}
                     onViewRecord={props.handleViewRecord}
                     onCreateLiquidation={(r) => { 
                         props.setRecordToLiquidate(r); 
                         props.setCurrentView('receive_contract'); 
                     }}
                     onMapCorrection={props.handleMapCorrectionRequest}
-                    onApproveRecord={(r) => {
-                        const todayStr = new Date().toISOString().split('T')[0];
-                        props.handleAddOrUpdateRecord({ ...r, status: RecordStatus.SIGNED, approvalDate: todayStr, completedDate: null });
-                    }}
                 />
             );
         case 'receive_record':
