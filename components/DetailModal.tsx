@@ -664,6 +664,19 @@ export const DetailModal: React.FC<DetailModalProps> = ({ isOpen, onClose, recor
 
                         <div className="p-6 space-y-0">
                              <TimelineItem 
+                                date={record.receivedDate} 
+                                label="NHẬN HỒ SƠ" 
+                                icon={UserIcon}
+                                colorClass={{text: 'text-emerald-700', border: 'border-emerald-600', bg: 'bg-emerald-600'}}
+                                subText={record.receivedBy ? (() => {
+                                    const receiver = users.find(u => u.employeeId === record.receivedBy);
+                                    if (!receiver) return undefined;
+                                    const emp = employees.find(e => e.id === receiver.employeeId);
+                                    return `${receiver.name} (${emp?.position || 'Nhân viên'})`;
+                                })() : undefined}
+                            />
+
+                             <TimelineItem 
                                 date={record.assignedDate} 
                                 label="GIAO NHÂN VIÊN" 
                                 icon={UserIcon}

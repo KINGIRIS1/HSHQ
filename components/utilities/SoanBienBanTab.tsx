@@ -2,11 +2,12 @@
 import React, { useState, useEffect } from 'react';
 import { User as UserType, NotifyFunction } from '../../types';
 import saveAs from 'file-saver';
-import { Loader2, Download, ExternalLink, List, PlusCircle, Save, Settings, Trash2, X, Plus } from 'lucide-react';
+import { Loader2, Download, ExternalLink, List, PlusCircle, Save, Settings, Trash2, X, Plus, Search } from 'lucide-react';
 import BienBanForm from './bien-ban-tab/BienBanForm';
 import BienBanPreview from './bien-ban-tab/BienBanPreview';
 import BienBanList from './bien-ban-tab/BienBanList';
 import { BienBanRecord, fetchBienBanRecords, saveBienBanRecord, deleteBienBanRecord } from '../../services/apiUtilities';
+import { fetchRecords } from '../../services/apiRecords';
 
 interface BoundaryChange {
   id: string;
@@ -29,7 +30,7 @@ const DEFAULT_BDDC_CAUSE = "Khi đo đạc lập bản đồ địa chính khôn
 
 const DEFAULT_ISSUING_AUTHORITIES = [
     "Sở Tài nguyên và Môi trường tỉnh Bình Phước",
-    "Văn phòng Đăng ký Đất đai tỉnh Bình Phước - Chi nhánh Hớn Quản",
+    "Văn phòng Đăng ký Đất đai tỉnh Đồng Nai - Chi nhánh Hớn Quản",
     "Chi nhánh Văn phòng Đăng ký Đất đai huyện Hớn Quản",
     "UBND huyện Hớn Quản",
     "UBND huyện Bình Long (cũ)"
@@ -54,6 +55,58 @@ const SoanBienBanTab: React.FC<SoanBienBanTabProps> = ({ currentUser, isActive, 
   const [isConfigAuthorities, setIsConfigAuthorities] = useState(false);
   const [tempAuthorities, setTempAuthorities] = useState<string[]>([]);
 
+  const [searchCode, setSearchCode] = useState('');
+  const [isLoadingInfo, setIsLoadingInfo] = useState(false);
+
+  const handleLoadInfo = async () => {
+      if (!searchCode.trim()) {
+          notify("Vui lòng nhập số biên nhận", "info");
+          return;
+      }
+      setIsLoadingInfo(true);
+      try {
+          const records = await fetchRecords();
+          const record = records.find(r => r.code.toLowerCase() === searchCode.trim().toLowerCase());
+          
+          if (record) {
+              setFormData(prev => ({
+                  ...prev,
+                  TEN_CHU: record.customerName || prev.TEN_CHU,
+                  DIA_CHI_CHU: record.customerAddress || prev.DIA_CHI_CHU,
+                  OWNERS: [{
+                      id: Date.now().toString(),
+                      title: 'Ông/Bà',
+                      name: record.customerName || '',
+                      address: record.customerAddress || '',
+                      hasSpouse: false,
+                      spouseTitle: 'Bà',
+                      spouseName: '',
+                      spouseAddress: ''
+                  }],
+                  SO_THUA_MOI: record.landPlot || prev.SO_THUA_MOI,
+                  SO_TO_MOI: record.mapSheet || prev.SO_TO_MOI,
+                  DIA_CHI_THUA: record.address || prev.DIA_CHI_THUA,
+                  PHUONG: record.ward || prev.PHUONG,
+                  SO_GCN: record.issueNumber || prev.SO_GCN,
+                  SO_VAO_SO: record.entryNumber || prev.SO_VAO_SO,
+                  NGAY_CAP: record.issueDate || prev.NGAY_CAP,
+                  DT_CU: record.area ? record.area.toString() : prev.DT_CU,
+                  DT_ODT: record.residentialArea ? record.residentialArea.toString() : prev.DT_ODT,
+                  SO_THUA_CU: record.landPlot || prev.SO_THUA_CU,
+                  SO_TO_CU: record.mapSheet || prev.SO_TO_CU,
+              }));
+              notify("Đã tải thông tin thành công!", "success");
+          } else {
+              notify("Không tìm thấy hồ sơ với số biên nhận này", "error");
+          }
+      } catch (error) {
+          console.error("Error loading info:", error);
+          notify("Lỗi khi tải thông tin", "error");
+      } finally {
+          setIsLoadingInfo(false);
+      }
+  };
+
   const [formData, setFormData] = useState({
     GIO_LAP: '',
     PHUT_LAP: '',
@@ -61,7 +114,7 @@ const SoanBienBanTab: React.FC<SoanBienBanTabProps> = ({ currentUser, isActive, 
     THANG_LAP: '',
     NAM_LAP: '',
     HO: 'Ông', TEN_CHU: '', DIA_CHI_CHU: '',
-    OWNERS: [], // Mảng chứa danh sách chủ (New)
+    OWNERS: [] as any[], // Mảng chứa danh sách chủ (New)
     SO_THUA_MOI: '', SO_TO_106: '', SO_TO_MOI: '', DIA_CHI_THUA: '', PHUONG: 'thị trấn Tân Khai',
     SO_GCN: '', SO_VAO_SO: '', DV_CAP_GCN: 'Sở Tài nguyên và Môi trường tỉnh Bình Phước', NGAY_CAP: '',
     SO_THUA_CU: '', SO_TO_CU: '', 
@@ -433,7 +486,7 @@ const SoanBienBanTab: React.FC<SoanBienBanTabProps> = ({ currentUser, isActive, 
         <p style="${indentStyle} margin-bottom: 5px;"><b>Nguyên nhân:</b></p>
         <p style="${indentStyle} margin-bottom: 5px;">${bddcCauseText}.</p>
         <p style="${indentStyle} margin-bottom: 5px;">Nay chủ sử dụng đất và các chủ sử dụng đất giáp ranh tiến hành cắm mốc xác định lại ranh giới theo hiện trạng, cam kết không tranh chấp.</p>
-        <p style="${indentStyle} margin-bottom: 12px;">Do đó, Kiến nghị Văn phòng Đăng ký đất đai tỉnh Bình Phước – Chi nhánh Hớn Quản cấp đổi GCNQSDĐ cho ${daiTuNhanXung}, đồng thời chỉnh lý bản đồ địa chính năm 2024 theo hiện trạng sử dụng đất thực tế.</p>
+        <p style="${indentStyle} margin-bottom: 12px;">Do đó, Kiến nghị Văn phòng Đăng ký đất đai tỉnh Đồng Nai – Chi nhánh Hớn Quản cấp đổi GCNQSDĐ cho ${daiTuNhanXung}, đồng thời chỉnh lý bản đồ địa chính năm 2024 theo hiện trạng sử dụng đất thực tế.</p>
         `
         : "";
 
@@ -586,7 +639,7 @@ const SoanBienBanTab: React.FC<SoanBienBanTabProps> = ({ currentUser, isActive, 
     const textDienTich = `, diện tích: <b>${dienTichHienThi} m²</b>`;
 
     const textMap2024 = `Theo bản đồ địa chính mới được Sở Tài nguyên và Môi trường ký duyệt ngày 10/10/2024 thuộc thửa đất số <b>${formData.SO_THUA_MOI || '...'}</b>, tờ bản đồ số <b>${formData.SO_TO_MOI || '...'}</b>${textDienTich}.`;
-    const textCV106 = `Theo Công văn số 106/VPĐK-KTĐC ngày 08/07/2025 của Văn phòng Đăng ký Đất đai tỉnh Bình Phước thuộc thửa đất số <b>${formData.SO_THUA_MOI || '...'}</b>, tờ bản đồ số <b>${formData.SO_TO_106}</b>${textDienTich}.`;
+    const textCV106 = `Theo Công văn số 106/VPĐK-KTĐC ngày 08/07/2025 của Văn phòng Đăng ký Đất đai tỉnh Đồng Nai thuộc thửa đất số <b>${formData.SO_THUA_MOI || '...'}</b>, tờ bản đồ số <b>${formData.SO_TO_106}</b>${textDienTich}.`;
 
     let canCuBanDoHtml = `<p style="${indentStyle} margin-bottom: 8px;">${textMap2024}</p>`;
     
@@ -615,7 +668,7 @@ const SoanBienBanTab: React.FC<SoanBienBanTabProps> = ({ currentUser, isActive, 
         ${ownersHtmlFull}
         
         <p style="margin-bottom: 5px;"><b>A. THÀNH PHẦN GỒM:</b></p>
-        <p style="margin-bottom: 5px;"><b>I. Đại diện Văn phòng Đăng ký đất đai tỉnh Bình Phước – Chi nhánh Hớn Quản:</b></p>
+        <p style="margin-bottom: 5px;"><b>I. Đại diện Văn phòng Đăng ký đất đai tỉnh Đồng Nai – Chi nhánh Hớn Quản:</b></p>
         <p style="margin-bottom: 5px;">1. ........................................................... - Chức vụ: ...........................................</p>
         <p style="margin-bottom: 10px;">2. Ông: <b>${toTitleCase(currentUser.name)}</b> - Chức vụ: Nhân viên</p>
 
@@ -629,7 +682,7 @@ const SoanBienBanTab: React.FC<SoanBienBanTabProps> = ({ currentUser, isActive, 
 
         <p style="margin-bottom: 8px;"><b>B. NỘI DUNG:</b></p>
         <p style="${indentStyle} margin-bottom: 8px;">Tiến hành đo đạc, kiểm tra, xác minh ranh giới, mốc giới thửa đất ngoài thực địa đối với khu đất:</p>
-        <p style="${indentStyle} margin-bottom: 8px;">Thửa đất số <b>${formData.SO_THUA_MOI || '...'}</b>, tờ bản đồ số <b>${toBanDoMoTa}</b>, tọa lạc tại ${formData.DIA_CHI_THUA}, ${formData.PHUONG}, tỉnh Bình Phước.</p>
+        <p style="${indentStyle} margin-bottom: 8px;">Thửa đất số <b>${formData.SO_THUA_MOI || '...'}</b>, tờ bản đồ số <b>${toBanDoMoTa}</b>, tọa lạc tại ${formData.DIA_CHI_THUA}, ${formData.PHUONG}, tỉnh Đồng Nai.</p>
 
         <p style="${indentStyle} margin-bottom: 8px;"><b>1. Về hồ sơ thửa đất:</b></p>
         <p style="${indentStyle} margin-bottom: 8px;">Khu đất đã được cấp GCNQSDĐ số phát hành <b>${formData.SO_GCN}</b> vào sổ cấp GCN số <b>${formData.SO_VAO_SO}</b> do <b>${formData.DV_CAP_GCN}</b> cấp ngày <b>${formattedNgayCap}</b>, thửa đất số ${formData.SO_THUA_CU}, tờ bản đồ số ${formData.SO_TO_CU}, diện tích ${formData.DT_CU} m² ${areaBreakdown}.</p>
@@ -763,6 +816,24 @@ const SoanBienBanTab: React.FC<SoanBienBanTabProps> = ({ currentUser, isActive, 
             {mode === 'create' ? (
                 <div className="flex flex-col lg:flex-row h-full overflow-hidden">
                     <div className="flex-none lg:w-[500px] border-r border-gray-200 bg-gray-50 flex flex-col h-full">
+                        <div className="p-3 bg-white border-b border-gray-200 flex gap-2 items-center shrink-0">
+                            <input 
+                                type="text" 
+                                placeholder="Nhập số biên nhận..." 
+                                className="flex-1 border border-gray-300 rounded px-3 py-1.5 text-sm"
+                                value={searchCode}
+                                onChange={(e) => setSearchCode(e.target.value)}
+                                onKeyDown={(e) => e.key === 'Enter' && handleLoadInfo()}
+                            />
+                            <button 
+                                onClick={handleLoadInfo}
+                                disabled={isLoadingInfo}
+                                className="bg-indigo-600 text-white px-3 py-1.5 rounded text-sm font-medium hover:bg-indigo-700 flex items-center gap-1 disabled:opacity-50 shrink-0"
+                            >
+                                {isLoadingInfo ? <Loader2 size={14} className="animate-spin" /> : <Search size={14} />}
+                                Load thông tin
+                            </button>
+                        </div>
                         <BienBanForm 
                             formData={formData} 
                             setFormData={setFormData}

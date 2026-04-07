@@ -654,7 +654,7 @@ const CongVanView: React.FC<CongVanViewProps> = ({ currentUser }) => {
                         ward: '',
                         status: RecordStatus.RECEIVED
                     } as RecordFile))}
-                    filterDepartment="Thông tin lưu trữ"
+                    filterDepartment="Lưu trữ"
                 />
 
                 {isFormOpen && (

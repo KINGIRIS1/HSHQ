@@ -11,6 +11,7 @@ interface BulkImportProps {
   calculateDeadline: (type: string, date: string) => string;
   calculateNextCode: (ward: string, date: string, existingCodes: string[]) => string;
   onPreview: (record: Partial<RecordFile>) => void;
+  currentUser?: any;
 }
 
 interface BulkRecordItem extends Partial<RecordFile> {
@@ -18,7 +19,7 @@ interface BulkRecordItem extends Partial<RecordFile> {
     isSaved: boolean;
 }
 
-const BulkImport: React.FC<BulkImportProps> = ({ onSave, calculateDeadline, calculateNextCode, onPreview }) => {
+const BulkImport: React.FC<BulkImportProps> = ({ onSave, calculateDeadline, calculateNextCode, onPreview, currentUser }) => {
   const [bulkRecords, setBulkRecords] = useState<BulkRecordItem[]>([]);
   const bulkFileInputRef = useRef<HTMLInputElement>(null);
 
@@ -137,6 +138,7 @@ const BulkImport: React.FC<BulkImportProps> = ({ onSave, calculateDeadline, calc
                   receivedDate: receivedDate,
                   deadline: deadline,
                   status: RecordStatus.RECEIVED,
+                  receivedBy: currentUser?.employeeId,
                   content: String(getVal(['NỘI DUNG', 'GHI CHÚ']) || ''),
                   authorizedBy: authorizedBy,
                   authDocType: authDocType,
@@ -170,7 +172,8 @@ const BulkImport: React.FC<BulkImportProps> = ({ onSave, calculateDeadline, calc
           id: Math.random().toString(36).substr(2, 9),
           receivedDate: record.receivedDate || new Date().toISOString().split('T')[0],
           deadline: record.deadline || '',
-          status: RecordStatus.RECEIVED
+          status: RecordStatus.RECEIVED,
+          receivedBy: currentUser?.employeeId
       } as RecordFile;
 
       const savedRecord = await onSave(newRecord);

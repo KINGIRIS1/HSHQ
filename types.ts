@@ -90,6 +90,7 @@ export interface RecordFile {
   recordType?: string | null;    
   
   receivedDate?: string | null;   
+  receivedBy?: string | null; // Người nhận hồ sơ (ID của user)
   deadline?: string | null;       
   assignedDate?: string | null;  
   

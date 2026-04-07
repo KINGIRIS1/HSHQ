@@ -444,7 +444,7 @@ const ChinhLyBienDongTab: React.FC<ChinhLyBienDongTabProps> = ({ currentUser, no
 
         // UPDATED TITLE & FOOTER
         const title1 = "DANH SÁCH CUNG CẤP SỐ THỬA CHÍNH THỨC";
-        const title2 = "CHI NHÁNH CHƠN THÀNH";
+        const title2 = "CHI NHÁNH HỚN QUẢN";
         
         // Header: Bỏ cột Ghi chú, đổi tên cột Số HĐ
         const header1 = ["STT", "Xã, Phường", "Thông tin trước biến động", "", "", "", "Thông tin sau biến động", "", "", "", "", "Thông tin QH / DT thu hồi", "Tổng DT (m2)", "Căn cứ pháp lý", "Ghi chú (Số hợp đồng)"];

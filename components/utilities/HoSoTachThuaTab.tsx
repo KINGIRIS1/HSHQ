@@ -453,7 +453,7 @@ const HoSoTachThuaTab: React.FC<HoSoTachThuaTabProps> = ({ currentUser, notify }
         const ws = XLSX.utils.aoa_to_sheet([]);
 
         const title1 = "DANH SÁCH CUNG CẤP SỐ THỬA CHÍNH THỨC";
-        const title2 = "CHI NHÁNH CHƠN THÀNH";
+        const title2 = "CHI NHÁNH HỚN QUẢN";
         
         // Cập nhật Header cho Excel (Bỏ cột Ghi chú, đổi tên cột Số HĐ)
         const header1 = ["STT", "Xã, Phường", "Thông tin trước biến động", "", "", "", "Thông tin sau biến động", "", "", "", "", "Tổng DT (m2)", "TT Quy hoạch", "Mục đích SDĐ", "", "Căn cứ pháp lý", "Ghi chú (Số hợp đồng)"];

@@ -104,7 +104,7 @@ const ReceiveRecord: React.FC<ReceiveRecordProps> = ({ onSave, onDelete, wards, 
   };
 
   const calculateNextCode = (wardName: string, dateStr: string, existingCodes: string[] = []) => {
-    if (!wardName || !dateStr) return '';
+    if (!dateStr) return '';
 
     const d = new Date(dateStr);
     const year = d.getFullYear().toString();
@@ -113,16 +113,19 @@ const ReceiveRecord: React.FC<ReceiveRecordProps> = ({ onSave, onDelete, wards, 
     const dd = ('0' + d.getDate()).slice(-2);
     const datePrefix = `${yy}${mm}${dd}`;
     
-    const prefix = getShortCode(wardName);
-    
     let maxSeq = 0;
     
     records.forEach(r => {
         if (!r.code) return;
         const parts = r.code.split('-');
-        if (parts.length === 3) {
+        if (parts.length === 2) {
+            const [rDate, rSeq] = parts;
+            if (rDate.substring(0, 2) === yy) {
+                const seqNum = parseInt(rSeq, 10);
+                if (!isNaN(seqNum) && seqNum > maxSeq) maxSeq = seqNum;
+            }
+        } else if (parts.length === 3) {
             const [rPrefix, rDate, rSeq] = parts;
-            // Check if it's the same year
             if (rDate.substring(0, 2) === yy) {
                 const seqNum = parseInt(rSeq, 10);
                 if (!isNaN(seqNum) && seqNum > maxSeq) maxSeq = seqNum;
@@ -133,9 +136,14 @@ const ReceiveRecord: React.FC<ReceiveRecordProps> = ({ onSave, onDelete, wards, 
     existingCodes.forEach(code => {
         if (!code) return;
         const parts = code.split('-');
-        if (parts.length === 3) {
+        if (parts.length === 2) {
+            const [rDate, rSeq] = parts;
+            if (rDate.substring(0, 2) === yy) {
+                const seqNum = parseInt(rSeq, 10);
+                if (!isNaN(seqNum) && seqNum > maxSeq) maxSeq = seqNum;
+            }
+        } else if (parts.length === 3) {
             const [rPrefix, rDate, rSeq] = parts;
-            // Check if it's the same year
             if (rDate.substring(0, 2) === yy) {
                 const seqNum = parseInt(rSeq, 10);
                 if (!isNaN(seqNum) && seqNum > maxSeq) maxSeq = seqNum;
@@ -144,7 +152,7 @@ const ReceiveRecord: React.FC<ReceiveRecordProps> = ({ onSave, onDelete, wards, 
     });
 
     const nextSeq = (maxSeq + 1).toString().padStart(4, '0');
-    return `${prefix}-${datePrefix}-${nextSeq}`;
+    return `${datePrefix}-${nextSeq}`;
   };
 
   // --- LOGIC TÍNH HẠN TRẢ (CẬP NHẬT FIX LỖI TIMEZONE VÀ NGÀY NGHỈ) ---
@@ -413,6 +421,7 @@ const ReceiveRecord: React.FC<ReceiveRecordProps> = ({ onSave, onDelete, wards, 
                 calculateDeadline={calculateDeadline}
                 calculateNextCode={(w, d, exist) => calculateNextCode(w, d, exist)}
                 onPreview={handlePreviewDocx}
+                currentUser={currentUser}
             />
         )}
 

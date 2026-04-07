@@ -23,6 +23,55 @@ const CACHE_KEY_ARCHIVE = 'offline_archive_records';
 
 // --- API ---
 
+export const migrateCungCapTaiLieu = async () => {
+    if (!isConfigured) return;
+    try {
+        const { data: landRecords, error: fetchError } = await supabase
+            .from('land_records')
+            .select('*')
+            .eq('recordType', 'Cung cấp tài liệu đất đai');
+            
+        if (fetchError) throw fetchError;
+        if (!landRecords || landRecords.length === 0) return;
+
+        console.log(`Found ${landRecords.length} records to migrate.`);
+
+        const archiveRecords = landRecords.map(r => ({
+            type: 'saoluc',
+            so_hieu: r.code || '',
+            trich_yeu: r.content || r.recordType || '',
+            ngay_thang: r.receivedDate || '',
+            noi_nhan_gui: r.customerName || '',
+            status: 'draft',
+            data: {
+                ...r,
+                xa_phuong: r.ward || '',
+                to_ban_do: r.mapSheet || '',
+                thua_dat: r.landPlot || '',
+                hen_tra: r.deadline || ''
+            }
+        }));
+
+        const { error: insertError } = await supabase
+            .from('archive_records')
+            .insert(archiveRecords);
+            
+        if (insertError) throw insertError;
+
+        const idsToDelete = landRecords.map(r => r.id);
+        const { error: deleteError } = await supabase
+            .from('land_records')
+            .delete()
+            .in('id', idsToDelete);
+            
+        if (deleteError) throw deleteError;
+
+        console.log('Migration completed successfully.');
+    } catch (error) {
+        console.error('Migration failed:', error);
+    }
+};
+
 export const fetchArchiveRecords = async (type: 'saoluc' | 'vaoso' | 'congvan'): Promise<ArchiveRecord[]> => {
     if (!isConfigured) {
         const cached = getFromCache<ArchiveRecord[]>(CACHE_KEY_ARCHIVE, []);

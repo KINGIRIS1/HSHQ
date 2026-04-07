@@ -1,13 +1,14 @@
 
 import React, { useState, useEffect } from 'react';
 import { PhieuInfoData, generatePreviewData, PLANNING_PRESETS, PlanningConfig, parseNumber } from '../../services/phieuInfoService';
-import { Settings, X, Plus, Trash2, RotateCcw, RefreshCw, Download, List, PlusCircle, Save } from 'lucide-react';
+import { Settings, X, Plus, Trash2, RotateCcw, RefreshCw, Download, List, PlusCircle, Save, Search, Loader2 } from 'lucide-react';
 import saveAs from 'file-saver';
 import { User as UserType, NotifyFunction } from '../../types';
 import InfoForm from './info-tab/InfoForm';
 import InfoPreview from './info-tab/InfoPreview';
 import InfoList from './info-tab/InfoList';
 import { ThongTinRecord, fetchThongTinRecords, saveThongTinRecord, deleteThongTinRecord } from '../../services/apiUtilities';
+import { fetchRecords } from '../../services/apiRecords';
 
 interface ProviderConfig {
     name: string;
@@ -66,6 +67,46 @@ const CungCapThongTinTab: React.FC<CungCapThongTinTabProps> = ({ currentUser, no
     
     const [isConfigProviders, setIsConfigProviders] = useState(false);
     const [tempProviders, setTempProviders] = useState<ProviderConfig[]>([]);
+
+    const [searchCode, setSearchCode] = useState('');
+    const [isLoadingInfo, setIsLoadingInfo] = useState(false);
+
+    const handleLoadInfo = async () => {
+        if (!searchCode.trim()) {
+            notify("Vui lòng nhập số biên nhận", "info");
+            return;
+        }
+        setIsLoadingInfo(true);
+        try {
+            const records = await fetchRecords();
+            const record = records.find(r => r.code.toLowerCase() === searchCode.trim().toLowerCase());
+            
+            if (record) {
+                setFormData(prev => ({
+                    ...prev,
+                    Ten_Nguoi_Yeu_Cau: record.customerName || prev.Ten_Nguoi_Yeu_Cau,
+                    Dia_Chi: record.customerAddress || prev.Dia_Chi,
+                    Ten_CSD: record.customerName || prev.Ten_CSD,
+                    Dia_Chi_Thua_Dat: record.address || prev.Dia_Chi_Thua_Dat,
+                    Phuong: record.ward || prev.Phuong,
+                    Thua_Cu: record.landPlot || prev.Thua_Cu,
+                    To_Cu: record.mapSheet || prev.To_Cu,
+                    DT_Cu: record.area ? record.area.toString() : prev.DT_Cu,
+                    DT_ODT: record.residentialArea ? record.residentialArea.toString() : prev.DT_ODT,
+                    Thua_2024: record.landPlot || prev.Thua_2024,
+                    To_2024: record.mapSheet || prev.To_2024,
+                }));
+                notify("Đã tải thông tin thành công!", "success");
+            } else {
+                notify("Không tìm thấy hồ sơ với số biên nhận này", "error");
+            }
+        } catch (error) {
+            console.error("Error loading info:", error);
+            notify("Lỗi khi tải thông tin", "error");
+        } finally {
+            setIsLoadingInfo(false);
+        }
+    };
 
     useEffect(() => { loadRecords(); }, []);
 
@@ -382,7 +423,7 @@ const CungCapThongTinTab: React.FC<CungCapThongTinTabProps> = ({ currentUser, no
                     <tr style="vertical-align: top;">
                         <td style="width: 45%; padding: 0;">
                             <p style="margin: 0;">VĂN PHÒNG ĐKĐĐ TỈNH ĐỒNG NAI</p>
-                            <p style="margin: 0;">CHI NHÁNH CHƠN THÀNH</p>
+                            <p style="margin: 0;">CHI NHÁNH HỚN QUẢN</p>
                             ${lineLeftHtml}
                         </td>
                         <td style="width: 55%; padding: 0;">
@@ -422,10 +463,10 @@ const CungCapThongTinTab: React.FC<CungCapThongTinTabProps> = ({ currentUser, no
                     Ông (bà): <b>${toTitleCase(formData.Ten_Nguoi_Yeu_Cau)}</b> ${uqText} nộp phiếu yêu cầu cung cấp thông tin tại Trung tâm phục vụ hành chính công ${formData.Phuong} ${previewData.Ngay_Nop_Fmt}.
                 </p>
                 <p style="text-indent: 30px; margin-bottom: 5px;">
-                    Nội dung yêu cầu cung cấp thông tin quy hoạch thửa đất số <b>${formData.Thua_Cu}</b>, tờ bản đồ số <b>${formData.To_Cu}</b>, diện tích <b>${formData.DT_Cu}m²</b> ${previewData.Loai_Dat_Fmt} tọa lạc tại ${formData.Dia_Chi_Thua_Dat}, ${formData.Phuong}, tỉnh Bình Phước của ông (bà) <b>${formData.Ten_CSD}</b>.
+                    Nội dung yêu cầu cung cấp thông tin quy hoạch thửa đất số <b>${formData.Thua_Cu}</b>, tờ bản đồ số <b>${formData.To_Cu}</b>, diện tích <b>${formData.DT_Cu}m²</b> ${previewData.Loai_Dat_Fmt} tọa lạc tại ${formData.Dia_Chi_Thua_Dat}, ${formData.Phuong}, tỉnh Đồng Nai của ông (bà) <b>${formData.Ten_CSD}</b>.
                 </p>
                 <p style="text-indent: 30px; margin-bottom: 5px;">
-                    Căn cứ chức năng, nhiệm vụ Văn phòng Đăng ký Đất đai tỉnh Bình Phước – Chi nhánh Hớn Quản cung cấp thông tin cho ông (bà) ${formData.Ten_Nguoi_Yeu_Cau} với các nội dung như sau:
+                    Căn cứ chức năng, nhiệm vụ Văn phòng Đăng ký Đất đai tỉnh Đồng Nai – Chi nhánh Hớn Quản cung cấp thông tin cho ông (bà) ${formData.Ten_Nguoi_Yeu_Cau} với các nội dung như sau:
                 </p>
 
                 <div style="margin-top: 10px; font-weight: bold; font-style: italic;">* Thông tin về thửa đất:</div>
@@ -444,7 +485,7 @@ const CungCapThongTinTab: React.FC<CungCapThongTinTabProps> = ({ currentUser, no
                 </div>
 
                 <p style="text-indent: 30px; margin-top: 15px;">
-                    Vậy Văn phòng Đăng ký Đất đai tỉnh Bình Phước – Chi nhánh Hớn Quản cung cấp thông tin cho ông (bà) được biết.
+                    Vậy Văn phòng Đăng ký Đất đai tỉnh Đồng Nai – Chi nhánh Hớn Quản cung cấp thông tin cho ông (bà) được biết.
                 </p>
 
                 <table style="width: 100%; margin-top: 30px; text-align: center; border-collapse: collapse;">
@@ -492,6 +533,24 @@ const CungCapThongTinTab: React.FC<CungCapThongTinTabProps> = ({ currentUser, no
                     <div className="flex flex-col lg:flex-row gap-6 h-full p-4 overflow-hidden">
                         {/* LEFT: FORM INPUT */}
                         <div className="flex-1 flex flex-col min-w-0">
+                            <div className="mb-4 p-3 bg-white border border-gray-200 rounded-xl flex gap-2 items-center shadow-sm">
+                                <input 
+                                    type="text" 
+                                    placeholder="Nhập số biên nhận..." 
+                                    className="flex-1 border border-gray-300 rounded px-3 py-1.5 text-sm"
+                                    value={searchCode}
+                                    onChange={(e) => setSearchCode(e.target.value)}
+                                    onKeyDown={(e) => e.key === 'Enter' && handleLoadInfo()}
+                                />
+                                <button 
+                                    onClick={handleLoadInfo}
+                                    disabled={isLoadingInfo}
+                                    className="bg-indigo-600 text-white px-3 py-1.5 rounded text-sm font-medium hover:bg-indigo-700 flex items-center gap-1 disabled:opacity-50 shrink-0"
+                                >
+                                    {isLoadingInfo ? <Loader2 size={14} className="animate-spin" /> : <Search size={14} />}
+                                    Load thông tin
+                                </button>
+                            </div>
                             <InfoForm 
                                 formData={formData}
                                 handleChange={handleChange}

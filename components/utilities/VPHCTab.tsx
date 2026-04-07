@@ -2,13 +2,14 @@
 import React, { useState, useEffect } from 'react';
 import { User as UserType, NotifyFunction } from '../../types';
 import saveAs from 'file-saver';
-import { Settings, List, PlusCircle, Save } from 'lucide-react';
+import { Settings, List, PlusCircle, Save, Search, Loader2 } from 'lucide-react';
 import VPHCForm from './vphc-tab/VPHCForm';
 import VPHCPreview from './vphc-tab/VPHCPreview';
 import VPHCList from './vphc-tab/VPHCList';
 import TemplateConfigModal from '../TemplateConfigModal';
 import { generateDocxBlobAsync, STORAGE_KEYS, hasTemplate } from '../../services/docxService';
 import { VphcRecord, fetchVphcRecords, saveVphcRecord, deleteVphcRecord } from '../../services/apiUtilities';
+import { fetchRecords } from '../../services/apiRecords';
 
 interface VPHCTabProps {
     currentUser?: UserType;
@@ -39,6 +40,46 @@ const VPHCTab: React.FC<VPHCTabProps> = ({ currentUser, notify }) => {
     const [isConfigOpen, setIsConfigOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const [exportedFilePath, setExportedFilePath] = useState<string | null>(null);
+
+    const [searchCode, setSearchCode] = useState('');
+    const [isLoadingInfo, setIsLoadingInfo] = useState(false);
+
+    const handleLoadInfo = async () => {
+        if (!searchCode.trim()) {
+            notify("Vui lòng nhập số biên nhận", "info");
+            return;
+        }
+        setIsLoadingInfo(true);
+        try {
+            const records = await fetchRecords();
+            const record = records.find(r => r.code.toLowerCase() === searchCode.trim().toLowerCase());
+            
+            if (record) {
+                setFormData(prev => ({
+                    ...prev,
+                    NGUOI: record.customerName || prev.NGUOI,
+                    NOIO: record.customerAddress || prev.NOIO,
+                    CCCD: record.cccd || prev.CCCD,
+                    THUA: record.landPlot || prev.THUA,
+                    TO: record.mapSheet || prev.TO,
+                    DT: record.area ? record.area.toString() : prev.DT,
+                    DC_THUA: record.address || prev.DC_THUA,
+                    XA_PHUONG: record.ward || prev.XA_PHUONG,
+                    SPH: record.issueNumber || prev.SPH,
+                    SVS: record.entryNumber || prev.SVS,
+                    NGAYCAPGCN: record.issueDate || prev.NGAYCAPGCN,
+                }));
+                notify("Đã tải thông tin thành công!", "success");
+            } else {
+                notify("Không tìm thấy hồ sơ với số biên nhận này", "error");
+            }
+        } catch (error) {
+            console.error("Error loading info:", error);
+            notify("Lỗi khi tải thông tin", "error");
+        } finally {
+            setIsLoadingInfo(false);
+        }
+    };
 
     // Initial Load
     useEffect(() => {
@@ -179,7 +220,7 @@ const VPHCTab: React.FC<VPHCTabProps> = ({ currentUser, notify }) => {
                     <tr style="vertical-align: top;">
                         <td style="width: 45%; padding: 0;">
                             <p style="margin: 0; font-size: 12pt;">VĂN PHÒNG ĐKĐĐ TỈNH ĐỒNG NAI</p>
-                            <p style="margin: 0; font-size: 13pt;">CHI NHÁNH CHƠN THÀNH</p>
+                            <p style="margin: 0; font-size: 13pt;">CHI NHÁNH HỚN QUẢN</p>
                             ${lineLeftHtml}
                             <p style="margin: 0; font-weight: normal; font-size: 13pt; margin-top: 5px;">Số: ${data.STT || '.....'} /BB-VPHV-HCTH</p>
                         </td>
@@ -197,15 +238,15 @@ const VPHCTab: React.FC<VPHCTabProps> = ({ currentUser, notify }) => {
                 <div style="text-align: center; font-weight: bold; font-size: 14pt; margin-bottom: 5px;">BIÊN BẢN VI PHẠM HÀNH CHÍNH*</div>
                 <div style="text-align: center; font-weight: bold; font-size: 13pt; margin-bottom: 20px;">Về lĩnh vực đất đai(2)</div>
 
-                <p style="margin-bottom: 10px;">Hôm nay, hồi …..giờ……phút, ngày .../.../${currentYear}, tại (3) Văn phòng Đăng ký đất đai tỉnh Bình Phước - Chi nhánh Hớn Quản.</p>
-                <p style="text-align: justify; margin-bottom: 10px;">Lý do lập biên bản tại &lt;trụ sở cơ quan của người có thẩm quyền lập biên bản/địa điểm khác:&gt;(*) Hồ sơ vụ việc do Văn phòng Đăng ký đất đai tỉnh Bình Phước - Chi nhánh Hớn Quản phát hiện và chuyển đến Chủ tịch UBND ${data.XA_PHUONG} xử lý theo quy định.</p>
-                <p style="text-align: justify; margin-bottom: 10px;">Căn cứ Biên bản làm việc số: ${data.STT || '...'} /BBLV ngày .../.../${currentYear} của Văn phòng Đăng ký đất đai tỉnh Bình Phước - Chi nhánh Hớn Quản tại Trung tâm hành chính công ${data.XA_PHUONG}, tỉnh Bình Phước.</p>
+                <p style="margin-bottom: 10px;">Hôm nay, hồi …..giờ……phút, ngày .../.../${currentYear}, tại (3) Văn phòng Đăng ký đất đai tỉnh Đồng Nai - Chi nhánh Hớn Quản.</p>
+                <p style="text-align: justify; margin-bottom: 10px;">Lý do lập biên bản tại &lt;trụ sở cơ quan của người có thẩm quyền lập biên bản/địa điểm khác:&gt;(*) Hồ sơ vụ việc do Văn phòng Đăng ký đất đai tỉnh Đồng Nai - Chi nhánh Hớn Quản phát hiện và chuyển đến Chủ tịch UBND ${data.XA_PHUONG} xử lý theo quy định.</p>
+                <p style="text-align: justify; margin-bottom: 10px;">Căn cứ Biên bản làm việc số: ${data.STT || '...'} /BBLV ngày .../.../${currentYear} của Văn phòng Đăng ký đất đai tỉnh Đồng Nai - Chi nhánh Hớn Quản tại Trung tâm hành chính công ${data.XA_PHUONG}, tỉnh Bình Phước.</p>
 
                 <p><b>Chúng tôi gồm:</b></p>
                 
                 <p><b>1. Người có thẩm quyền lập biên bản:</b></p>
                 <p style="margin-left: 20px;">Họ và tên: Cao Thị Dung. Chức vụ: Tổ trưởng Tổ Hành chính tổng hợp.</p>
-                <p style="margin-left: 20px; margin-bottom: 10px;">Cơ quan: Văn phòng Đăng ký đất đai tỉnh Bình Phước - Chi nhánh Hớn Quản.</p>
+                <p style="margin-left: 20px; margin-bottom: 10px;">Cơ quan: Văn phòng Đăng ký đất đai tỉnh Đồng Nai - Chi nhánh Hớn Quản.</p>
 
                 <p><b>2. Với sự chứng kiến của: (5)</b></p>
                 <div style="margin-left: 20px; margin-bottom: 10px;">
@@ -241,7 +282,7 @@ const VPHCTab: React.FC<VPHCTabProps> = ({ currentUser, notify }) => {
                 <p><b>2. Đã có các hành vi vi phạm hành chính: (8)</b></p>
                 <p style="margin-left: 20px; margin-bottom: 5px;">Không thực hiện đăng ký biến động đất đai theo quy định tại điểm a, khoản 1 Điều 133 luật đất đai.</p>
                 <p style="margin-left: 20px; text-align: justify; margin-bottom: 10px;">
-                    Cụ thể: Vào lúc…..giờ……phút, ngày .../.../${currentYear}, tại Trung Tâm phục vụ hành chính công ${data.XA_PHUONG}, nhân viên Văn phòng Đăng ký đất đai tỉnh Bình Phước – Chi nhánh Hớn Quản phát hiện đã quá 30 ngày kể từ ngày ký hợp đồng <b>${data.LOAIHS}</b> quyền sử dụng đất số: ${data.SOCC}, do Văn phòng Công chứng ${data.VPCC} lập ngày ${data.NGAYCC}. 
+                    Cụ thể: Vào lúc…..giờ……phút, ngày .../.../${currentYear}, tại Trung Tâm phục vụ hành chính công ${data.XA_PHUONG}, nhân viên Văn phòng Đăng ký đất đai tỉnh Đồng Nai – Chi nhánh Hớn Quản phát hiện đã quá 30 ngày kể từ ngày ký hợp đồng <b>${data.LOAIHS}</b> quyền sử dụng đất số: ${data.SOCC}, do Văn phòng Công chứng ${data.VPCC} lập ngày ${data.NGAYCC}. 
                     Ông/bà <b>${data.NGUOI}</b> không thực hiện đăng ký biến động đất đai theo quy định tại điểm a khoản 1 và khoản 3 Điều 133 Luật Đất đai năm 2024 đối với thửa đất số <b>${data.THUA}</b>, tờ bản đồ số <b>${data.TO}</b>, diện tích <b>${data.DT}m²</b> theo Giấy chứng nhận Quyền sử dụng đất số <b>${data.SPH}</b>, số vào sổ <b>${data.SVS}</b> do ${data.COQUANCAP} cấp ngày ${data.NGAYCAPGCN} cho <b>${data.CHUSDGCN}</b>. Thửa đất tọa lạc tại ${data.DC_THUA}, ${data.XA_PHUONG}.
                 </p>
 
@@ -353,7 +394,7 @@ const VPHCTab: React.FC<VPHCTabProps> = ({ currentUser, notify }) => {
                     <tr style="vertical-align: top;">
                         <td style="width: 45%; padding: 0;">
                             <p style="margin: 0; font-size: 12pt;">VĂN PHÒNG ĐKĐĐ TỈNH ĐỒNG NAI</p>
-                            <p style="margin: 0; font-size: 13pt;">CHI NHÁNH CHƠN THÀNH</p>
+                            <p style="margin: 0; font-size: 13pt;">CHI NHÁNH HỚN QUẢN</p>
                             ${lineLeftHtml}
                             <p style="margin: 0; font-weight: normal; font-size: 13pt; margin-top: 5px;">Số: ${data.STT || '....'} /BBLV</p>
                         </td>
@@ -377,7 +418,7 @@ const VPHCTab: React.FC<VPHCTabProps> = ({ currentUser, notify }) => {
                 
                 <p><b>1. Người có thẩm quyền lập biên bản:</b></p>
                 <div style="margin-left: 20px;">
-                    <p>1. Ông/bà: ${creatorName} - Chức vụ: Nhân viên Văn phòng Đăng ký đất đai tỉnh Bình Phước - Chi nhánh Hớn Quản – Phụ trách tiếp nhận hồ sơ lĩnh vực đất đai tại Trung tâm phục vụ hành chính công ${data.XA_PHUONG}.</p>
+                    <p>1. Ông/bà: ${creatorName} - Chức vụ: Nhân viên Văn phòng Đăng ký đất đai tỉnh Đồng Nai - Chi nhánh Hớn Quản – Phụ trách tiếp nhận hồ sơ lĩnh vực đất đai tại Trung tâm phục vụ hành chính công ${data.XA_PHUONG}.</p>
                 </div>
 
                 <p><b>2. Người chứng kiến (nếu có):</b></p>
@@ -554,6 +595,24 @@ const VPHCTab: React.FC<VPHCTabProps> = ({ currentUser, notify }) => {
                     <div className="flex flex-col lg:flex-row gap-6 h-full p-4 overflow-hidden">
                         {/* LEFT: FORM */}
                         <div className="flex-1 flex flex-col min-w-0">
+                            <div className="mb-4 p-3 bg-white border border-gray-200 rounded-xl flex gap-2 items-center shadow-sm">
+                                <input 
+                                    type="text" 
+                                    placeholder="Nhập số biên nhận..." 
+                                    className="flex-1 border border-gray-300 rounded px-3 py-1.5 text-sm"
+                                    value={searchCode}
+                                    onChange={(e) => setSearchCode(e.target.value)}
+                                    onKeyDown={(e) => e.key === 'Enter' && handleLoadInfo()}
+                                />
+                                <button 
+                                    onClick={handleLoadInfo}
+                                    disabled={isLoadingInfo}
+                                    className="bg-indigo-600 text-white px-3 py-1.5 rounded text-sm font-medium hover:bg-indigo-700 flex items-center gap-1 disabled:opacity-50 shrink-0"
+                                >
+                                    {isLoadingInfo ? <Loader2 size={14} className="animate-spin" /> : <Search size={14} />}
+                                    Load thông tin
+                                </button>
+                            </div>
                             <VPHCForm formData={formData} handleChange={handleChange} />
                             
                             {/* ACTION BUTTONS */}

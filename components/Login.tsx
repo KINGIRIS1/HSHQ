@@ -50,8 +50,8 @@ const Login: React.FC<LoginProps> = ({ onLogin, users }) => {
     <div className="fixed inset-0 w-full h-full flex items-center justify-center bg-[#0f172a] font-sans overflow-hidden">
       {/* Background Decor - Giữ nguyên hiệu ứng cho giống App */}
       <div className="absolute inset-0 z-0 pointer-events-none">
-        <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] rounded-full bg-blue-600/10 blur-[150px]"></div>
-        <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] rounded-full bg-indigo-600/10 blur-[150px]"></div>
+        <div className="absolute -top-[20%] -left-[10%] w-[60%] h-[60%] rounded-full bg-blue-600/10 blur-[150px]"></div>
+        <div className="absolute -bottom-[20%] -right-[10%] w-[60%] h-[60%] rounded-full bg-indigo-600/10 blur-[150px]"></div>
       </div>
 
       <div className="w-full max-w-[1100px] h-[80vh] min-h-[600px] bg-white rounded-3xl shadow-2xl overflow-hidden flex z-10 animate-fade-in-up m-4 border border-slate-800/50">

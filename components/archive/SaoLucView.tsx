@@ -763,7 +763,7 @@ const SaoLucView: React.FC<SaoLucViewProps> = ({ currentUser, wards = ['Tân Qua
                         ward: r.data?.xa_phuong,
                         status: RecordStatus.RECEIVED
                     } as RecordFile))}
-                    filterDepartment="Thông tin lưu trữ"
+                    filterDepartment="Lưu trữ"
                 />
 
                 {isFormOpen && (

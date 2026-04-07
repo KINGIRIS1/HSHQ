@@ -43,7 +43,6 @@ const getShortCode = (ward: string) => {
 
 const DailyList: React.FC<DailyListProps> = ({ records, wards, currentUser, employees, onPreviewExcel, onEdit, onDelete, onPrint }) => {
   const [filterDate, setFilterDate] = useState<string>(new Date().toISOString().split('T')[0]);
-  const [filterWard, setFilterWard] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
 
   const filteredDailyRecords = useMemo(() => {
@@ -52,34 +51,14 @@ const DailyList: React.FC<DailyListProps> = ({ records, wards, currentUser, empl
       
       // Lọc danh sách
       const list = records.filter(r => {
-          // 0. Lọc theo quyền ONEDOOR
-          if (currentUser?.role === 'ONEDOOR') {
-              const emp = employees?.find(e => e.id === currentUser.employeeId);
-              const managedWards = emp?.managedWards || [];
-              if (r.ward && !managedWards.includes(r.ward)) {
-                  return false;
-              }
+          // Luôn lọc theo user nhận
+          if (r.receivedBy !== currentUser.employeeId) {
+              return false;
           }
 
           // 1. Lọc theo ngày nhận
           if (r.receivedDate !== filterDate) return false;
           
-          // 2. Lọc theo Đơn vị phụ trách (Dựa vào Mã hồ sơ thay vì Địa chỉ đất)
-          if (filterWard !== 'all') {
-              const targetPrefix = getShortCode(filterWard);
-              const recordCode = (r.code || '').trim().toUpperCase();
-              const parts = recordCode.split('-');
-              const recordPrefix = parts.length > 0 ? parts[0] : '';
-              
-              // Nếu mã hồ sơ có cấu trúc đúng (chứa prefix), so sánh prefix
-              if (parts.length >= 3) {
-                  if (recordPrefix !== targetPrefix) return false;
-              } else {
-                  // Fallback: Nếu mã không đúng chuẩn, so sánh địa chỉ đất (ít xảy ra với hồ sơ mới)
-                  if (r.ward !== filterWard) return false;
-              }
-          }
-
           // 3. Tìm kiếm từ khóa
           if (searchTerm) {
               const nameMatch = r.customerName?.toLowerCase().includes(searchLower);
@@ -89,32 +68,19 @@ const DailyList: React.FC<DailyListProps> = ({ records, wards, currentUser, empl
           return true;
       });
 
-      // Sắp xếp: Gom nhóm theo Mã đơn vị (Prefix) trước, sau đó tăng dần theo số thứ tự
+      // Sắp xếp: Tăng dần theo số thứ tự
       return list.sort((a, b) => {
           const codeA = (a.code || '').toUpperCase();
           const codeB = (b.code || '').toUpperCase();
           
-          // Tách prefix
-          const partsA = codeA.split('-');
-          const prefixA = partsA.length >= 3 ? partsA[0] : '';
-          
-          const partsB = codeB.split('-');
-          const prefixB = partsB.length >= 3 ? partsB[0] : '';
-
-          // So sánh Prefix (Gom nhóm đơn vị)
-          const prefixCompare = prefixA.localeCompare(prefixB);
-          if (prefixCompare !== 0) return prefixCompare;
-
-          // Nếu cùng đơn vị, so sánh toàn bộ mã (để sắp xếp theo số thứ tự)
           return codeA.localeCompare(codeB, undefined, { numeric: true, sensitivity: 'base' });
       });
-  }, [records, filterDate, filterWard, searchTerm]);
+  }, [records, filterDate, searchTerm, currentUser]);
 
   const createDailyListWorkbook = () => {
       if (filteredDailyRecords.length === 0) return null;
       
-      // Nếu là "Tất cả", tiêu đề sẽ là "DANH SÁCH TỔNG HỢP...", ngược lại là tên xã cụ thể
-      const wardTitle = filterWard !== 'all' ? filterWard.toUpperCase() : "CÁC ĐƠN VỊ";
+      const wardTitle = "DANH SÁCH TỔNG HỢP";
       const dateParts = filterDate.split('-'); 
       const dateStr = `NGÀY ${dateParts[2]} THÁNG ${dateParts[1]} NĂM ${dateParts[0]}`;
       
@@ -224,13 +190,6 @@ const DailyList: React.FC<DailyListProps> = ({ records, wards, currentUser, empl
             <div className="flex items-center gap-2"> 
                 <label className="text-sm font-medium text-gray-600">Ngày nhận:</label> 
                 <input type="date" className="border border-gray-300 rounded px-3 py-1.5 text-sm outline-none focus:ring-1 focus:ring-blue-500" value={filterDate} onChange={(e) => setFilterDate(e.target.value)} /> 
-            </div>
-            <div className="flex items-center gap-2"> 
-                <label className="text-sm font-medium text-gray-600">Đơn vị (Lọc):</label> 
-                <select className="border border-gray-300 rounded px-3 py-1.5 text-sm outline-none focus:ring-1 focus:ring-blue-500" value={filterWard} onChange={(e) => setFilterWard(e.target.value)}> 
-                    <option value="all">-- Tất cả (Sắp xếp theo đơn vị) --</option> 
-                    {wards.map(w => <option key={w} value={w}>{w}</option>)} 
-                </select> 
             </div>
             <div className="relative flex-1 max-w-sm"> 
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} /> 

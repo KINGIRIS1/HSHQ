@@ -12,6 +12,7 @@ import { exportReportToExcel, exportReturnedListToExcel } from './utils/excelExp
 import { generateReport } from './services/geminiService';
 import { syncTemplatesFromCloud } from './services/docxService'; 
 import { updateRecordApi, saveEmployeeApi, saveUserApi, forceUpdateRecordsBatchApi } from './services/api';
+import { migrateCungCapTaiLieu } from './services/apiArchive';
 import * as XLSX from 'xlsx-js-style';
 import { CheckCircle, AlertTriangle } from 'lucide-react';
 
@@ -103,6 +104,13 @@ function App() {
 
   // Sync Templates
   useEffect(() => { syncTemplatesFromCloud(); }, []);
+
+  // Run migration for Cung cấp tài liệu đất đai
+  useEffect(() => {
+      if (currentUser) {
+          migrateCungCapTaiLieu();
+      }
+  }, [currentUser]);
 
   // Save visible columns
   useEffect(() => { localStorage.setItem('visible_columns', JSON.stringify(visibleColumns)); }, [visibleColumns]);

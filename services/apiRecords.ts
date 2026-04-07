@@ -6,7 +6,7 @@ import { logError, getFromCache, saveToCache, CACHE_KEYS, sanitizeData, normaliz
 
 const RECORD_DB_COLUMNS = [
     'id', 'code', 'customerName', 'phoneNumber', 'cccd', 'customerAddress', 'ward', 'landPlot', 'mapSheet', 
-    'area', 'address', 'group', 'content', 'recordType', 'receivedDate', 'deadline', 
+    'area', 'address', 'group', 'content', 'recordType', 'receivedDate', 'receivedBy', 'deadline', 
     'assignedDate', 'submissionDate', 'approvalDate', 'completedDate', 'status', 'assignedTo', 'submittedTo',
     'notes', 'privateNotes', 'personalNotes', 
     'authorizedBy', 'authDocType', 'otherDocs', 'exportBatch', 'exportDate', 
@@ -15,6 +15,14 @@ const RECORD_DB_COLUMNS = [
     'receiptNumber', 'resultReturnedDate', 'receiverName',
     'needsMapCorrection',
     'issueNumber', 'entryNumber', 'issueDate', 'residentialArea'
+];
+
+const OPTIONAL_NEW_COLUMNS = [
+    'customerAddress', 'issueNumber', 'entryNumber', 'issueDate', 'residentialArea',
+    'needsMapCorrection', 'receiptNumber', 'resultReturnedDate', 'receiverName',
+    'reminderDate', 'lastRemindedAt', 'measurementNumber', 'excerptNumber',
+    'exportBatch', 'exportDate', 'authorizedBy', 'authDocType', 'otherDocs',
+    'privateNotes', 'personalNotes'
 ];
 
 export const fetchRecords = async (): Promise<RecordFile[]> => {
@@ -99,14 +107,13 @@ export const getShortCode = (ward: string) => {
     return 'CT';
 };
 
-export const getNextGlobalRecordCode = async (wardName: string, dateStr: string): Promise<string> => {
-    const prefix = getShortCode(wardName);
+export const getNextGlobalRecordCode = async (dateStr: string): Promise<string> => {
     if (!isConfigured) {
         const d = new Date(dateStr);
         const yy = d.getFullYear().toString().slice(-2);
         const mm = ('0' + (d.getMonth() + 1)).slice(-2);
         const dd = ('0' + d.getDate()).slice(-2);
-        return `${prefix}-${yy}${mm}${dd}-${Math.floor(Math.random() * 1000).toString().padStart(4, '0')}`;
+        return `${yy}${mm}${dd}-${Math.floor(Math.random() * 1000).toString().padStart(4, '0')}`;
     }
 
     const d = new Date(dateStr);
@@ -165,21 +172,31 @@ export const getNextGlobalRecordCode = async (wardName: string, dateStr: string)
     }
 
     const seqStr = nextSeq.toString().padStart(4, '0');
-    return `${prefix}-${datePrefix}-${seqStr}`;
+    return `${datePrefix}-${seqStr}`;
 };
 
 export const createRecordApi = async (record: RecordFile): Promise<RecordFile | null> => {
     if (!isConfigured) return record;
     try {
         let finalCode = record.code;
-        const isGeneratedFormat = finalCode && /^[A-ZĐ]{2,3}-\d{6}-\d{3,4}$/.test(finalCode);
+        const isGeneratedFormat = finalCode && (/^[A-ZĐ]{2,3}-\d{6}-\d{3,4}$/.test(finalCode) || /^\d{6}-\d{3,4}$/.test(finalCode));
         
         if (!finalCode || finalCode.includes('?') || isGeneratedFormat) {
-            finalCode = await getNextGlobalRecordCode(record.ward || '', record.receivedDate || new Date().toISOString());
+            finalCode = await getNextGlobalRecordCode(record.receivedDate || new Date().toISOString());
         }
         
         const payload = sanitizeData({ ...record, code: finalCode }, RECORD_DB_COLUMNS);
         const { data, error } = await supabase.from('land_records').insert([payload]).select();
+        
+        if (error && error.code === 'PGRST204') {
+            console.warn("⚠️ [Fallback] Database is missing columns. Retrying without new columns...");
+            const fallbackPayload = { ...payload };
+            OPTIONAL_NEW_COLUMNS.forEach(col => delete fallbackPayload[col]);
+            const { data: fallbackData, error: fallbackError } = await supabase.from('land_records').insert([fallbackPayload]).select();
+            if (fallbackError) throw fallbackError;
+            return fallbackData?.[0] as RecordFile;
+        }
+        
         if (error) throw error;
         return data?.[0] as RecordFile;
     } catch (error) {
@@ -193,6 +210,16 @@ export const updateRecordApi = async (record: RecordFile): Promise<RecordFile | 
     try {
         const payload = sanitizeData(record, RECORD_DB_COLUMNS);
         const { data, error } = await supabase.from('land_records').update(payload).eq('id', record.id).select();
+        
+        if (error && error.code === 'PGRST204') {
+            console.warn("⚠️ [Fallback] Database is missing columns. Retrying without new columns...");
+            const fallbackPayload = { ...payload };
+            OPTIONAL_NEW_COLUMNS.forEach(col => delete fallbackPayload[col]);
+            const { data: fallbackData, error: fallbackError } = await supabase.from('land_records').update(fallbackPayload).eq('id', record.id).select();
+            if (fallbackError) throw fallbackError;
+            return fallbackData?.[0] as RecordFile;
+        }
+        
         if (error) throw error;
         return data?.[0] as RecordFile;
     } catch (error) {
@@ -219,13 +246,26 @@ export const createRecordsBatchApi = async (records: RecordFile[]): Promise<bool
         const payload = [];
         for (const r of records) {
             let finalCode = r.code;
-            const isGeneratedFormat = finalCode && /^[A-ZĐ]{2,3}-\d{6}-\d{3,4}$/.test(finalCode);
+            const isGeneratedFormat = finalCode && (/^[A-ZĐ]{2,3}-\d{6}-\d{3,4}$/.test(finalCode) || /^\d{6}-\d{3,4}$/.test(finalCode));
             if (!finalCode || finalCode.includes('?') || isGeneratedFormat) {
-                finalCode = await getNextGlobalRecordCode(r.ward || '', r.receivedDate || new Date().toISOString());
+                finalCode = await getNextGlobalRecordCode(r.receivedDate || new Date().toISOString());
             }
             payload.push(sanitizeData({ ...r, code: finalCode }, RECORD_DB_COLUMNS));
         }
         const { error } = await supabase.from('land_records').insert(payload);
+        
+        if (error && error.code === 'PGRST204') {
+            console.warn("⚠️ [Fallback] Database is missing columns. Retrying batch insert without new columns...");
+            const fallbackPayload = payload.map(p => {
+                const fp = { ...p };
+                OPTIONAL_NEW_COLUMNS.forEach(col => delete fp[col]);
+                return fp;
+            });
+            const { error: fallbackError } = await supabase.from('land_records').insert(fallbackPayload);
+            if (fallbackError) throw fallbackError;
+            return true;
+        }
+        
         if (error) throw error;
         return true;
     } catch (error) {
@@ -307,6 +347,19 @@ export const forceUpdateRecordsBatchApi = async (records: RecordFile[]): Promise
 
         if (updatesToPush.length > 0) {
             const { error: upsertError } = await supabase.from('land_records').upsert(updatesToPush);
+            
+            if (upsertError && upsertError.code === 'PGRST204') {
+                console.warn("⚠️ [Fallback] Database is missing columns. Retrying batch upsert without new columns...");
+                const fallbackPayload = updatesToPush.map(p => {
+                    const fp = { ...p };
+                    OPTIONAL_NEW_COLUMNS.forEach(col => delete fp[col]);
+                    return fp;
+                });
+                const { error: fallbackError } = await supabase.from('land_records').upsert(fallbackPayload);
+                if (fallbackError) throw fallbackError;
+                return { success: true, count: updateCount };
+            }
+            
             if (upsertError) throw upsertError;
         }
 

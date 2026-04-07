@@ -96,7 +96,7 @@ const RichTextToolbar: React.FC<RichTextToolbarProps> = ({ editorRef }) => {
         <div className="relative group/color">
           <button className="p-1.5 hover:bg-slate-100 rounded flex flex-col items-center">
             <Baseline size={16} />
-            <div className="w-3 h-0.5 bg-red-600 mt-[-2px]" />
+            <div className="w-3 h-0.5 bg-red-600 -mt-[2px]" />
           </button>
           <div className="absolute top-full left-0 mt-1 hidden group-hover/color:grid grid-cols-5 gap-1 p-2 bg-white shadow-xl border rounded z-50">
             {['#000000', '#FF0000', '#0000FF', '#008000', '#FF8C00', '#8B0000', '#00008B', '#006400', '#4B0082', '#808080'].map(c => (
