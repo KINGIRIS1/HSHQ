@@ -452,14 +452,14 @@ function App() {
       }
   }, []);
 
-  const executeBatchExport = async (batchNumber: number, batchDate: string) => {
+  const executeBatchExport = async (batchNumber: number, batchDate: string, handoverWard?: string) => {
       const todayStr = recordFilterProps.filterDate || new Date().toISOString().split('T')[0];
       const candidates = selectedRecordIds.size > 0 ? records.filter(r => selectedRecordIds.has(r.id)) : recordFilterProps.filteredRecords;
       const recordsToExport = candidates.filter(r => r.status === RecordStatus.SIGNED || (r.status === RecordStatus.WITHDRAWN && !r.exportBatch));
       if (recordsToExport.length === 0) return;
       const updatesToApply = recordsToExport.map(r => {
           const nextStatus = r.status === RecordStatus.WITHDRAWN ? RecordStatus.WITHDRAWN : RecordStatus.HANDOVER;
-          return { ...r, exportBatch: batchNumber, exportDate: batchDate, status: nextStatus, completedDate: r.completedDate || todayStr };
+          return { ...r, exportBatch: batchNumber, exportDate: batchDate, status: nextStatus, completedDate: r.completedDate || todayStr, handoverWard: handoverWard || r.handoverWard };
       });
       setRecords(prev => prev.map(r => {
           const updated = updatesToApply.find(u => u.id === r.id);

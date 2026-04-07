@@ -7,10 +7,11 @@ import { fetchChinhLyRecords } from '../services/apiUtilities';
 interface AddToBatchModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: (batch: number, date: string) => void;
+  onConfirm: (batch: number, date: string, handoverWard?: string) => void;
   records: RecordFile[];
   selectedCount: number;
   targetRecords?: RecordFile[]; // Prop này quan trọng để kiểm tra warning
+  wards?: string[];
 }
 
 const AddToBatchModal: React.FC<AddToBatchModalProps> = ({ 
@@ -19,7 +20,8 @@ const AddToBatchModal: React.FC<AddToBatchModalProps> = ({
   onConfirm, 
   records, 
   selectedCount,
-  targetRecords = [] // Giá trị mặc định
+  targetRecords = [], // Giá trị mặc định
+  wards = []
 }) => {
   const [mode, setMode] = useState<'new' | 'existing'>('new');
   const [selectedExistingBatch, setSelectedExistingBatch] = useState<string>('');
@@ -27,6 +29,10 @@ const AddToBatchModal: React.FC<AddToBatchModalProps> = ({
   // State xác nhận danh sách chỉnh lý
   const [needsCorrectionConfirm, setNeedsCorrectionConfirm] = useState(false);
   
+  // State giao phi địa giới
+  const [isNonGeographic, setIsNonGeographic] = useState(false);
+  const [selectedHandoverWard, setSelectedHandoverWard] = useState<string>('');
+
   // State danh sách cảnh báo thực tế (đã lọc qua logic kiểm tra bảng chỉnh lý)
   const [filteredWarningList, setFilteredWarningList] = useState<RecordFile[]>([]);
 
@@ -128,8 +134,15 @@ const AddToBatchModal: React.FC<AddToBatchModalProps> = ({
           return;
       }
 
+      if (isNonGeographic && !selectedHandoverWard) {
+          alert("Vui lòng chọn địa bàn giao kết quả.");
+          return;
+      }
+
+      const handoverWard = isNonGeographic ? selectedHandoverWard : undefined;
+
       if (mode === 'new') {
-          onConfirm(nextBatchInfo.batch, nextBatchInfo.date);
+          onConfirm(nextBatchInfo.batch, nextBatchInfo.date, handoverWard);
       } else {
           if (!selectedExistingBatch) {
               alert('Vui lòng chọn một đợt cũ.');
@@ -140,10 +153,12 @@ const AddToBatchModal: React.FC<AddToBatchModalProps> = ({
           const found = historyBatches.find(h => h.date === datePart && h.batch === batchNum);
           
           if (found) {
-              onConfirm(found.batch, found.fullDate);
+              onConfirm(found.batch, found.fullDate, handoverWard);
           }
       }
       setNeedsCorrectionConfirm(false); // Reset
+      setIsNonGeographic(false);
+      setSelectedHandoverWard('');
       onClose();
   };
 
@@ -248,6 +263,35 @@ const AddToBatchModal: React.FC<AddToBatchModalProps> = ({
                     </div>
                 </div>
             </label>
+
+            {/* Giao phi địa giới */}
+            <div className="mt-4 border-t pt-4">
+                <label className="flex items-center gap-2 cursor-pointer mb-2">
+                    <input 
+                        type="checkbox" 
+                        className="w-4 h-4 text-purple-600 focus:ring-purple-500 rounded"
+                        checked={isNonGeographic}
+                        onChange={(e) => setIsNonGeographic(e.target.checked)}
+                    />
+                    <span className="text-sm font-bold text-gray-700">Giao phi địa giới (Giao khác địa bàn)</span>
+                </label>
+                
+                {isNonGeographic && (
+                    <div className="pl-6 mt-2">
+                        <label className="block text-xs text-gray-500 mb-1">Chọn địa bàn giao kết quả:</label>
+                        <select 
+                            className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:ring-2 focus:ring-purple-500 outline-none"
+                            value={selectedHandoverWard}
+                            onChange={(e) => setSelectedHandoverWard(e.target.value)}
+                        >
+                            <option value="">-- Chọn xã/phường --</option>
+                            {wards.map(w => (
+                                <option key={w} value={w}>{w}</option>
+                            ))}
+                        </select>
+                    </div>
+                )}
+            </div>
         </div>
 
         <div className="p-4 border-t bg-gray-50 flex justify-end gap-3">

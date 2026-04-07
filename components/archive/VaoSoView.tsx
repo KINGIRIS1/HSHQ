@@ -264,6 +264,72 @@ const VaoSoView: React.FC<VaoSoViewProps> = ({ currentUser, wards }) => {
         fileInputRef.current?.click();
     };
 
+    const handleDownloadTemplate = () => {
+        const headers = [
+            "Mã hồ sơ",
+            "Tên chủ sử dụng",
+            "Loại biến động",
+            "Loại GCN",
+            "Số vào sổ",
+            "Ngày nhận",
+            "Số tờ",
+            "Số thửa",
+            "Tổng diện tích",
+            "Diện tích thổ cư",
+            "Địa danh",
+            "Số phát hành",
+            "Ngày ký GCN",
+            "Chuyển scan",
+            "Ghi chú"
+        ];
+        
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.aoa_to_sheet([headers]);
+        
+        // Style headers
+        const headerStyle = {
+            font: { bold: true, color: { rgb: "FFFFFF" } },
+            fill: { fgColor: { rgb: "008080" } }, // Teal
+            alignment: { horizontal: "center", vertical: "center" },
+            border: {
+                top: { style: 'thin' },
+                bottom: { style: 'thin' },
+                left: { style: 'thin' },
+                right: { style: 'thin' }
+            }
+        };
+        
+        for (let i = 0; i < headers.length; i++) {
+            const cellRef = XLSX.utils.encode_cell({ r: 0, c: i });
+            if (!ws[cellRef]) ws[cellRef] = { t: 's', v: headers[i] };
+            ws[cellRef].s = headerStyle;
+        }
+        
+        // Set column widths
+        ws['!cols'] = [
+            { wch: 15 }, // Mã hồ sơ
+            { wch: 30 }, // Tên chủ sử dụng
+            { wch: 20 }, // Loại biến động
+            { wch: 15 }, // Loại GCN
+            { wch: 15 }, // Số vào sổ
+            { wch: 15 }, // Ngày nhận
+            { wch: 10 }, // Số tờ
+            { wch: 10 }, // Số thửa
+            { wch: 15 }, // Tổng diện tích
+            { wch: 15 }, // Diện tích thổ cư
+            { wch: 15 }, // Địa danh
+            { wch: 15 }, // Số phát hành
+            { wch: 15 }, // Ngày ký GCN
+            { wch: 15 }, // Chuyển scan
+            { wch: 20 }  // Ghi chú
+        ];
+        
+        XLSX.utils.book_append_sheet(wb, ws, "Template");
+        const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+        const blob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        saveAs(blob, "Mau_Nhap_Vao_So_GCN.xlsx");
+    };
+
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
@@ -541,67 +607,121 @@ const VaoSoView: React.FC<VaoSoViewProps> = ({ currentUser, wards }) => {
     };
 
     const renderOwnerInput = (value: string, onChange: (val: string) => void, onBlur: () => void) => {
-        const items = value ? value.split('\n') : [''];
-        return (
-            <div className="flex flex-col gap-2 w-full">
-                {items.map((item, index) => {
-                    // Parse "Name CCCD: 123" or similar format
-                    let name = item;
+        const parseOwners = (val: string) => {
+            if (!val) return [{ name: '', cccd: '', address: '' }];
+            
+            if (val.includes('\n\n') || val.includes('Địa chỉ:')) {
+                return val.split('\n\n').map(block => {
+                    const lines = block.split('\n');
+                    let name = lines[0] || '';
                     let cccd = '';
-                    const cccdMatch = item.match(/^(.*?)\s+CCCD:\s*(.*)$/);
+                    let address = '';
+                    
+                    const cccdMatch = name.match(/^(.*?)\s+CCCD:\s*(.*)$/);
                     if (cccdMatch) {
                         name = cccdMatch[1];
                         cccd = cccdMatch[2];
                     }
+                    
+                    for (let i = 1; i < lines.length; i++) {
+                        if (lines[i].startsWith('CCCD: ')) {
+                            cccd = lines[i].substring(6);
+                        } else if (lines[i].startsWith('Địa chỉ: ')) {
+                            address = lines[i].substring(9);
+                        }
+                    }
+                    return { name, cccd, address };
+                });
+            } else {
+                return val.split('\n').map(line => {
+                    let name = line;
+                    let cccd = '';
+                    let address = '';
+                    const cccdMatch = line.match(/^(.*?)\s+CCCD:\s*(.*)$/);
+                    if (cccdMatch) {
+                        name = cccdMatch[1];
+                        cccd = cccdMatch[2];
+                    }
+                    return { name, cccd, address };
+                });
+            }
+        };
 
-                    return (
-                        <div key={index} className="flex flex-col gap-1 w-full border border-gray-200 p-1.5 rounded bg-gray-50">
-                            <div className="flex items-center gap-1 w-full">
-                                <input
-                                    type="text"
-                                    className="flex-1 min-w-0 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-teal-500 outline-none"
-                                    value={name}
-                                    placeholder="Tên chủ sử dụng (VD: ông: Nguyễn Văn A)"
-                                    onChange={(e) => {
-                                        const newItems = [...items];
-                                        newItems[index] = cccd ? `${e.target.value} CCCD: ${cccd}` : e.target.value;
-                                        onChange(newItems.join('\n'));
+        const serializeOwners = (owners: any[]) => {
+            return owners.map(o => {
+                let str = o.name;
+                if (o.cccd) str += `\nCCCD: ${o.cccd}`;
+                if (o.address) str += `\nĐịa chỉ: ${o.address}`;
+                return str;
+            }).join('\n\n');
+        };
+
+        const owners = parseOwners(value);
+
+        return (
+            <div className="flex flex-col gap-2 w-full">
+                {owners.map((owner, index) => (
+                    <div key={index} className="flex flex-col gap-1 w-full border border-gray-200 p-1.5 rounded bg-gray-50">
+                        <div className="flex items-center gap-1 w-full">
+                            <input
+                                type="text"
+                                className="flex-1 min-w-0 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-teal-500 outline-none font-bold"
+                                value={owner.name}
+                                placeholder="Tên chủ sử dụng (VD: Bà Hà Thị Vân)"
+                                onChange={(e) => {
+                                    const newOwners = [...owners];
+                                    newOwners[index].name = e.target.value;
+                                    onChange(serializeOwners(newOwners));
+                                }}
+                                onBlur={onBlur}
+                            />
+                            {owners.length > 1 && (
+                                <button
+                                    onClick={() => {
+                                        const newOwners = owners.filter((_, i) => i !== index);
+                                        onChange(serializeOwners(newOwners));
+                                        setTimeout(onBlur, 0);
                                     }}
-                                    onBlur={onBlur}
-                                />
-                                {items.length > 1 && (
-                                    <button
-                                        onClick={() => {
-                                            const newItems = items.filter((_, i) => i !== index);
-                                            onChange(newItems.join('\n'));
-                                            setTimeout(onBlur, 0);
-                                        }}
-                                        className="text-red-500 hover:text-red-700 p-1"
-                                    >
-                                        <X size={14} />
-                                    </button>
-                                )}
-                            </div>
-                            <div className="flex items-center gap-1 w-full">
-                                <input
-                                    type="text"
-                                    className="flex-1 min-w-0 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-teal-500 outline-none"
-                                    value={cccd}
-                                    placeholder="Số CCCD"
-                                    onChange={(e) => {
-                                        const newItems = [...items];
-                                        newItems[index] = e.target.value ? `${name} CCCD: ${e.target.value}` : name;
-                                        onChange(newItems.join('\n'));
-                                    }}
-                                    onBlur={onBlur}
-                                />
-                            </div>
+                                    className="text-red-500 hover:text-red-700 p-1"
+                                >
+                                    <X size={14} />
+                                </button>
+                            )}
                         </div>
-                    );
-                })}
+                        <div className="flex items-center gap-1 w-full">
+                            <input
+                                type="text"
+                                className="flex-1 min-w-0 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-teal-500 outline-none"
+                                value={owner.cccd}
+                                placeholder="Số CCCD"
+                                onChange={(e) => {
+                                    const newOwners = [...owners];
+                                    newOwners[index].cccd = e.target.value;
+                                    onChange(serializeOwners(newOwners));
+                                }}
+                                onBlur={onBlur}
+                            />
+                        </div>
+                        <div className="flex items-center gap-1 w-full">
+                            <input
+                                type="text"
+                                className="flex-1 min-w-0 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-teal-500 outline-none"
+                                value={owner.address}
+                                placeholder="Địa chỉ thường trú"
+                                onChange={(e) => {
+                                    const newOwners = [...owners];
+                                    newOwners[index].address = e.target.value;
+                                    onChange(serializeOwners(newOwners));
+                                }}
+                                onBlur={onBlur}
+                            />
+                        </div>
+                    </div>
+                ))}
                 <button
                     onClick={() => {
-                        onChange([...items, ''].join('\n'));
+                        const newOwners = [...owners, { name: '', cccd: '', address: '' }];
+                        onChange(serializeOwners(newOwners));
                         setTimeout(onBlur, 0);
                     }}
                     className="text-xs text-teal-600 hover:text-teal-800 flex items-center gap-1 self-start mt-1 bg-teal-50 px-2 py-1 rounded"
@@ -689,6 +809,9 @@ const VaoSoView: React.FC<VaoSoViewProps> = ({ currentUser, wards }) => {
                                     title="Cài đặt số vào sổ"
                                 >
                                     <Settings size={16}/>
+                                </button>
+                                <button onClick={handleDownloadTemplate} className="flex items-center gap-2 bg-emerald-600 text-white px-3 py-1.5 rounded-md font-bold text-sm hover:bg-emerald-700 shadow-sm" title="Tải mẫu Excel">
+                                    <FileSpreadsheet size={16}/> Tải mẫu
                                 </button>
                                 <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept=".xlsx, .xls" className="hidden" />
                                 <button onClick={handleImportClick} className="flex items-center gap-2 bg-blue-600 text-white px-3 py-1.5 rounded-md font-bold text-sm hover:bg-blue-700 shadow-sm">

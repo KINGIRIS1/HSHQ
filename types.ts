@@ -111,6 +111,7 @@ export interface RecordFile {
 
   exportBatch?: number | null;   
   exportDate?: string | null;    
+  handoverWard?: string | null; // Nơi giao trả kết quả (nếu khác địa chỉ thửa đất)
   
   measurementNumber?: string | null; 
   excerptNumber?: string | null;

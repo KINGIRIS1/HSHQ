@@ -101,7 +101,8 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose, records, war
         
         recordsToExport = records.filter(r => {
             const matchBatch = r.exportDate?.startsWith(dateStr) && r.exportBatch === batchNum;
-            const matchWard = selectedWard === 'all' || r.ward === selectedWard;
+            const targetWard = r.handoverWard || r.ward;
+            const matchWard = selectedWard === 'all' || targetWard === selectedWard;
             return matchBatch && matchWard;
         });
 
@@ -187,7 +188,7 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose, records, war
         ];
 
         if (!(isHandover && isSpecificWard)) {
-            row.push(r.ward || '');
+            row.push(r.handoverWard || r.ward || '');
         }
 
         row.push(

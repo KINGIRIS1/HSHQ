@@ -11,17 +11,16 @@ interface SystemReceiptTemplateProps {
 }
 
 const SystemReceiptTemplate: React.FC<SystemReceiptTemplateProps> = ({ data, receivingWard, onClose }) => {
-    const printRef = useRef<HTMLDivElement>(null);
+    const receiptRef = useRef<HTMLDivElement>(null);
+    const controlSlipRef = useRef<HTMLDivElement>(null);
 
-    const handlePrint = () => {
-        if (!printRef.current) return;
-        const printContent = printRef.current.innerHTML;
+    const printHtml = (htmlContent: string, title: string) => {
         const printWindow = window.open('', '_blank');
         if (printWindow) {
             printWindow.document.write(`
                 <html>
                 <head>
-                    <title>In Biên Nhận</title>
+                    <title>${title}</title>
                     <style>
                         @page { margin: 15mm; }
                         body { 
@@ -58,7 +57,7 @@ const SystemReceiptTemplate: React.FC<SystemReceiptTemplateProps> = ({ data, rec
                     </style>
                 </head>
                 <body>
-                    ${printContent}
+                    ${htmlContent}
                 </body>
                 </html>
             `);
@@ -69,6 +68,22 @@ const SystemReceiptTemplate: React.FC<SystemReceiptTemplateProps> = ({ data, rec
                 printWindow.close();
             }, 1500);
         }
+    };
+
+    const handlePrintAll = () => {
+        if (!receiptRef.current || !controlSlipRef.current) return;
+        const printContent = receiptRef.current.innerHTML + '<div style="page-break-before: always; margin-top: 20px;" class="print-page-break"></div>' + controlSlipRef.current.innerHTML;
+        printHtml(printContent, 'In Tất Cả');
+    };
+
+    const handlePrintReceipt = () => {
+        if (!receiptRef.current) return;
+        printHtml(receiptRef.current.innerHTML, 'In Biên Nhận');
+    };
+
+    const handlePrintControlSlip = () => {
+        if (!controlSlipRef.current) return;
+        printHtml(controlSlipRef.current.innerHTML, 'In Phiếu Kiểm Soát');
     };
 
     const now = new Date();
@@ -97,21 +112,21 @@ const SystemReceiptTemplate: React.FC<SystemReceiptTemplateProps> = ({ data, rec
 
     const wardName = getNormalizedWard(data.ward || '');
 
-    const emptyRows = Array(11).fill(0).map((_, i) => (
+    const emptyRows = Array(6).fill(0).map((_, i) => (
         <tr key={i} className="avoid-break">
             <td style={{ width: '12%', border: '1px solid black' }}></td>
             <td style={{ width: '58%', border: '1px solid black', padding: 0 }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                     <tbody>
                         <tr>
-                            <td colSpan={3} style={{ borderBottom: '1px solid black', padding: '6px', textAlign: 'left', whiteSpace: 'nowrap' }}>
+                            <td colSpan={3} style={{ borderBottom: '1px solid black', padding: '4px 6px', textAlign: 'left', whiteSpace: 'nowrap' }}>
                                 1.Giao &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ..... giờ ..... phút, ngày..... tháng ..... năm......
                             </td>
                         </tr>
                         <tr>
-                            <td style={{ width: '15%', borderRight: '1px solid black', padding: '6px', textAlign: 'left', verticalAlign: 'top' }}>2.Nhận</td>
-                            <td style={{ width: '42.5%', borderRight: '1px solid black', padding: '6px', textAlign: 'center', verticalAlign: 'top' }}>Người giao<br/><br/><br/><br/></td>
-                            <td style={{ width: '42.5%', padding: '6px', textAlign: 'center', verticalAlign: 'top' }}>Người nhận<br/><br/><br/><br/></td>
+                            <td style={{ width: '15%', borderRight: '1px solid black', padding: '4px 6px', textAlign: 'left', verticalAlign: 'top' }}>2.Nhận</td>
+                            <td style={{ width: '42.5%', borderRight: '1px solid black', padding: '4px 6px', textAlign: 'center', verticalAlign: 'top' }}>Người giao<br/><br/><br/></td>
+                            <td style={{ width: '42.5%', padding: '4px 6px', textAlign: 'center', verticalAlign: 'top' }}>Người nhận<br/><br/><br/></td>
                         </tr>
                     </tbody>
                 </table>
@@ -127,7 +142,13 @@ const SystemReceiptTemplate: React.FC<SystemReceiptTemplateProps> = ({ data, rec
                 <div className="flex justify-between items-center p-4 border-b">
                     <h2 className="text-xl font-bold">In Biên Nhận & Phiếu Kiểm Soát</h2>
                     <div className="flex space-x-2">
-                        <button onClick={handlePrint} className="flex items-center px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                        <button onClick={handlePrintReceipt} className="flex items-center px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
+                            <Printer className="w-4 h-4 mr-2" /> In Biên Nhận
+                        </button>
+                        <button onClick={handlePrintControlSlip} className="flex items-center px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700">
+                            <Printer className="w-4 h-4 mr-2" /> In Phiếu Quy Trình
+                        </button>
+                        <button onClick={handlePrintAll} className="flex items-center px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
                             <Printer className="w-4 h-4 mr-2" /> In Tất Cả
                         </button>
                         <button onClick={onClose} className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300">
@@ -137,8 +158,8 @@ const SystemReceiptTemplate: React.FC<SystemReceiptTemplateProps> = ({ data, rec
                 </div>
                 
                 <div className="p-8 overflow-y-auto flex-1 bg-gray-50">
-                    <div ref={printRef}>
-                        <div className="bg-white p-10 shadow-sm border border-gray-200 mx-auto text-black" style={{ maxWidth: '210mm', minHeight: '297mm', fontFamily: "'Times New Roman', Times, serif", fontSize: '14px', lineHeight: '1.3' }}>
+                    <div>
+                        <div ref={receiptRef} className="bg-white p-10 shadow-sm border border-gray-200 mx-auto text-black" style={{ maxWidth: '210mm', minHeight: '297mm', fontFamily: "'Times New Roman', Times, serif", fontSize: '14px', lineHeight: '1.3' }}>
                             
                             {/* Header */}
                         <div className="flex justify-between mb-4">
@@ -256,7 +277,7 @@ const SystemReceiptTemplate: React.FC<SystemReceiptTemplateProps> = ({ data, rec
 
                     <div style={{ pageBreakBefore: 'always', marginTop: '20px' }} className="print-page-break"></div>
                     
-                    <div className="bg-white p-10 shadow-sm border border-gray-200 mx-auto text-black mt-8" style={{ maxWidth: '210mm', minHeight: '297mm', fontFamily: "'Times New Roman', Times, serif", fontSize: '14px', lineHeight: '1.3' }}>
+                    <div ref={controlSlipRef} className="bg-white p-10 shadow-sm border border-gray-200 mx-auto text-black mt-8" style={{ maxWidth: '210mm', minHeight: '297mm', fontFamily: "'Times New Roman', Times, serif", fontSize: '14px', lineHeight: '1.3' }}>
                         {/* Control Slip Header */}
                         <div className="flex justify-between mb-4">
                             <div className="text-center" style={{ width: '45%' }}>
@@ -292,14 +313,14 @@ const SystemReceiptTemplate: React.FC<SystemReceiptTemplateProps> = ({ data, rec
                                         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                                             <tbody>
                                                 <tr>
-                                                    <td colSpan={3} style={{ borderBottom: '1px solid black', padding: '6px', textAlign: 'left', whiteSpace: 'nowrap' }}>
+                                                    <td colSpan={3} style={{ borderBottom: '1px solid black', padding: '4px 6px', textAlign: 'left', whiteSpace: 'nowrap' }}>
                                                         1.Giao &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {formatDateTime(rDate)}
                                                     </td>
                                                 </tr>
                                                 <tr>
-                                                    <td style={{ width: '15%', borderRight: '1px solid black', padding: '6px', textAlign: 'left', verticalAlign: 'top' }}>2.Nhận</td>
-                                                    <td style={{ width: '42.5%', borderRight: '1px solid black', padding: '6px', textAlign: 'center', verticalAlign: 'top' }}>Người giao<br/><br/><br/><br/></td>
-                                                    <td style={{ width: '42.5%', padding: '6px', textAlign: 'center', verticalAlign: 'top' }}>Người nhận<br/><br/><br/><br/></td>
+                                                    <td style={{ width: '15%', borderRight: '1px solid black', padding: '4px 6px', textAlign: 'left', verticalAlign: 'top' }}>2.Nhận</td>
+                                                    <td style={{ width: '42.5%', borderRight: '1px solid black', padding: '4px 6px', textAlign: 'center', verticalAlign: 'top' }}>Người giao<br/><br/><br/></td>
+                                                    <td style={{ width: '42.5%', padding: '4px 6px', textAlign: 'center', verticalAlign: 'top' }}>Người nhận<br/><br/><br/></td>
                                                 </tr>
                                             </tbody>
                                         </table>

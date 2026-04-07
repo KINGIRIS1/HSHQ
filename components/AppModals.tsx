@@ -167,6 +167,7 @@ const AppModals: React.FC<AppModalsProps> = (props) => {
                 records={props.records}
                 selectedCount={props.selectedCount}
                 targetRecords={targetRecordsForBatch} 
+                wards={props.wards}
             />
 
             <ExcelPreviewModal 

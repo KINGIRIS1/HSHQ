@@ -158,9 +158,12 @@ export const useRecordFilter = (
         // Ward, Status, Employee Filters
         if (filterWard !== 'all') {
             const wardSearch = removeVietnameseTones(filterWard);
-            result = result.filter(r => removeVietnameseTones(r.ward || '').includes(wardSearch));
+            result = result.filter(r => {
+                const targetWard = (currentView === 'handover_list' || currentView === 'other_handover_list') ? (r.handoverWard || r.ward) : r.ward;
+                return removeVietnameseTones(targetWard || '').includes(wardSearch);
+            });
         }
-        if (filterStatus !== 'all' && currentView !== 'handover_list') {
+        if (filterStatus !== 'all' && currentView !== 'handover_list' && currentView !== 'other_handover_list') {
             result = result.filter(r => r.status === filterStatus);
         }
         if (filterEmployee !== 'all' && currentView !== 'assign_tasks') {
