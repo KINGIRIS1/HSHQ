@@ -9,7 +9,7 @@ const RECORD_DB_COLUMNS = [
     'area', 'address', 'group', 'content', 'recordType', 'receivedDate', 'receivedBy', 'deadline', 
     'assignedDate', 'submissionDate', 'approvalDate', 'completedDate', 'status', 'assignedTo', 'submittedTo',
     'notes', 'privateNotes', 'personalNotes', 
-    'authorizedBy', 'authDocType', 'otherDocs', 'exportBatch', 'exportDate', 
+    'authorizedBy', 'authDocType', 'otherDocs', 'exportBatch', 'exportDate', 'handoverWard',
     'measurementNumber', 'excerptNumber',
     'reminderDate', 'lastRemindedAt',
     'receiptNumber', 'resultReturnedDate', 'receiverName',
@@ -21,7 +21,7 @@ const OPTIONAL_NEW_COLUMNS = [
     'customerAddress', 'issueNumber', 'entryNumber', 'issueDate', 'residentialArea',
     'needsMapCorrection', 'receiptNumber', 'resultReturnedDate', 'receiverName',
     'reminderDate', 'lastRemindedAt', 'measurementNumber', 'excerptNumber',
-    'exportBatch', 'exportDate', 'authorizedBy', 'authDocType', 'otherDocs',
+    'exportBatch', 'exportDate', 'handoverWard', 'authorizedBy', 'authDocType', 'otherDocs',
     'privateNotes', 'personalNotes'
 ];
 
