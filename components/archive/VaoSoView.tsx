@@ -268,6 +268,8 @@ const VaoSoView: React.FC<VaoSoViewProps> = ({ currentUser, wards }) => {
         const headers = [
             "Mã hồ sơ",
             "Tên chủ sử dụng",
+            "CCCD",
+            "Địa chỉ chủ",
             "Loại biến động",
             "Loại GCN",
             "Số vào sổ",
@@ -309,6 +311,8 @@ const VaoSoView: React.FC<VaoSoViewProps> = ({ currentUser, wards }) => {
         ws['!cols'] = [
             { wch: 15 }, // Mã hồ sơ
             { wch: 30 }, // Tên chủ sử dụng
+            { wch: 15 }, // CCCD
+            { wch: 40 }, // Địa chỉ chủ
             { wch: 20 }, // Loại biến động
             { wch: 15 }, // Loại GCN
             { wch: 15 }, // Số vào sổ
@@ -317,7 +321,7 @@ const VaoSoView: React.FC<VaoSoViewProps> = ({ currentUser, wards }) => {
             { wch: 10 }, // Số thửa
             { wch: 15 }, // Tổng diện tích
             { wch: 15 }, // Diện tích thổ cư
-            { wch: 15 }, // Địa danh
+            { wch: 20 }, // Địa danh
             { wch: 15 }, // Số phát hành
             { wch: 15 }, // Ngày ký GCN
             { wch: 15 }, // Chuyển scan
@@ -384,6 +388,8 @@ const VaoSoView: React.FC<VaoSoViewProps> = ({ currentUser, wards }) => {
                     so_vao_so: findCol(['số vào sổ', 'svs', 'số vào']),
                     ma_ho_so: findCol(['mã hồ sơ', 'mã hs', 'số hồ sơ']),
                     ten_chu_su_dung: tenChuSuDungIdx,
+                    cccd: findCol(['cccd', 'cmnd', 'căn cước']),
+                    dia_chi_chu: findCol(['địa chỉ chủ', 'địa chỉ thường trú', 'nơi ở']),
                     loai_bien_dong: findCol(['biến động', 'loại hồ sơ', 'nội dung']),
                     loai_gcn: findCol(['loại gcn', 'gcn']),
                     ngay_nhan: findCol(['ngày nhận', 'ngày nộp']),
@@ -391,7 +397,7 @@ const VaoSoView: React.FC<VaoSoViewProps> = ({ currentUser, wards }) => {
                     so_thua: findCol(['thửa', 'số thửa']),
                     tong_dien_tich: findCol(['tổng diện tích', 'dt', 'diện tích']),
                     dien_tich_tho_cu: findCol(['thổ cư', 'ont', 'odt']),
-                    dia_danh: findCol(['địa danh', 'địa chỉ', 'vị trí']),
+                    dia_danh: findCol(['địa danh', 'địa chỉ thửa', 'vị trí']),
                     so_phat_hanh: findCol(['số phát hành', 'số seri', 'seri']),
                     ngay_ky_gcn: findCol(['ký gcn', 'ngày ký giấy', 'ngày cấp']),
                     ngay_ky_phieu_tk: findCol(['phiếu tk', 'chuyển scan']),
@@ -415,10 +421,18 @@ const VaoSoView: React.FC<VaoSoViewProps> = ({ currentUser, wards }) => {
                         return String(val).trim();
                     };
 
+                    let tenChu = getValue(colMap.ten_chu_su_dung);
+                    let cccd = getValue(colMap.cccd);
+                    let diaChiChu = getValue(colMap.dia_chi_chu);
+                    
+                    let combinedOwner = tenChu;
+                    if (cccd) combinedOwner += `\nCCCD: ${cccd}`;
+                    if (diaChiChu) combinedOwner += `\nĐịa chỉ: ${diaChiChu}`;
+
                     const recordData = {
                         so_vao_so: getValue(colMap.so_vao_so),
                         ma_ho_so: getValue(colMap.ma_ho_so),
-                        ten_chu_su_dung: getValue(colMap.ten_chu_su_dung),
+                        ten_chu_su_dung: combinedOwner,
                         loai_bien_dong: getValue(colMap.loai_bien_dong),
                         loai_gcn: getValue(colMap.loai_gcn) || 'GCN mới',
                         ngay_nhan: getValue(colMap.ngay_nhan),

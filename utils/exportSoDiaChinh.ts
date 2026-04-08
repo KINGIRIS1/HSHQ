@@ -79,7 +79,15 @@ export const generateSoDiaChinhBlob = async (records: ArchiveRecord[], quyenSo: 
 
             const formatNameForTOC = (nameStr: string) => {
                 if (!nameStr) return "";
-                return nameStr.split('\n').map(line => line.replace(/\s+CCCD:.*$/, '')).join(', ');
+                return nameStr.split('\n\n').map(block => {
+                    const lines = block.split('\n');
+                    let name = lines[0] || '';
+                    const cccdMatch = name.match(/^(.*?)\s+(CCCD:\s*.*)$/);
+                    if (cccdMatch) {
+                        name = cccdMatch[1];
+                    }
+                    return name;
+                }).filter(Boolean).join('; ');
             };
 
             tocTableRows.push(
@@ -315,18 +323,41 @@ export const generateSoDiaChinhBlob = async (records: ArchiveRecord[], quyenSo: 
                         new TableRow({
                             children: [
                                 new TableCell({
-                                    children: (data.ten_chu_su_dung || record.noi_nhan_gui || "").split('\n').map((ownerLine: string) => {
-                                        const cccdMatch = ownerLine.match(/^(.*?)\s+(CCCD:\s*.*)$/);
+                                    children: (data.ten_chu_su_dung || record.noi_nhan_gui || "").split('\n\n').map((ownerBlock: string) => {
+                                        const lines = ownerBlock.split('\n');
+                                        let name = lines[0] || '';
+                                        let cccd = '';
+                                        let address = '';
+                                        
+                                        // Handle old format where CCCD is on the same line
+                                        const cccdMatch = name.match(/^(.*?)\s+(CCCD:\s*.*)$/);
                                         if (cccdMatch) {
-                                            return new Paragraph({
-                                                children: [
-                                                    new TextRun({ text: cccdMatch[1] + " ", bold: true, size: 22, font: "Arial" }),
-                                                    new TextRun({ text: cccdMatch[2], bold: false, size: 22, font: "Arial" })
-                                                ]
-                                            });
+                                            name = cccdMatch[1];
+                                            cccd = cccdMatch[2];
                                         }
+                                        
+                                        for (let i = 1; i < lines.length; i++) {
+                                            if (lines[i].startsWith('CCCD: ')) {
+                                                cccd = lines[i];
+                                            } else if (lines[i].startsWith('Địa chỉ: ')) {
+                                                address = lines[i];
+                                            }
+                                        }
+                                        
+                                        const parts = [];
+                                        parts.push(new TextRun({ text: name, bold: true, size: 22, font: "Arial" }));
+                                        
+                                        if (cccd) {
+                                            parts.push(new TextRun({ text: `; ${cccd}`, bold: false, size: 22, font: "Arial" }));
+                                        }
+                                        
+                                        if (address) {
+                                            parts.push(new TextRun({ text: `; ${address}`, bold: false, size: 22, font: "Arial" }));
+                                        }
+                                        
                                         return new Paragraph({
-                                            children: [new TextRun({ text: ownerLine, bold: true, size: 22, font: "Arial" })]
+                                            children: parts,
+                                            spacing: { after: 100 }
                                         });
                                     }),
                                     columnSpan: 10,
