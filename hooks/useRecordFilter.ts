@@ -26,6 +26,7 @@ export const useRecordFilter = (
 
     const [filterDate, setFilterDate] = useState(''); 
     const [filterSpecificDate, setFilterSpecificDate] = useState('');
+    const [filterAssignedDate, setFilterAssignedDate] = useState('');
     const [filterFromDate, setFilterFromDate] = useState('');
     const [filterToDate, setFilterToDate] = useState('');
     const [showAdvancedDateFilter, setShowAdvancedDateFilter] = useState(false);
@@ -49,7 +50,7 @@ export const useRecordFilter = (
     // Reset pagination when filters change
     useEffect(() => {
         setCurrentPage(1);
-    }, [currentView, sortConfig, warningFilter, filterWard, filterStatus, filterEmployee, filterSpecificDate, filterFromDate, filterToDate, handoverTab, searchTerm]);
+    }, [currentView, sortConfig, warningFilter, filterWard, filterStatus, filterEmployee, filterSpecificDate, filterAssignedDate, filterFromDate, filterToDate, handoverTab, searchTerm]);
 
     // --- WARNING CHECK LOGIC ---
     const checkWarningPermission = (r: RecordFile) => {
@@ -186,6 +187,10 @@ export const useRecordFilter = (
                     });
                 }
             }
+            
+            if (filterAssignedDate) {
+                result = result.filter(r => r.assignedDate && r.assignedDate.startsWith(filterAssignedDate));
+            }
         }
 
         // Warning Filters
@@ -208,7 +213,7 @@ export const useRecordFilter = (
         });
 
         return result;
-    }, [records, searchTerm, filterWard, filterStatus, filterEmployee, filterDate, filterSpecificDate, filterFromDate, filterToDate, showAdvancedDateFilter, warningFilter, currentView, sortConfig, handoverTab, currentUser, employees]);
+    }, [records, searchTerm, filterWard, filterStatus, filterEmployee, filterDate, filterSpecificDate, filterAssignedDate, filterFromDate, filterToDate, showAdvancedDateFilter, warningFilter, currentView, sortConfig, handoverTab, currentUser, employees]);
 
     const paginatedRecords = useMemo(() => {
         const start = (currentPage - 1) * itemsPerPage;
@@ -245,6 +250,7 @@ export const useRecordFilter = (
         searchTerm, setSearchTerm,
         filterDate, setFilterDate,
         filterSpecificDate, setFilterSpecificDate,
+        filterAssignedDate, setFilterAssignedDate,
         filterFromDate, setFilterFromDate,
         filterToDate, setFilterToDate,
         showAdvancedDateFilter, setShowAdvancedDateFilter,

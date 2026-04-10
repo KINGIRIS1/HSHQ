@@ -74,6 +74,7 @@ interface AppRoutesProps {
     
     filterDate: string; setFilterDate: (s: string) => void;
     filterSpecificDate: string; setFilterSpecificDate: (s: string) => void;
+    filterAssignedDate: string; setFilterAssignedDate: (s: string) => void;
     filterFromDate: string; setFilterFromDate: (s: string) => void;
     filterToDate: string; setFilterToDate: (s: string) => void;
     showAdvancedDateFilter: boolean; setShowAdvancedDateFilter: (b: boolean) => void;
@@ -293,7 +294,23 @@ const AppRoutes: React.FC<AppRoutesProps> = (props) => {
                              </div>
                          )}
                          
-                         {(currentView !== 'handover_list' && currentView !== 'other_handover_list') && !props.showAdvancedDateFilter && ( <div className="flex items-center gap-2 bg-white px-2 py-1.5 border border-gray-200 rounded-md shadow-sm"><Calendar size={16} className="text-gray-500" /><input type="date" value={props.filterSpecificDate} onChange={(e) => props.setFilterSpecificDate(e.target.value)} className="text-sm outline-none bg-transparent text-gray-700" title="Lọc theo ngày tiếp nhận" />{props.filterSpecificDate && (<button onClick={() => props.setFilterSpecificDate('')} className="text-gray-400 hover:text-red-500"><X size={14} /></button>)}</div>)}
+                         {(currentView !== 'handover_list' && currentView !== 'other_handover_list') && !props.showAdvancedDateFilter && ( 
+                             <div className="flex items-center gap-2 bg-white px-2 py-1.5 border border-gray-200 rounded-md shadow-sm">
+                                 <Calendar size={16} className="text-gray-500" />
+                                 <span className="text-xs text-gray-500 font-bold uppercase">Ngày nhận:</span>
+                                 <input type="date" value={props.filterSpecificDate} onChange={(e) => props.setFilterSpecificDate(e.target.value)} className="text-sm outline-none bg-transparent text-gray-700" title="Lọc theo ngày nhận" />
+                                 {props.filterSpecificDate && (<button onClick={() => props.setFilterSpecificDate('')} className="text-gray-400 hover:text-red-500"><X size={14} /></button>)}
+                             </div>
+                         )}
+
+                         {(currentView === 'all_records' || currentView === 'other_records') && !props.showAdvancedDateFilter && (
+                             <div className="flex items-center gap-2 bg-white px-2 py-1.5 border border-gray-200 rounded-md shadow-sm">
+                                 <Calendar size={16} className="text-gray-500" />
+                                 <span className="text-xs text-gray-500 font-bold uppercase">Ngày giao NV:</span>
+                                 <input type="date" value={props.filterAssignedDate} onChange={(e) => props.setFilterAssignedDate(e.target.value)} className="text-sm outline-none bg-transparent text-gray-700" title="Lọc theo ngày giao nhân viên" />
+                                 {props.filterAssignedDate && (<button onClick={() => props.setFilterAssignedDate('')} className="text-gray-400 hover:text-red-500"><X size={14} /></button>)}
+                             </div>
+                         )}
                          
                          {(currentView === 'handover_list' || currentView === 'other_handover_list') && props.handoverTab === 'history' && (
                              <div className="flex items-center gap-2 bg-white px-2 py-1.5 border border-gray-200 rounded-md shadow-sm">
@@ -386,9 +403,9 @@ const AppRoutes: React.FC<AppRoutesProps> = (props) => {
 
                     {props.showAdvancedDateFilter && (
                         <div className="flex items-center gap-2 bg-gray-50 p-2 rounded-lg border border-gray-200 animate-fade-in text-sm">
-                            <span className="text-gray-600 font-medium">Từ ngày:</span>
+                            <span className="text-gray-600 font-bold uppercase text-xs">Ngày nhận từ:</span>
                             <input type="date" className="border rounded px-2 py-1" value={props.filterFromDate} onChange={(e) => props.setFilterFromDate(e.target.value)} />
-                            <span className="text-gray-600 font-medium">Đến ngày:</span>
+                            <span className="text-gray-600 font-bold uppercase text-xs">Đến ngày:</span>
                             <input type="date" className="border rounded px-2 py-1" value={props.filterToDate} onChange={(e) => props.setFilterToDate(e.target.value)} />
                             {(props.filterFromDate || props.filterToDate) && <button onClick={() => { props.setFilterFromDate(''); props.setFilterToDate(''); }} className="text-red-500 hover:underline text-xs">Xóa</button>}
                         </div>

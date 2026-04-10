@@ -425,9 +425,43 @@ const VaoSoView: React.FC<VaoSoViewProps> = ({ currentUser, wards }) => {
                     let cccd = getValue(colMap.cccd);
                     let diaChiChu = getValue(colMap.dia_chi_chu);
                     
-                    let combinedOwner = tenChu;
-                    if (cccd) combinedOwner += `\nCCCD: ${cccd}`;
-                    if (diaChiChu) combinedOwner += `\nĐịa chỉ: ${diaChiChu}`;
+                    let combinedOwner = "";
+                    if (tenChu && (tenChu.includes(' và ') || tenChu.includes('; CCCD:') || tenChu.includes('; CMND:'))) {
+                        const owners = tenChu.split(/\s+và\s+/i);
+                        const parsedOwners = owners.map(ownerStr => {
+                            const parts = ownerStr.split(';').map(p => p.trim());
+                            let name = parts[0];
+                            let ownerCccd = '';
+                            let ownerAddress = '';
+                            
+                            for (let i = 1; i < parts.length; i++) {
+                                const p = parts[i];
+                                if (p.toUpperCase().startsWith('CCCD:') || p.toUpperCase().startsWith('CMND:')) {
+                                    ownerCccd = p.substring(5).trim();
+                                } else if (p.toLowerCase().startsWith('địa chỉ:')) {
+                                    ownerAddress = p.substring(8).trim();
+                                }
+                            }
+                            
+                            let res = name;
+                            if (ownerCccd) res += `\nCCCD: ${ownerCccd}`;
+                            if (ownerAddress) res += `\nĐịa chỉ: ${ownerAddress}`;
+                            return res;
+                        });
+                        
+                        if (parsedOwners.length === 1) {
+                            let res = parsedOwners[0];
+                            if (cccd && !res.includes('CCCD:')) res += `\nCCCD: ${cccd}`;
+                            if (diaChiChu && !res.includes('Địa chỉ:')) res += `\nĐịa chỉ: ${diaChiChu}`;
+                            combinedOwner = res;
+                        } else {
+                            combinedOwner = parsedOwners.join('\n\n');
+                        }
+                    } else {
+                        combinedOwner = tenChu;
+                        if (cccd) combinedOwner += `\nCCCD: ${cccd}`;
+                        if (diaChiChu) combinedOwner += `\nĐịa chỉ: ${diaChiChu}`;
+                    }
 
                     const recordData = {
                         so_vao_so: getValue(colMap.so_vao_so),

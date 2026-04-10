@@ -614,12 +614,6 @@ const PersonalProfile: React.FC<PersonalProfileProps> = ({ user, records, isDire
                                                     Đã thực hiện <CheckSquare size={14} />
                                                 </button>
                                             )}
-
-                                            {activeTab === 'completed_work' && (
-                                                <button onClick={() => handleForwardToSign(r)} title="Chuyển sang bước Ký kiểm tra" className="px-3 py-1.5 bg-purple-600 text-white rounded-md hover:bg-purple-700 text-xs font-bold flex items-center gap-2 shadow-sm transition-all">
-                                                    Trình ký <Send size={14} />
-                                                </button>
-                                            )}
                                             
                                             {/* Tab Chờ ký không có nút hành động (chỉ xem) */}
                                         </div>
