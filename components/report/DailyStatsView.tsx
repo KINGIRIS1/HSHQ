@@ -18,7 +18,11 @@ const DailyStatsView: React.FC<DailyStatsViewProps> = ({ records, employees, war
     const [deadlineFrom, setDeadlineFrom] = useState('');
     const [deadlineTo, setDeadlineTo] = useState('');
 
+    const [assignedFrom, setAssignedFrom] = useState('');
+    const [assignedTo, setAssignedTo] = useState('');
+
     const [selectedWard, setSelectedWard] = useState<string>('all');
+    const [selectedEmployee, setSelectedEmployee] = useState<string>('all');
 
     // Pagination States
     const [currentPage, setCurrentPage] = useState(1);
@@ -62,14 +66,41 @@ const DailyStatsView: React.FC<DailyStatsViewProps> = ({ records, employees, war
                 }
             }
 
+            let matchAssigned = true;
+            if (assignedFrom || assignedTo) {
+                if (!r.assignedDate) {
+                    matchAssigned = false;
+                } else {
+                    const rDate = new Date(r.assignedDate);
+                    rDate.setHours(0,0,0,0);
+                    if (assignedFrom) {
+                        const from = new Date(assignedFrom); from.setHours(0,0,0,0);
+                        if (rDate < from) matchAssigned = false;
+                    }
+                    if (assignedTo) {
+                        const to = new Date(assignedTo); to.setHours(23,59,59,999);
+                        if (rDate > to) matchAssigned = false;
+                    }
+                }
+            }
+
             let matchWard = true;
             if (selectedWard !== 'all') {
                 matchWard = getNormalizedWard(r.ward) === selectedWard;
             }
 
-            return matchReceive && matchDeadline && matchWard;
+            let matchEmployee = true;
+            if (selectedEmployee !== 'all') {
+                if (selectedEmployee === 'unassigned') {
+                    matchEmployee = !r.assignedTo;
+                } else {
+                    matchEmployee = r.assignedTo === selectedEmployee;
+                }
+            }
+
+            return matchReceive && matchDeadline && matchAssigned && matchWard && matchEmployee;
         });
-    }, [records, receiveFrom, receiveTo, deadlineFrom, deadlineTo, selectedWard]);
+    }, [records, receiveFrom, receiveTo, deadlineFrom, deadlineTo, assignedFrom, assignedTo, selectedWard, selectedEmployee]);
 
     React.useEffect(() => {
         if (onFilteredRecordsChange) {
@@ -87,17 +118,17 @@ const DailyStatsView: React.FC<DailyStatsViewProps> = ({ records, employees, war
     // Reset page when filters change
     React.useEffect(() => {
         setCurrentPage(1);
-    }, [receiveFrom, receiveTo, deadlineFrom, deadlineTo, selectedWard]);
+    }, [receiveFrom, receiveTo, deadlineFrom, deadlineTo, assignedFrom, assignedTo, selectedWard, selectedEmployee]);
 
     const handleExport = () => {
-        exportDailyStatsToExcel(filteredRecords, employees, receiveFrom, receiveTo, deadlineFrom, deadlineTo);
+        exportDailyStatsToExcel(filteredRecords, employees, receiveFrom, receiveTo, deadlineFrom, deadlineTo, assignedFrom, assignedTo);
     };
 
     const formatDate = (d?: string | null) => d ? new Date(d).toLocaleDateString('vi-VN') : '-';
 
     return (
         <div className="flex flex-col h-full bg-white animate-fade-in-up p-4">
-            <div className="flex flex-col md:flex-row gap-4 mb-6 bg-gray-50 p-4 rounded-xl border border-gray-200">
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6 bg-gray-50 p-4 rounded-xl border border-gray-200">
                 <div className="flex-1">
                     <label className="block text-xs font-bold text-gray-700 mb-1">Ngày nhận</label>
                     <div className="flex items-center gap-2">
@@ -117,8 +148,17 @@ const DailyStatsView: React.FC<DailyStatsViewProps> = ({ records, employees, war
                 </div>
 
                 <div className="flex-1">
+                    <label className="block text-xs font-bold text-gray-700 mb-1">Ngày giao NV</label>
+                    <div className="flex items-center gap-2">
+                        <input type="date" value={assignedFrom} onChange={e => setAssignedFrom(e.target.value)} className="border border-gray-300 rounded-md px-2 py-1.5 text-sm w-full" title="Từ ngày" />
+                        <span className="text-gray-400">-</span>
+                        <input type="date" value={assignedTo} onChange={e => setAssignedTo(e.target.value)} className="border border-gray-300 rounded-md px-2 py-1.5 text-sm w-full" title="Đến ngày" />
+                    </div>
+                </div>
+
+                <div className="flex-1">
                     <label className="block text-xs font-bold text-gray-700 mb-1">Xã/Phường</label>
-                    <div className="flex items-center gap-2 bg-white px-2 py-1.5 border border-gray-300 rounded-md">
+                    <div className="flex items-center gap-2 bg-white px-2 py-1.5 border border-gray-300 rounded-md h-[34px]">
                         <MapPin size={16} className="text-gray-500" />
                         <select 
                             value={selectedWard} 
@@ -133,7 +173,25 @@ const DailyStatsView: React.FC<DailyStatsViewProps> = ({ records, employees, war
                     </div>
                 </div>
 
-                <div className="flex items-end">
+                <div className="flex-1">
+                    <label className="block text-xs font-bold text-gray-700 mb-1">Nhân viên</label>
+                    <div className="flex items-center gap-2 bg-white px-2 py-1.5 border border-gray-300 rounded-md h-[34px]">
+                        <Search size={16} className="text-gray-500" />
+                        <select 
+                            value={selectedEmployee} 
+                            onChange={(e) => setSelectedEmployee(e.target.value)} 
+                            className="text-sm outline-none bg-transparent text-gray-700 font-medium cursor-pointer border-none focus:ring-0 w-full"
+                        >
+                            <option value="all">Tất cả nhân viên</option>
+                            <option value="unassigned">Chưa giao</option>
+                            {employees.map(emp => (
+                                <option key={emp.id} value={emp.id}>{emp.name}</option>
+                            ))}
+                        </select>
+                    </div>
+                </div>
+
+                <div className="flex items-end md:col-span-3 lg:col-span-5 justify-end">
                     <button 
                         onClick={handleExport}
                         disabled={filteredRecords.length === 0}

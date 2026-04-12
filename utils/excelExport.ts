@@ -280,7 +280,7 @@ export const exportReportToExcel = async (
     XLSX.writeFile(wb, fileName);
 };
 
-export const exportDailyStatsToExcel = (records: RecordFile[], employees: Employee[], receiveFrom: string, receiveTo: string, deadlineFrom: string, deadlineTo: string) => {
+export const exportDailyStatsToExcel = (records: RecordFile[], employees: Employee[], receiveFrom: string, receiveTo: string, deadlineFrom: string, deadlineTo: string, assignedFrom?: string, assignedTo?: string) => {
     if (records.length === 0) {
         alert("Không có hồ sơ nào để xuất.");
         return;
@@ -300,6 +300,7 @@ export const exportDailyStatsToExcel = (records: RecordFile[], employees: Employ
         "Xã/Phường", 
         "Ngày Nhận", 
         "Ngày Hẹn Trả", 
+        "Ngày Giao NV",
         "Ngày Hoàn Thành",
         "NV Xử Lý", 
         "Trạng Thái"
@@ -314,6 +315,7 @@ export const exportDailyStatsToExcel = (records: RecordFile[], employees: Employ
             getNormalizedWard(r.ward || undefined),
             formatDate(r.receivedDate),
             formatDate(r.deadline),
+            formatDate(r.assignedDate),
             formatDate(r.completedDate || r.resultReturnedDate),
             emp ? emp.name : '',
             STATUS_LABELS[r.status] || r.status
@@ -326,6 +328,9 @@ export const exportDailyStatsToExcel = (records: RecordFile[], employees: Employ
     }
     if (deadlineFrom || deadlineTo) {
         subtitle += `\nNgày hẹn trả: ${deadlineFrom ? formatDate(deadlineFrom) : '...'} - ${deadlineTo ? formatDate(deadlineTo) : '...'}`;
+    }
+    if (assignedFrom || assignedTo) {
+        subtitle += `\nNgày giao NV: ${assignedFrom ? formatDate(assignedFrom) : '...'} - ${assignedTo ? formatDate(assignedTo) : '...'}`;
     }
 
     const wsData = [
@@ -349,6 +354,7 @@ export const exportDailyStatsToExcel = (records: RecordFile[], employees: Employ
         { wch: 20 }, // Xã
         { wch: 15 }, // Ngày nhận
         { wch: 15 }, // Ngày hẹn trả
+        { wch: 15 }, // Ngày giao NV
         { wch: 15 }, // Ngày hoàn thành
         { wch: 25 }, // NV
         { wch: 20 }  // Trạng thái
