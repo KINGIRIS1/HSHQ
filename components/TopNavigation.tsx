@@ -43,8 +43,8 @@ const TopNavigation: React.FC<TopNavigationProps> = ({
   };
 
   // Cập nhật danh sách các view được phép
-  const oneDoorAllowedViews = ['dashboard', 'internal_chat', 'receive_record', 'receive_contract', 'all_records', 'other_records', 'personal_profile', 'account_settings', 'utilities', 'handover_list', 'work_schedule', 'archive_records', 'receive_group', 'records_group', 'reports', 'tools_group'];
-  const teamLeaderAllowedViews = ['dashboard', 'personal_profile', 'all_records', 'other_records', 'excerpt_management', 'reports', 'account_settings', 'internal_chat', 'utilities', 'work_schedule', 'archive_records', 'records_group', 'tools_group'];
+  const oneDoorAllowedViews = ['dashboard', 'internal_chat', 'receive_record', 'receive_contract', 'all_records', 'registration_records', 'other_records', 'personal_profile', 'account_settings', 'utilities', 'handover_list', 'work_schedule', 'archive_records', 'receive_group', 'records_group', 'reports', 'tools_group'];
+  const teamLeaderAllowedViews = ['dashboard', 'personal_profile', 'all_records', 'registration_records', 'other_records', 'excerpt_management', 'reports', 'account_settings', 'internal_chat', 'utilities', 'work_schedule', 'archive_records', 'records_group', 'tools_group'];
 
   // Define menu structure
   const menuItems = [
@@ -74,6 +74,7 @@ const TopNavigation: React.FC<TopNavigationProps> = ({
       isTabGroup: true,
       subItems: [
         { id: 'all_records', label: 'Đo đạc', icon: Ruler, visible: hasPermission('VIEW_RECORDS') },
+        { id: 'registration_records', label: 'Đăng ký', icon: FileSignature, visible: hasPermission('VIEW_RECORDS') },
         { id: 'archive_records', label: 'Lưu trữ', icon: FolderArchive, visible: hasPermission('VIEW_ARCHIVE') },
         { id: 'other_records', label: 'Khác', icon: Layers, visible: hasPermission('VIEW_RECORDS') },
       ]

@@ -41,8 +41,8 @@ const Sidebar: React.FC<SidebarProps> = ({
   const hasManagerRights = isAdmin || isSubadmin || isTeamLeader;
 
   // Cập nhật danh sách các view được phép
-  const oneDoorAllowedViews = ['dashboard', 'internal_chat', 'receive_record', 'receive_contract', 'all_records', 'personal_profile', 'account_settings', 'utilities', 'handover_list', 'work_schedule', 'archive_records'];
-  const teamLeaderAllowedViews = ['dashboard', 'personal_profile', 'all_records', 'excerpt_management', 'reports', 'account_settings', 'internal_chat', 'utilities', 'work_schedule', 'archive_records'];
+  const oneDoorAllowedViews = ['dashboard', 'internal_chat', 'receive_record', 'receive_contract', 'all_records', 'registration_records', 'personal_profile', 'account_settings', 'utilities', 'handover_list', 'work_schedule', 'archive_records'];
+  const teamLeaderAllowedViews = ['dashboard', 'personal_profile', 'all_records', 'registration_records', 'excerpt_management', 'reports', 'account_settings', 'internal_chat', 'utilities', 'work_schedule', 'archive_records'];
 
   const menuItems = [
     { id: 'dashboard', label: 'Tổng quan', icon: LayoutDashboard, visible: true, badge: reminderCount, badgeColor: 'bg-pink-500' },
@@ -53,6 +53,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     { id: 'receive_contract', label: 'Tiếp nhận hợp đồng', icon: FileSignature, visible: !isTeamLeader && !isEmployee },
     // Đổi tên thành "Hồ sơ đo đạc"
     { id: 'all_records', label: 'Hồ sơ đo đạc', icon: FileText, visible: true, badge: !isOneDoor ? warningRecordsCount : 0, badgeColor: 'bg-red-600' },
+    { id: 'registration_records', label: 'Hồ sơ đăng ký', icon: FileSignature, visible: true },
     { id: 'archive_records', label: 'Hồ sơ lưu trữ', icon: FolderArchive, visible: true },
     { id: 'excerpt_management', label: 'Số TL/TĐ', icon: BookOpen, visible: !isOneDoor },
     { id: 'utilities', label: 'Tiện ích', icon: PenTool, visible: true },

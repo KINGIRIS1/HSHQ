@@ -17,6 +17,7 @@ import ReportSection from './ReportSection';
 import RecordRow from './RecordRow';
 import WorkScheduleView from './WorkScheduleView';
 import ArchiveRecords from './ArchiveRecords';
+import RegistrationRecords from './RegistrationRecords';
 import SystemView from './SystemView';
 import BarcodeGeneratorView from './BarcodeGeneratorView';
 
@@ -607,6 +608,10 @@ const AppRoutes: React.FC<AppRoutesProps> = (props) => {
                     currentUser={currentUser}
                     initialRecordForCorrection={props.recordForMapCorrection}
                 />
+            );
+        case 'registration_records':
+            return (
+                <RegistrationRecords currentUser={currentUser} wards={wards} />
             );
         case 'archive_records':
             return (
