@@ -383,7 +383,7 @@ const ReceiveContract: React.FC<ReceiveContractProps> = ({ wards, currentUser, e
           DIACHI: val(dataToPrint.address || dataToPrint.ward),
           SDT: val(dataToPrint.phoneNumber),
           SDT_A: val(dataToPrint.phoneNumber),
-          BEN_B: "CN VPĐKĐĐ THỊ XÃ CHƠN THÀNH",
+          BEN_B: "CN VPĐKĐĐ HUYỆN HỚN QUẢN",
           DAI_DIEN_B: signerName,
           CHUC_VU_B: signerPosition,
           NGUOI_KY: signerName,

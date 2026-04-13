@@ -209,9 +209,9 @@ function App() {
 
   // --- HANDLERS (Business Logic) ---
 
-  const handleExportReportExcel = async (fromDateStr: string, toDateStr: string, ward: string) => {
+  const handleExportReportExcel = async (fromDateStr: string, toDateStr: string, ward: string, title?: string, data?: RecordFile[]) => {
       if (!currentUser) return;
-      await exportReportToExcel(records, fromDateStr, toDateStr, ward, employees);
+      await exportReportToExcel(data || records, fromDateStr, toDateStr, ward, employees, title);
   };
 
   const handleUpdateCurrentAccount = async (data: { name: string; password?: string; department?: string }) => {

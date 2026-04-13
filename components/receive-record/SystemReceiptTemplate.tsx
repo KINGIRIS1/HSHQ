@@ -281,7 +281,7 @@ const SystemReceiptTemplate: React.FC<SystemReceiptTemplateProps> = ({ data, rec
                         {/* Control Slip Header */}
                         <div className="flex justify-between mb-4">
                             <div className="text-center" style={{ width: '45%' }}>
-                                <div className="font-bold text-[15px]">VĂN PHÒNG ĐKĐĐ TỈNH ĐỒNG NAI</div>
+                                <div className="font-bold text-[15px]">VĂN PHÒNG ĐKĐĐ TỈNH BÌNH PHƯỚC</div>
                                 <div className="font-bold text-[16px]">CHI NHÁNH HỚN QUẢN</div>
                             </div>
                             <div className="text-center" style={{ width: '50%' }}>

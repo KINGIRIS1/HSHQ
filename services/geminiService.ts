@@ -151,25 +151,31 @@ export const generateReport = async (
       DỮ LIỆU JSON: ${JSON.stringify(reportData)}
 
       YÊU CẦU TRÌNH BÀY (HTML thuần, CSS Tailwind, Font Serif):
-      1. TIÊU ĐỀ: "${title}" (In đậm, trung tâm, size lớn).
-      2. THỜI GIAN: ${timeLabel}.
-      3. BẢNG TỔNG HỢP: Tạo 1 bảng nhỏ hiển thị các chỉ số:
+      1. QUỐC HIỆU, TIÊU NGỮ:
+         - Căn giữa: "CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM" (In đậm)
+         - Căn giữa: "Độc lập - Tự do - Hạnh phúc" (In đậm, có gạch chân)
+      2. TIÊU ĐỀ: "${title}" (In đậm, trung tâm, size lớn, màu xanh đậm hoặc đen).
+      3. THỜI GIAN: ${timeLabel} (Căn giữa, in nghiêng).
+      4. BẢNG TỔNG HỢP: Tạo 1 bảng nhỏ hiển thị các chỉ số:
          - Tổng HS
          - Đã xong
          - Đang xử lý
          - Trễ hạn (Chưa xong): ${overduePendingCount}
          - Trễ hạn (Đã xong): ${overdueCompletedCount}
       
-      4. THỐNG KÊ THEO ĐỊA BÀN (Tóm tắt): Tạo 1 bảng HTML (Border đen mỏng 1px) các cột: STT, Địa bàn, Tổng số, Đã xong, Tỷ lệ %.
+      5. THỐNG KÊ THEO ĐỊA BÀN (Tóm tắt): Tạo 1 bảng HTML (Border đen mỏng 1px) các cột: STT, Địa bàn, Tổng số, Đã xong, Tỷ lệ %.
 
-      5. CHI TIẾT LOẠI HỒ SƠ CỦA TỪNG XÃ/PHƯỜNG (Quan trọng): 
+      6. CHI TIẾT LOẠI HỒ SƠ CỦA TỪNG XÃ/PHƯỜNG (Quan trọng): 
          - Tạo một bảng HTML riêng biệt.
          - Cột 1: Địa bàn (Xã/Phường).
          - Cột 2: Chi tiết số lượng từng loại (Ví dụ: Trích lục: 5, Đo đạc: 2, Cắm mốc: 1...). Hãy liệt kê rõ ràng trong ô.
          - Dữ liệu lấy từ 'wardTypeDetails'.
 
-      6. NHẬN XÉT (Tối đa 3 câu): Nhận xét ngắn gọn về tiến độ. Đặc biệt lưu ý tách biệt việc tồn đọng hồ sơ trễ hạn (chưa xong) và việc hoàn thành nhưng bị trễ (đã xong).
-      7. CHỮ KÝ: Căn phải "Người lập biểu", để trống khoảng trắng để ký.
+      7. NHẬN XÉT (Tối đa 3 câu): Nhận xét ngắn gọn về tiến độ. Đặc biệt lưu ý tách biệt việc tồn đọng hồ sơ trễ hạn (chưa xong) và việc hoàn thành nhưng bị trễ (đã xong).
+      8. CHỮ KÝ: 
+         - Tạo một bảng 2 cột không viền (border="0").
+         - Cột trái: "NGƯỜI LẬP BIỂU" (In đậm), dòng dưới "(Ký, họ tên)" (In nghiêng).
+         - Cột phải: "THỦ TRƯỞNG ĐƠN VỊ" (In đậm), dòng dưới "(Ký, họ tên, đóng dấu)" (In nghiêng).
 
       LƯU Ý QUAN TRỌNG: 
       - Không sử dụng các thẻ <html> <body>. 

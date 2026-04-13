@@ -14,7 +14,7 @@ interface ReportSectionProps {
     reportContent: string;
     isGenerating: boolean;
     onGenerate: (fromDate: string, toDate: string, title?: string, data?: RecordFile[]) => void;
-    onExportExcel: (fromDate: string, toDate: string, ward: string) => void;
+    onExportExcel: (fromDate: string, toDate: string, ward: string, title?: string, data?: RecordFile[]) => void;
     records: RecordFile[];
     wards: string[]; 
     employees: Employee[];
@@ -244,9 +244,9 @@ const ReportSection: React.FC<ReportSectionProps> = ({ reportContent, isGenerati
 
         setActiveTab('ai');
         
-        let title = "BÁO CÁO TÌNH HÌNH TIẾP NHẬN VÀ GIẢI QUYẾT HỒ SƠ";
-        if (reportType === 'week') title = "BÁO CÁO KẾT QUẢ CÔNG TÁC TUẦN";
-        if (reportType === 'month') title = "BÁO CÁO KẾT QUẢ CÔNG TÁC THÁNG";
+        let title = mainTab === 'measurement' ? "BÁO CÁO KẾT QUẢ CÔNG TÁC ĐO ĐẠC" : "BÁO CÁO KẾT QUẢ CÔNG TÁC LƯU TRỮ";
+        if (reportType === 'week') title = mainTab === 'measurement' ? "BÁO CÁO KẾT QUẢ CÔNG TÁC ĐO ĐẠC TUẦN" : "BÁO CÁO KẾT QUẢ CÔNG TÁC LƯU TRỮ TUẦN";
+        if (reportType === 'month') title = mainTab === 'measurement' ? "BÁO CÁO KẾT QUẢ CÔNG TÁC ĐO ĐẠC THÁNG" : "BÁO CÁO KẾT QUẢ CÔNG TÁC LƯU TRỮ THÁNG";
 
         // Pass filteredData to onGenerate
         onGenerate(fromDate, toDate, title, filteredData);
@@ -254,7 +254,11 @@ const ReportSection: React.FC<ReportSectionProps> = ({ reportContent, isGenerati
 
     const handleExportExcelClick = () => {
         if (!fromDate || !toDate) { alert("Vui lòng chọn đầy đủ thời gian."); return; }
-        onExportExcel(fromDate, toDate, selectedWard);
+        let title = mainTab === 'measurement' ? "BÁO CÁO KẾT QUẢ CÔNG TÁC ĐO ĐẠC" : "BÁO CÁO KẾT QUẢ CÔNG TÁC LƯU TRỮ";
+        if (reportType === 'week') title = mainTab === 'measurement' ? "BÁO CÁO KẾT QUẢ CÔNG TÁC ĐO ĐẠC TUẦN" : "BÁO CÁO KẾT QUẢ CÔNG TÁC LƯU TRỮ TUẦN";
+        if (reportType === 'month') title = mainTab === 'measurement' ? "BÁO CÁO KẾT QUẢ CÔNG TÁC ĐO ĐẠC THÁNG" : "BÁO CÁO KẾT QUẢ CÔNG TÁC LƯU TRỮ THÁNG";
+        
+        onExportExcel(fromDate, toDate, selectedWard, title, filteredData);
     };
 
     const handlePrint = () => {

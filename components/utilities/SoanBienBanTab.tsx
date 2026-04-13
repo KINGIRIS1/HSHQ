@@ -682,7 +682,7 @@ const SoanBienBanTab: React.FC<SoanBienBanTabProps> = ({ currentUser, isActive, 
 
         <p style="margin-bottom: 8px;"><b>B. NỘI DUNG:</b></p>
         <p style="${indentStyle} margin-bottom: 8px;">Tiến hành đo đạc, kiểm tra, xác minh ranh giới, mốc giới thửa đất ngoài thực địa đối với khu đất:</p>
-        <p style="${indentStyle} margin-bottom: 8px;">Thửa đất số <b>${formData.SO_THUA_MOI || '...'}</b>, tờ bản đồ số <b>${toBanDoMoTa}</b>, tọa lạc tại ${formData.DIA_CHI_THUA}, ${formData.PHUONG}, tỉnh Đồng Nai.</p>
+        <p style="${indentStyle} margin-bottom: 8px;">Thửa đất số <b>${formData.SO_THUA_MOI || '...'}</b>, tờ bản đồ số <b>${toBanDoMoTa}</b>, tọa lạc tại ${formData.DIA_CHI_THUA}, ${formData.PHUONG}, tỉnh Bình Phước.</p>
 
         <p style="${indentStyle} margin-bottom: 8px;"><b>1. Về hồ sơ thửa đất:</b></p>
         <p style="${indentStyle} margin-bottom: 8px;">Khu đất đã được cấp GCNQSDĐ số phát hành <b>${formData.SO_GCN}</b> vào sổ cấp GCN số <b>${formData.SO_VAO_SO}</b> do <b>${formData.DV_CAP_GCN}</b> cấp ngày <b>${formattedNgayCap}</b>, thửa đất số ${formData.SO_THUA_CU}, tờ bản đồ số ${formData.SO_TO_CU}, diện tích ${formData.DT_CU} m² ${areaBreakdown}.</p>

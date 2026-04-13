@@ -10,7 +10,8 @@ export const exportReportToExcel = async (
     fromDateStr: string, 
     toDateStr: string,
     ward: string,
-    employees: Employee[]
+    employees: Employee[],
+    customTitle?: string
 ) => {
     const from = new Date(fromDateStr);
     from.setHours(0, 0, 0, 0);
@@ -175,11 +176,13 @@ export const exportReportToExcel = async (
     const wardTitle = (ward && ward !== 'all') ? ` - ${ward.toUpperCase()}` : "";
 
     // Content Injection
+    const reportTitle = customTitle ? `${customTitle}${wardTitle}` : `BÁO CÁO TÌNH HÌNH TIẾP NHẬN VÀ GIẢI QUYẾT HỒ SƠ${wardTitle}`;
+    
     XLSX.utils.sheet_add_aoa(ws, [
         ["CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM"], // 0
         ["Độc lập - Tự do - Hạnh phúc"],         // 1
         [""],                                    // 2
-        [`BÁO CÁO TÌNH HÌNH TIẾP NHẬN VÀ GIẢI QUYẾT HỒ SƠ${wardTitle}`], // 3
+        [reportTitle], // 3
         [`Từ ngày ${formatDate(fromDateStr)} đến ngày ${formatDate(toDateStr)}`], // 4
         [""],                                    // 5
         [`Tổng số: ${total} | Đã xong: ${completed} | Đang giải quyết: ${processing} | Trễ hạn (Chưa xong): ${overduePending} | Trễ hạn (Đã xong): ${overdueCompleted}`], // 6
@@ -334,8 +337,8 @@ export const exportDailyStatsToExcel = (records: RecordFile[], employees: Employ
     }
 
     const wsData = [
-        ["CHI NHÁNH VĂN PHÒNG ĐĂNG KÝ ĐẤT ĐAI"],
-        ["CHƠN THÀNH"],
+        ["CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM"],
+        ["Độc lập - Tự do - Hạnh phúc"],
         [],
         ["DANH SÁCH HỒ SƠ THỐNG KÊ"],
         [subtitle],
@@ -345,6 +348,49 @@ export const exportDailyStatsToExcel = (records: RecordFile[], employees: Employ
     ];
 
     const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+    const totalCols = tableHeader.length - 1;
+    ws['!merges'] = [
+        { s: { r: 0, c: 0 }, e: { r: 0, c: totalCols } },
+        { s: { r: 1, c: 0 }, e: { r: 1, c: totalCols } },
+        { s: { r: 3, c: 0 }, e: { r: 3, c: totalCols } },
+        { s: { r: 4, c: 0 }, e: { r: 4, c: totalCols } }
+    ];
+
+    if(ws['A1']) ws['A1'].s = { font: { name: "Times New Roman", sz: 14, bold: true }, alignment: { horizontal: "center" } };
+    if(ws['A2']) ws['A2'].s = { font: { name: "Times New Roman", sz: 12, bold: true, underline: true }, alignment: { horizontal: "center" } };
+    if(ws['A4']) ws['A4'].s = { font: { name: "Times New Roman", sz: 16, bold: true, color: { rgb: "0000FF" } }, alignment: { horizontal: "center" } };
+    if(ws['A5']) ws['A5'].s = { font: { name: "Times New Roman", sz: 12, italic: true }, alignment: { horizontal: "center", wrapText: true } };
+
+    const headerStyle = { 
+        font: { name: "Times New Roman", sz: 11, bold: true }, 
+        border: { top: { style: "thin" }, bottom: { style: "thin" }, left: { style: "thin" }, right: { style: "thin" } }, 
+        fill: { fgColor: { rgb: "E0E0E0" } }, 
+        alignment: { horizontal: "center", vertical: "center", wrapText: true } 
+    };
+    const cellStyle = { 
+        font: { name: "Times New Roman", sz: 11 }, 
+        border: { top: { style: "thin" }, bottom: { style: "thin" }, left: { style: "thin" }, right: { style: "thin" } },
+        alignment: { vertical: "center", wrapText: true }
+    };
+    const centerStyle = { ...cellStyle, alignment: { horizontal: "center", vertical: "center" } };
+
+    const headerRowIdx = 6;
+    const dataStartIdx = 7;
+
+    for (let c = 0; c <= totalCols; c++) {
+        const headerRef = XLSX.utils.encode_cell({ r: headerRowIdx, c });
+        if (!ws[headerRef]) ws[headerRef] = { v: "", t: "s" };
+        ws[headerRef].s = headerStyle;
+
+        for (let r = dataStartIdx; r < dataStartIdx + dataRows.length; r++) {
+            const cellRef = XLSX.utils.encode_cell({ r, c });
+            if (!ws[cellRef]) ws[cellRef] = { v: "", t: "s" };
+            
+            if ([0, 4, 5, 6, 7, 9].includes(c)) ws[cellRef].s = centerStyle;
+            else ws[cellRef].s = cellStyle;
+        }
+    }
 
     // Styling
     ws['!cols'] = [
