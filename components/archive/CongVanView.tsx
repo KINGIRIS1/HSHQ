@@ -47,7 +47,7 @@ const CongVanView: React.FC<CongVanViewProps> = ({ currentUser }) => {
         status: 'draft',
         so_hieu: '',
         trich_yeu: '',
-        ngay_thang: new Date().toISOString().split('T')[0],
+        ngay_thang: new Date().toISOString(),
         noi_nhan_gui: ''
     });
     const [editingId, setEditingId] = useState<string | null>(null);
@@ -332,7 +332,7 @@ const CongVanView: React.FC<CongVanViewProps> = ({ currentUser }) => {
             await loadData();
             setIsFormOpen(false);
             setEditingId(null);
-            setFormData({ type: 'congvan', status: 'draft', so_hieu: '', trich_yeu: '', ngay_thang: new Date().toISOString().split('T')[0], noi_nhan_gui: '' });
+            setFormData({ type: 'congvan', status: 'draft', so_hieu: '', trich_yeu: '', ngay_thang: new Date().toISOString(), noi_nhan_gui: '' });
         } else {
             alert('Lỗi khi lưu.');
         }
@@ -603,7 +603,7 @@ const CongVanView: React.FC<CongVanViewProps> = ({ currentUser }) => {
                                     <FileSpreadsheet size={16}/> Import Excel
                                     <input type="file" className="hidden" accept=".xlsx, .xls" onChange={handleImportExcel} />
                                 </label>
-                                <button onClick={() => { setIsFormOpen(true); setEditingId(null); setFormData({type: 'congvan', status: 'draft', so_hieu: '', trich_yeu: '', ngay_thang: new Date().toISOString().split('T')[0], noi_nhan_gui: ''}); }} className="flex items-center gap-2 bg-orange-600 text-white px-3 py-1.5 rounded-md font-bold text-sm hover:bg-orange-700 shadow-sm">
+                                <button onClick={() => { setIsFormOpen(true); setEditingId(null); setFormData({type: 'congvan', status: 'draft', so_hieu: '', trich_yeu: '', ngay_thang: new Date().toISOString(), noi_nhan_gui: ''}); }} className="flex items-center gap-2 bg-orange-600 text-white px-3 py-1.5 rounded-md font-bold text-sm hover:bg-orange-700 shadow-sm">
                                     <Plus size={16}/> Tạo mới
                                 </button>
                             </>

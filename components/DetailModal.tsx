@@ -124,6 +124,12 @@ export const DetailModal: React.FC<DetailModalProps> = ({ isOpen, onClose, recor
     const d = String(date.getDate()).padStart(2, '0');
     const m = String(date.getMonth() + 1).padStart(2, '0');
     const y = date.getFullYear();
+    
+    if (dateStr.includes('T')) {
+        const h = String(date.getHours()).padStart(2, '0');
+        const min = String(date.getMinutes()).padStart(2, '0');
+        return `${h}:${min} - ${d}/${m}/${y}`;
+    }
     return `${d}/${m}/${y}`;
   };
 
@@ -504,6 +510,18 @@ export const DetailModal: React.FC<DetailModalProps> = ({ isOpen, onClose, recor
                             </div>
                             <span className="font-bold text-sm text-gray-700">{getEmployeeName(record.assignedTo)}</span>
                         </div>
+
+                        {record.status === RecordStatus.PENDING_CHECK || record.status === RecordStatus.CHECKED ? (
+                            <div className="mt-4">
+                                <label className="text-[10px] text-gray-400 uppercase font-bold block mb-2">Người kiểm tra</label>
+                                <div className="flex items-center gap-3 bg-orange-50 p-3 rounded-lg border border-orange-100">
+                                    <div className="w-8 h-8 rounded-full bg-orange-200 flex items-center justify-center text-orange-600">
+                                        <UserIcon size={16}/>
+                                    </div>
+                                    <span className="font-bold text-sm text-orange-800">{getEmployeeName(record.checkedBy)}</span>
+                                </div>
+                            </div>
+                        ) : null}
                     </div>
 
                     {/* REMINDER */}
@@ -684,11 +702,32 @@ export const DetailModal: React.FC<DetailModalProps> = ({ isOpen, onClose, recor
                             />
                             
                             <TimelineItem 
-                                date={null} 
+                                date={record.completedWorkDate} 
                                 forceActive={isWorkDone}
                                 label="ĐÃ THỰC HIỆN" 
                                 icon={CheckSquare}
                                 colorClass={{text: 'text-cyan-700', border: 'border-cyan-600', bg: 'bg-cyan-600'}}
+                            />
+
+                            <TimelineItem 
+                                date={record.pendingCheckDate} 
+                                forceActive={record.status === RecordStatus.PENDING_CHECK || record.status === RecordStatus.CHECKED || record.status === RecordStatus.PENDING_SIGN || record.status === RecordStatus.SIGNED || record.status === RecordStatus.HANDOVER || record.status === RecordStatus.RETURNED}
+                                label="TRÌNH KIỂM TRA" 
+                                icon={Send}
+                                colorClass={{text: 'text-orange-700', border: 'border-orange-600', bg: 'bg-orange-600'}}
+                                subText={record.checkedBy ? (() => {
+                                    const checker = employees.find(e => e.id === record.checkedBy);
+                                    if (!checker) return undefined;
+                                    return `${checker.name} (${checker?.position || 'Người kiểm tra'})`;
+                                })() : undefined}
+                            />
+
+                            <TimelineItem 
+                                date={record.checkedDate} 
+                                forceActive={record.status === RecordStatus.CHECKED || record.status === RecordStatus.PENDING_SIGN || record.status === RecordStatus.SIGNED || record.status === RecordStatus.HANDOVER || record.status === RecordStatus.RETURNED}
+                                label="ĐÃ KIỂM TRA" 
+                                icon={CheckSquare}
+                                colorClass={{text: 'text-orange-700', border: 'border-orange-600', bg: 'bg-orange-600'}}
                             />
 
                             <TimelineItem 

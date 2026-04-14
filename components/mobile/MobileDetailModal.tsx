@@ -99,7 +99,16 @@ export const MobileDetailModal: React.FC<MobileDetailModalProps> = ({
   const formatDate = (dateStr?: string | null) => {
     if (!dateStr) return '---';
     const date = new Date(dateStr);
-    return `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`;
+    const d = String(date.getDate()).padStart(2, '0');
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const y = date.getFullYear();
+    
+    if (dateStr.includes('T')) {
+        const h = String(date.getHours()).padStart(2, '0');
+        const min = String(date.getMinutes()).padStart(2, '0');
+        return `${h}:${min} - ${d}/${m}/${y}`;
+    }
+    return `${d}/${m}/${y}`;
   };
 
   const getEmployeeName = (id?: string | null) => {
@@ -475,11 +484,30 @@ export const MobileDetailModal: React.FC<MobileDetailModalProps> = ({
                   colorClass={{text: 'text-blue-600', border: 'border-blue-600', bg: 'bg-blue-600'}}
                 />
                 <TimelineItem 
-                  date={null} 
+                  date={record.completedWorkDate} 
                   forceActive={isWorkDone}
                   label="ĐÃ THỰC HIỆN" 
                   icon={CheckSquare}
                   colorClass={{text: 'text-cyan-600', border: 'border-cyan-600', bg: 'bg-cyan-600'}}
+                />
+                <TimelineItem 
+                  date={record.pendingCheckDate} 
+                  forceActive={record.status === RecordStatus.PENDING_CHECK || record.status === RecordStatus.CHECKED || record.status === RecordStatus.PENDING_SIGN || record.status === RecordStatus.SIGNED || record.status === RecordStatus.HANDOVER || record.status === RecordStatus.RETURNED}
+                  label="TRÌNH KIỂM TRA" 
+                  icon={Send}
+                  colorClass={{text: 'text-orange-600', border: 'border-orange-600', bg: 'bg-orange-600'}}
+                  subText={record.checkedBy ? (() => {
+                      const checker = employees.find(e => e.id === record.checkedBy);
+                      if (!checker) return undefined;
+                      return `${checker.name} (${checker?.position || 'Người kiểm tra'})`;
+                  })() : undefined}
+                />
+                <TimelineItem 
+                  date={record.checkedDate} 
+                  forceActive={record.status === RecordStatus.CHECKED || record.status === RecordStatus.PENDING_SIGN || record.status === RecordStatus.SIGNED || record.status === RecordStatus.HANDOVER || record.status === RecordStatus.RETURNED}
+                  label="ĐÃ KIỂM TRA" 
+                  icon={CheckSquare}
+                  colorClass={{text: 'text-orange-600', border: 'border-orange-600', bg: 'bg-orange-600'}}
                 />
                 <TimelineItem 
                   date={record.submissionDate} 
@@ -524,6 +552,18 @@ export const MobileDetailModal: React.FC<MobileDetailModalProps> = ({
                 <p className="text-sm font-bold text-slate-800">{getEmployeeName(record.assignedTo)}</p>
               </div>
             </div>
+
+            {(record.status === RecordStatus.PENDING_CHECK || record.status === RecordStatus.CHECKED) && (
+              <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4 mt-4">
+                <div className="w-12 h-12 rounded-full bg-orange-50 flex items-center justify-center text-orange-400">
+                  <UserIcon size={24} />
+                </div>
+                <div>
+                  <p className="text-[10px] text-orange-400 font-bold uppercase">Người kiểm tra</p>
+                  <p className="text-sm font-bold text-orange-800">{getEmployeeName(record.checkedBy)}</p>
+                </div>
+              </div>
+            )}
           </div>
         )}
 

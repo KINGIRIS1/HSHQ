@@ -2,7 +2,8 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { RecordFile, RecordStatus, User, Employee } from '../types';
 import StatusBadge from './StatusBadge';
-import { Briefcase, ArrowRight, CheckCircle, Clock, Send, AlertTriangle, UserCog, ChevronLeft, ChevronRight, AlertCircle, Search, ArrowUp, ArrowDown, ArrowUpDown, Bell, CalendarClock, FileCheck, Map, CheckSquare } from 'lucide-react';
+import { Briefcase, ArrowRight, CheckCircle, Clock, Send, AlertTriangle, UserCog, ChevronLeft, ChevronRight, AlertCircle, Search, ArrowUp, ArrowDown, ArrowUpDown, Bell, CalendarClock, FileCheck, Map, CheckSquare, ClipboardList, FileDown } from 'lucide-react';
+import * as XLSX from 'xlsx-js-style';
 import { getShortRecordType } from '../constants';
 import { confirmAction } from '../utils/appHelpers';
 import { updateRecordApi } from '../services/api';
@@ -41,7 +42,7 @@ function removeVietnameseTones(str: string): string {
 
 const PersonalProfile: React.FC<PersonalProfileProps> = ({ user, records, isDirector, users, employees, onUpdateStatus, onUpdateRecord, onViewRecord, onCreateLiquidation, onMapCorrection }) => {
   // Thêm tab 'completed_work' và 'pending_sign'
-  const [activeTab, setActiveTab] = useState<'pending' | 'completed_work' | 'pending_sign' | 'finished' | 'reminder'>(isDirector ? 'pending_sign' : 'pending');
+  const [activeTab, setActiveTab] = useState<'pending' | 'completed_work' | 'pending_check' | 'pending_sign' | 'finished' | 'reminder'>(isDirector ? 'pending_sign' : 'pending');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   
@@ -53,6 +54,7 @@ const PersonalProfile: React.FC<PersonalProfileProps> = ({ user, records, isDire
 
   const [archiveRecords, setArchiveRecords] = useState<ArchiveRecord[]>([]);
   const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
+  const [isSubmitCheckModalOpen, setIsSubmitCheckModalOpen] = useState(false);
   const [submitTargetRecords, setSubmitTargetRecords] = useState<RecordFile[]>([]);
 
   useEffect(() => {
@@ -68,7 +70,12 @@ const PersonalProfile: React.FC<PersonalProfileProps> = ({ user, records, isDire
     const mainRecords = records.filter(r => {
         if (!user.employeeId) return false;
         if (isDirector) {
-            return r.submittedTo === user.employeeId;
+            return r.submittedTo === user.employeeId || r.assignedTo === user.employeeId;
+        }
+        // Nếu là người kiểm tra, họ có thể thấy hồ sơ được giao cho họ HOẶC hồ sơ trình cho họ kiểm tra
+        const isCheckerUser = employees.find(e => e.id === user.employeeId)?.position?.toLowerCase().includes('tổ') && (employees.find(e => e.id === user.employeeId)?.department?.toLowerCase().includes('đo đạc') || employees.find(e => e.id === user.employeeId)?.department?.toLowerCase().includes('kỹ thuật'));
+        if (isCheckerUser) {
+            return r.assignedTo === user.employeeId || r.checkedBy === user.employeeId;
         }
         return r.assignedTo === user.employeeId;
     });
@@ -77,7 +84,11 @@ const PersonalProfile: React.FC<PersonalProfileProps> = ({ user, records, isDire
         .filter(r => {
             if (!user.employeeId) return false;
             if (isDirector) {
-                return r.data?.submitted_to === user.employeeId; // Assuming archive has submitted_to
+                return r.data?.submitted_to === user.employeeId || r.data?.assigned_to === user.employeeId; 
+            }
+            const isCheckerUser = employees.find(e => e.id === user.employeeId)?.position?.toLowerCase().includes('tổ') && (employees.find(e => e.id === user.employeeId)?.department?.toLowerCase().includes('đo đạc') || employees.find(e => e.id === user.employeeId)?.department?.toLowerCase().includes('kỹ thuật'));
+            if (isCheckerUser) {
+                return r.data?.assigned_to === user.employeeId || r.data?.checked_by === user.employeeId;
             }
             return r.data?.assigned_to === user.employeeId;
         })
@@ -135,6 +146,21 @@ const PersonalProfile: React.FC<PersonalProfileProps> = ({ user, records, isDire
     return [...mainRecords, ...mappedArchives];
   }, [records, archiveRecords, user.employeeId]);
   
+  const isChecker = useMemo(() => {
+      if (!user.employeeId) return false;
+      const emp = employees.find(e => e.id === user.employeeId);
+      if (!emp) return false;
+      const isDoDac = emp.department?.toLowerCase().includes('đo đạc') || emp.department?.toLowerCase().includes('kỹ thuật');
+      const isLeader = emp.position?.toLowerCase().includes('tổ trưởng') || emp.position?.toLowerCase().includes('tổ phó');
+      return isDoDac && isLeader;
+  }, [user.employeeId, employees]);
+
+  useEffect(() => {
+      if (isChecker && activeTab !== 'pending_check' && activeTab !== 'finished') {
+          setActiveTab('pending_check');
+      }
+  }, [isChecker]);
+
   // 1. Hồ sơ Đang thực hiện (ASSIGNED, IN_PROGRESS)
   const pendingRecords = useMemo(() => {
       let list = myRecords.filter(r => r.status === RecordStatus.ASSIGNED || r.status === RecordStatus.IN_PROGRESS);
@@ -147,7 +173,13 @@ const PersonalProfile: React.FC<PersonalProfileProps> = ({ user, records, isDire
       return filterAndSort(list, searchTerm, sortConfig);
   }, [myRecords, searchTerm, sortConfig]);
 
-  // 3. Hồ sơ Chờ ký (PENDING_SIGN) - Chuyển thành Tab chính
+  // 3. Hồ sơ Chờ kiểm tra (PENDING_CHECK) - Dành cho Tổ trưởng/Tổ phó
+  const pendingCheckRecords = useMemo(() => {
+      let list = myRecords.filter(r => r.status === RecordStatus.PENDING_CHECK || r.status === RecordStatus.CHECKED);
+      return filterAndSort(list, searchTerm, sortConfig);
+  }, [myRecords, searchTerm, sortConfig]);
+
+  // 4. Hồ sơ Chờ ký (PENDING_SIGN) - Chuyển thành Tab chính
   const reviewRecords = useMemo(() => {
       let list = myRecords.filter(r => r.status === RecordStatus.PENDING_SIGN);
       return filterAndSort(list, searchTerm, sortConfig);
@@ -219,6 +251,7 @@ const PersonalProfile: React.FC<PersonalProfileProps> = ({ user, records, isDire
   const displayRecords = 
       activeTab === 'pending' ? pendingRecords : 
       activeTab === 'completed_work' ? completedWorkRecords :
+      activeTab === 'pending_check' ? pendingCheckRecords :
       activeTab === 'pending_sign' ? reviewRecords :
       activeTab === 'finished' ? finishedRecords :
       reminderRecords;
@@ -236,6 +269,40 @@ const PersonalProfile: React.FC<PersonalProfileProps> = ({ user, records, isDire
           direction = 'desc';
       }
       setSortConfig({ key, direction });
+  };
+
+  const handleExportExcel = () => {
+      const dataToExport = myRecords.map((r, idx) => ({
+          'STT': idx + 1,
+          'Mã hồ sơ': r.code,
+          'Chủ sử dụng': r.customerName,
+          'Số điện thoại': r.phoneNumber || '',
+          'CCCD': r.cccd || '',
+          'Loại hồ sơ': r.recordType,
+          'Ngày nhận': r.receivedDate ? r.receivedDate.split('T')[0] : '',
+          'Hẹn trả': r.deadline ? r.deadline.split('T')[0] : '',
+          'Trạng thái': r.status,
+          'Xã/Phường': r.ward || '',
+          'Số tờ': r.mapSheet || '',
+          'Số thửa': r.landPlot || '',
+          'Diện tích': r.area || '',
+          'Địa chỉ': r.address || '',
+          'Nội dung': r.content || '',
+          'Ngày giao': r.assignedDate ? r.assignedDate.split('T')[0] : '',
+          'Ngày trình ký': r.submissionDate ? r.submissionDate.split('T')[0] : '',
+          'Ngày duyệt': r.approvalDate ? r.approvalDate.split('T')[0] : '',
+          'Ngày hoàn thành': r.completedDate ? r.completedDate.split('T')[0] : '',
+          'Ngày trả kết quả': r.resultReturnedDate ? r.resultReturnedDate.split('T')[0] : '',
+          'Ghi chú': r.notes || '',
+          'Ghi chú cá nhân': r.personalNotes || '',
+          'Số trích đo': r.measurementNumber || '',
+          'Số trích lục': r.excerptNumber || ''
+      }));
+
+      const ws = XLSX.utils.json_to_sheet(dataToExport);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "HoSoCaNhan");
+      XLSX.writeFile(wb, `HoSoCaNhan_${user.name}_${new Date().toISOString().split('T')[0]}.xlsx`);
   };
 
   // --- ACTIONS ---
@@ -280,9 +347,20 @@ const PersonalProfile: React.FC<PersonalProfileProps> = ({ user, records, isDire
     }
   };
 
+  const handleMarkAsChecked = async (record: RecordFile) => {
+    if (await confirmAction(`Xác nhận đã kiểm tra hồ sơ ${record.code}?\nHồ sơ sẽ chuyển sang trạng thái "Đã kiểm tra".`)) {
+        onUpdateStatus(record, RecordStatus.CHECKED);
+    }
+  };
+
   const handleForwardToSign = async (record: RecordFile) => {
     setSubmitTargetRecords([record]);
     setIsSubmitModalOpen(true);
+  };
+
+  const handleForwardToCheck = async (record: RecordFile) => {
+    setSubmitTargetRecords([record]);
+    setIsSubmitCheckModalOpen(true);
   };
 
   const handleConfirmSubmit = async (directorId: string) => {
@@ -314,7 +392,7 @@ const PersonalProfile: React.FC<PersonalProfileProps> = ({ user, records, isDire
                     ...record,
                     status: RecordStatus.PENDING_SIGN,
                     submittedTo: directorId,
-                    submissionDate: new Date().toISOString().split('T')[0]
+                    submissionDate: new Date().toISOString()
                 };
                 
                 if (onUpdateRecord) {
@@ -440,18 +518,30 @@ const PersonalProfile: React.FC<PersonalProfileProps> = ({ user, records, isDire
           <p className="text-gray-500 mt-1">Danh sách hồ sơ bạn đang phụ trách.</p>
         </div>
         <div className="flex gap-4 w-full md:w-auto justify-center">
-             <div className="flex-1 md:flex-none text-center px-4 py-2 bg-blue-50 rounded-lg border border-blue-100 min-w-[100px]">
-                <div className="text-2xl font-bold text-blue-700">{pendingRecords.length}</div>
-                <div className="text-xs text-blue-600 uppercase font-semibold">Đang xử lý</div>
-             </div>
-             <div className="flex-1 md:flex-none text-center px-4 py-2 bg-cyan-50 rounded-lg border border-cyan-100 min-w-[100px]">
-                <div className="text-2xl font-bold text-cyan-700">{completedWorkRecords.length}</div>
-                <div className="text-xs text-cyan-600 uppercase font-semibold">Đã thực hiện</div>
-             </div>
-             <div className="flex-1 md:flex-none text-center px-4 py-2 bg-purple-50 rounded-lg border border-purple-100 min-w-[100px]">
-                <div className="text-2xl font-bold text-purple-700">{reviewRecords.length}</div>
-                <div className="text-xs text-purple-600 uppercase font-semibold">Chờ ký</div>
-             </div>
+             {!isChecker && (
+                 <>
+                     <div className="flex-1 md:flex-none text-center px-4 py-2 bg-blue-50 rounded-lg border border-blue-100 min-w-[100px]">
+                        <div className="text-2xl font-bold text-blue-700">{pendingRecords.length}</div>
+                        <div className="text-xs text-blue-600 uppercase font-semibold">Đang xử lý</div>
+                     </div>
+                     <div className="flex-1 md:flex-none text-center px-4 py-2 bg-cyan-50 rounded-lg border border-cyan-100 min-w-[100px]">
+                        <div className="text-2xl font-bold text-cyan-700">{completedWorkRecords.length}</div>
+                        <div className="text-xs text-cyan-600 uppercase font-semibold">Đã thực hiện</div>
+                     </div>
+                 </>
+             )}
+             {isChecker && (
+                 <div className="flex-1 md:flex-none text-center px-4 py-2 bg-orange-50 rounded-lg border border-orange-100 min-w-[100px]">
+                    <div className="text-2xl font-bold text-orange-700">{pendingCheckRecords.length}</div>
+                    <div className="text-xs text-orange-600 uppercase font-semibold">Chờ kiểm tra</div>
+                 </div>
+             )}
+             {!isChecker && (
+                 <div className="flex-1 md:flex-none text-center px-4 py-2 bg-purple-50 rounded-lg border border-purple-100 min-w-[100px]">
+                    <div className="text-2xl font-bold text-purple-700">{reviewRecords.length}</div>
+                    <div className="text-xs text-purple-600 uppercase font-semibold">Chờ ký</div>
+                 </div>
+             )}
              <div className="flex-1 md:flex-none text-center px-4 py-2 bg-green-50 rounded-lg border border-green-100 min-w-[100px]">
                 <div className="text-2xl font-bold text-green-700">{finishedRecords.length}</div>
                 <div className="text-xs text-green-600 uppercase font-semibold">Hoàn thành</div>
@@ -465,7 +555,7 @@ const PersonalProfile: React.FC<PersonalProfileProps> = ({ user, records, isDire
         {/* TABS & SEARCH */}
         <div className="p-4 border-b border-gray-100 bg-gray-50 flex flex-col md:flex-row justify-between items-center gap-4 shrink-0">
             <div className="flex bg-white rounded-lg p-1 border border-gray-200 shadow-sm overflow-x-auto max-w-full">
-                {!isDirector && (
+                {!isDirector && !isChecker && (
                     <>
                         <button 
                             onClick={() => { setActiveTab('pending'); setCurrentPage(1); setSearchTerm(''); }}
@@ -485,14 +575,26 @@ const PersonalProfile: React.FC<PersonalProfileProps> = ({ user, records, isDire
                         </button>
                     </>
                 )}
-                <button 
-                    onClick={() => { setActiveTab('pending_sign'); setCurrentPage(1); setSearchTerm(''); }}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-bold transition-all whitespace-nowrap ${
-                        activeTab === 'pending_sign' ? 'bg-purple-600 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-100'
-                    }`}
-                >
-                    <Send size={16} /> Chờ ký ({reviewRecords.length})
-                </button>
+                {isChecker && (
+                    <button 
+                        onClick={() => { setActiveTab('pending_check'); setCurrentPage(1); setSearchTerm(''); }}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-bold transition-all whitespace-nowrap ${
+                            activeTab === 'pending_check' ? 'bg-orange-600 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-100'
+                        }`}
+                    >
+                        <ClipboardList size={16} /> Chờ kiểm tra ({pendingCheckRecords.length})
+                    </button>
+                )}
+                {!isChecker && (
+                    <button 
+                        onClick={() => { setActiveTab('pending_sign'); setCurrentPage(1); setSearchTerm(''); }}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-bold transition-all whitespace-nowrap ${
+                            activeTab === 'pending_sign' ? 'bg-purple-600 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-100'
+                        }`}
+                    >
+                        <Send size={16} /> Chờ ký ({reviewRecords.length})
+                    </button>
+                )}
                 <button 
                     onClick={() => { setActiveTab('finished'); setCurrentPage(1); setSearchTerm(''); }}
                     className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-bold transition-all whitespace-nowrap ${
@@ -501,7 +603,7 @@ const PersonalProfile: React.FC<PersonalProfileProps> = ({ user, records, isDire
                 >
                     <FileCheck size={16} /> Hoàn thành ({finishedRecords.length})
                 </button>
-                {!isDirector && (
+                {!isDirector && !isChecker && (
                     <button 
                         onClick={() => { setActiveTab('reminder'); setCurrentPage(1); setSearchTerm(''); }}
                         className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-bold transition-all whitespace-nowrap ${
@@ -513,15 +615,23 @@ const PersonalProfile: React.FC<PersonalProfileProps> = ({ user, records, isDire
                 )}
             </div>
             
-            <div className="relative w-full md:w-64">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-                <input 
-                    type="text" 
-                    placeholder={`Tìm trong ${getTabLabel()}...`}
-                    className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
-                    value={searchTerm}
-                    onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
-                />
+            <div className="flex gap-2 w-full md:w-auto">
+                <div className="relative w-full md:w-64">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                    <input 
+                        type="text" 
+                        placeholder={`Tìm trong ${getTabLabel()}...`}
+                        className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
+                        value={searchTerm}
+                        onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+                    />
+                </div>
+                <button 
+                    onClick={handleExportExcel}
+                    className="flex items-center gap-2 px-3 py-2 bg-green-600 text-white rounded-lg text-sm font-bold hover:bg-green-700 transition-colors whitespace-nowrap"
+                >
+                    <FileDown size={16} /> Xuất Excel
+                </button>
             </div>
         </div>
         
@@ -543,6 +653,10 @@ const PersonalProfile: React.FC<PersonalProfileProps> = ({ user, records, isDire
                                 }
                             </th>
                             
+                            {activeTab === 'pending_check' && (
+                                <th className="p-3 w-[150px]">Người kiểm tra</th>
+                            )}
+
                             <th className="p-3 text-center w-[120px]">Trạng thái</th>
                             <th className="p-3 text-center w-[100px]">Chỉnh lý</th>
                             <th className="p-3 text-center w-[180px]">Thao tác chính</th>
@@ -575,6 +689,14 @@ const PersonalProfile: React.FC<PersonalProfileProps> = ({ user, records, isDire
                                             </div>
                                         )}
                                     </td>
+
+                                    {activeTab === 'pending_check' && (
+                                        <td className="p-3 text-gray-600 align-middle">
+                                            <div className="truncate" title={r.checkedBy ? employees.find(e => e.id === r.checkedBy)?.name : ''}>
+                                                {r.checkedBy ? employees.find(e => e.id === r.checkedBy)?.name : '---'}
+                                            </div>
+                                        </td>
+                                    )}
 
                                     <td className="p-3 text-center align-middle"><StatusBadge status={r.status} /></td>
                                     
@@ -612,6 +734,21 @@ const PersonalProfile: React.FC<PersonalProfileProps> = ({ user, records, isDire
                                             {activeTab === 'pending' && (
                                                 <button onClick={() => handleMarkAsDone(r)} title="Đánh dấu đã xong việc" className="px-3 py-1.5 bg-cyan-600 text-white rounded-md hover:bg-cyan-700 text-xs font-bold flex items-center gap-2 shadow-sm transition-all">
                                                     Đã thực hiện <CheckSquare size={14} />
+                                                </button>
+                                            )}
+                                            {activeTab === 'completed_work' && (
+                                                <button onClick={() => handleForwardToCheck(r)} title="Trình kiểm tra" className="px-3 py-1.5 bg-orange-600 text-white rounded-md hover:bg-orange-700 text-xs font-bold flex items-center gap-2 shadow-sm transition-all">
+                                                    <ClipboardList size={14} /> Trình kiểm tra
+                                                </button>
+                                            )}
+                                            {activeTab === 'pending_check' && r.status === RecordStatus.PENDING_CHECK && (
+                                                <button onClick={() => handleMarkAsChecked(r)} title="Đánh dấu đã kiểm tra" className="px-3 py-1.5 bg-teal-600 text-white rounded-md hover:bg-teal-700 text-xs font-bold flex items-center gap-2 shadow-sm transition-all">
+                                                    <CheckCircle size={14} /> Đã kiểm tra
+                                                </button>
+                                            )}
+                                            {activeTab === 'pending_check' && r.status === RecordStatus.CHECKED && (
+                                                <button onClick={() => handleForwardToSign(r)} title="Trình ký duyệt" className="px-3 py-1.5 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 text-xs font-bold flex items-center gap-2 shadow-sm transition-all">
+                                                    <Send size={14} /> Trình ký
                                                 </button>
                                             )}
                                             
@@ -653,6 +790,27 @@ const PersonalProfile: React.FC<PersonalProfileProps> = ({ user, records, isDire
           users={users}
           employees={employees}
           onConfirm={handleConfirmSubmit}
+      />
+
+      <SubmitModal 
+          isOpen={isSubmitCheckModalOpen}
+          onClose={() => setIsSubmitCheckModalOpen(false)}
+          records={submitTargetRecords}
+          users={users}
+          employees={employees}
+          isCheckMode={true}
+          onConfirm={async (checkerId) => {
+              for (const record of submitTargetRecords) {
+                  await onUpdateRecord?.({
+                      ...record,
+                      status: RecordStatus.PENDING_CHECK,
+                      pendingCheckDate: new Date().toISOString(),
+                      checkedBy: checkerId
+                  });
+              }
+              setIsSubmitCheckModalOpen(false);
+              setSubmitTargetRecords([]);
+          }}
       />
     </div>
   );

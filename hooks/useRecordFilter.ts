@@ -91,6 +91,9 @@ export const useRecordFilter = (
             } else {
                 result = result.filter(r => r.status === RecordStatus.PENDING_SIGN);
             }
+        } else if (currentView === 'pending_check_list') {
+            // Tab Kiểm tra: Hiển thị hồ sơ Chờ kiểm tra và Đã kiểm tra
+            result = result.filter(r => r.status === RecordStatus.PENDING_CHECK || r.status === RecordStatus.CHECKED);
         } else if (currentView === 'completed_list') {
             result = result.filter(r => r.status === RecordStatus.COMPLETED_WORK);
         } else if (currentView === 'director_completed' || currentView === 'other_director_completed') {
@@ -136,7 +139,7 @@ export const useRecordFilter = (
 
         // Filter by recordType based on view group
         const isOtherView = ['other_records', 'other_assign_tasks', 'other_check_list', 'other_handover_list', 'other_director_completed'].includes(currentView);
-        const isMeasurementView = ['all_records', 'assign_tasks', 'completed_list', 'check_list', 'handover_list', 'director_completed'].includes(currentView);
+        const isMeasurementView = ['all_records', 'assign_tasks', 'completed_list', 'pending_check_list', 'check_list', 'handover_list', 'director_completed'].includes(currentView);
         
         if (isOtherView) {
             result = result.filter(r => ['CMD', 'Tòa án', 'Thi hành án'].includes(r.recordType || ''));

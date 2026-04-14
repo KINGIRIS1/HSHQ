@@ -168,7 +168,7 @@ const VaoSoView: React.FC<VaoSoViewProps> = ({ currentUser, wards }) => {
             status: 'completed',
             so_hieu: '',
             trich_yeu: '',
-            ngay_thang: new Date().toISOString().split('T')[0],
+            ngay_thang: new Date().toISOString(),
             noi_nhan_gui: '',
             created_by: currentUser.username,
             data: {
@@ -177,7 +177,7 @@ const VaoSoView: React.FC<VaoSoViewProps> = ({ currentUser, wards }) => {
                 ten_chu_su_dung: '',
                 loai_bien_dong: '',
                 loai_gcn: 'GCN mới',
-                ngay_nhan: new Date().toISOString().split('T')[0],
+                ngay_nhan: new Date().toISOString(),
                 so_to: '',
                 so_thua: '',
                 tong_dien_tich: '',
@@ -488,7 +488,7 @@ const VaoSoView: React.FC<VaoSoViewProps> = ({ currentUser, wards }) => {
                         status: 'completed',
                         so_hieu: recordData.ma_ho_so,
                         trich_yeu: `${recordData.loai_bien_dong} - ${recordData.ten_chu_su_dung}`,
-                        ngay_thang: recordData.ngay_nhan || new Date().toISOString().split('T')[0],
+                        ngay_thang: recordData.ngay_nhan || new Date().toISOString(),
                         created_by: currentUser.username,
                         data: recordData
                     });
@@ -1656,7 +1656,7 @@ const BatchModal: React.FC<BatchModalProps> = ({ isOpen, onClose, onConfirm, rec
                 if (!isNaN(b) && b > maxBatch) maxBatch = b;
             }
         });
-        return { batch: maxBatch + 1, date: todayStr };
+        return { batch: maxBatch + 1, date: new Date().toISOString() };
     }, [records, todayStr]);
 
     const historyBatches = useMemo(() => {

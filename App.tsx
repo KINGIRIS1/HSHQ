@@ -55,6 +55,7 @@ function App() {
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [assignTargetRecords, setAssignTargetRecords] = useState<RecordFile[]>([]);
   const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
+  const [isSubmitCheckModalOpen, setIsSubmitCheckModalOpen] = useState(false);
   const [submitTargetRecords, setSubmitTargetRecords] = useState<RecordFile[]>([]);
   const [viewingRecord, setViewingRecord] = useState<RecordFile | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -283,13 +284,13 @@ function App() {
   }, []);
 
   const confirmAssign = async (employeeId: string) => {
-      const today = new Date().toISOString().split('T')[0];
+      const nowStr = new Date().toISOString();
       const updatedIds = assignTargetRecords.map(r => r.id);
       
       const updates = {
           assignedTo: employeeId,
           status: RecordStatus.ASSIGNED,
-          assignedDate: today,
+          assignedDate: nowStr,
           submissionDate: null,
           approvalDate: null,
           completedDate: null,
@@ -306,7 +307,7 @@ function App() {
   };
 
   const getUpdatesForStatusChange = (newStatus: RecordStatus) => {
-      const todayStr = new Date().toISOString().split('T')[0];
+      const nowStr = new Date().toISOString();
       const updates: any = { status: newStatus };
 
       switch (newStatus) {
@@ -321,7 +322,7 @@ function App() {
               break;
           case RecordStatus.ASSIGNED:
           case RecordStatus.IN_PROGRESS:
-              if (!updates.assignedDate) updates.assignedDate = todayStr;
+              if (!updates.assignedDate) updates.assignedDate = nowStr;
               updates.submissionDate = null;
               updates.approvalDate = null;
               updates.completedDate = null;
@@ -332,28 +333,46 @@ function App() {
           // MỚI: Trạng thái Đã thực hiện
           case RecordStatus.COMPLETED_WORK:
               // Giữ nguyên assignedDate
+              updates.completedWorkDate = nowStr;
+              updates.pendingCheckDate = null;
+              updates.checkedDate = null;
               updates.submissionDate = null; 
               updates.approvalDate = null;
               updates.completedDate = null;
               break;
+          case RecordStatus.PENDING_CHECK:
+              updates.pendingCheckDate = nowStr;
+              updates.checkedDate = null;
+              updates.submissionDate = null;
+              updates.approvalDate = null;
+              updates.completedDate = null;
+              updates.resultReturnedDate = null;
+              break;
+          case RecordStatus.CHECKED:
+              updates.checkedDate = nowStr;
+              updates.submissionDate = null;
+              updates.approvalDate = null;
+              updates.completedDate = null;
+              updates.resultReturnedDate = null;
+              break;
           case RecordStatus.PENDING_SIGN:
-              updates.submissionDate = todayStr; 
+              updates.submissionDate = nowStr; 
               updates.approvalDate = null;
               updates.completedDate = null;
               updates.resultReturnedDate = null;
               break;
           case RecordStatus.SIGNED:
-              updates.approvalDate = todayStr; 
+              updates.approvalDate = nowStr; 
               updates.completedDate = null;
               updates.resultReturnedDate = null;
               break;
           case RecordStatus.HANDOVER:
-              updates.completedDate = todayStr; 
+              updates.completedDate = nowStr; 
               updates.resultReturnedDate = null;
               break;
           case RecordStatus.RETURNED:
-              updates.resultReturnedDate = todayStr;
-              if (!updates.completedDate) updates.completedDate = todayStr;
+              updates.resultReturnedDate = nowStr;
+              if (!updates.completedDate) updates.completedDate = nowStr;
               break;
       }
       return updates;
@@ -362,14 +381,14 @@ function App() {
   const handleBulkUpdate = async (field: keyof RecordFile, value: any) => {
       const selectedIds = Array.from(selectedRecordIds);
       let updates: any = { [field]: value };
-      const todayStr = new Date().toISOString().split('T')[0];
+      const nowStr = new Date().toISOString();
 
       if (field === 'status') {
           updates = getUpdatesForStatusChange(value as RecordStatus);
       }
       
       if (field === 'assignedTo') {
-          updates.assignedDate = todayStr;
+          updates.assignedDate = nowStr;
           updates.status = RecordStatus.ASSIGNED;
           updates.submissionDate = null;
           updates.approvalDate = null;
@@ -408,8 +427,8 @@ function App() {
 
   const handleConfirmReturnResult = useCallback(async (receiptNumber: string, receiverName: string) => {
       if (!returnRecord) return;
-      const today = new Date().toISOString().split('T')[0];
-      const updates = { resultReturnedDate: today, status: RecordStatus.RETURNED, receiptNumber: receiptNumber, receiverName: receiverName }; 
+      const nowStr = new Date().toISOString();
+      const updates = { resultReturnedDate: nowStr, status: RecordStatus.RETURNED, receiptNumber: receiptNumber, receiverName: receiverName }; 
       setRecords(prev => prev.map(r => r.id === returnRecord.id ? { ...r, ...updates } : r));
       await updateRecordApi({ ...returnRecord, ...updates });
       setToast({ type: 'success', message: `Đã ghi nhận trả kết quả hồ sơ ${returnRecord.code} cho ${receiverName}.` });
@@ -438,11 +457,16 @@ function App() {
       }
       if (record.status === RecordStatus.COMPLETED_WORK) {
           setSubmitTargetRecords([record]);
+          setIsSubmitCheckModalOpen(true);
+          return;
+      }
+      if (record.status === RecordStatus.CHECKED) {
+          setSubmitTargetRecords([record]);
           setIsSubmitModalOpen(true);
           return;
       }
       // UPDATE: Thêm COMPLETED_WORK vào luồng
-      const flow = [RecordStatus.RECEIVED, RecordStatus.ASSIGNED, RecordStatus.IN_PROGRESS, RecordStatus.COMPLETED_WORK, RecordStatus.PENDING_SIGN, RecordStatus.SIGNED, RecordStatus.HANDOVER];
+      const flow = [RecordStatus.RECEIVED, RecordStatus.ASSIGNED, RecordStatus.IN_PROGRESS, RecordStatus.COMPLETED_WORK, RecordStatus.PENDING_CHECK, RecordStatus.CHECKED, RecordStatus.PENDING_SIGN, RecordStatus.SIGNED, RecordStatus.HANDOVER];
       const idx = flow.indexOf(record.status);
       if (idx < flow.length - 1) {
           const nextStatus = flow[idx + 1];
@@ -453,13 +477,13 @@ function App() {
   }, []);
 
   const executeBatchExport = async (batchNumber: number, batchDate: string, handoverWard?: string) => {
-      const todayStr = recordFilterProps.filterDate || new Date().toISOString().split('T')[0];
+      const nowStr = new Date().toISOString();
       const candidates = selectedRecordIds.size > 0 ? records.filter(r => selectedRecordIds.has(r.id)) : recordFilterProps.filteredRecords;
       const recordsToExport = candidates.filter(r => r.status === RecordStatus.SIGNED || (r.status === RecordStatus.WITHDRAWN && !r.exportBatch));
       if (recordsToExport.length === 0) return;
       const updatesToApply = recordsToExport.map(r => {
           const nextStatus = r.status === RecordStatus.WITHDRAWN ? RecordStatus.WITHDRAWN : RecordStatus.HANDOVER;
-          return { ...r, exportBatch: batchNumber, exportDate: batchDate, status: nextStatus, completedDate: r.completedDate || todayStr, handoverWard: handoverWard || r.handoverWard };
+          return { ...r, exportBatch: batchNumber, exportDate: batchDate, status: nextStatus, completedDate: r.completedDate || nowStr, handoverWard: handoverWard || r.handoverWard };
       });
       setRecords(prev => prev.map(r => {
           const updated = updatesToApply.find(u => u.id === r.id);
@@ -475,8 +499,8 @@ function App() {
       const pendingSign = recordFilterProps.filteredRecords.filter(r => r.status === RecordStatus.PENDING_SIGN);
       if (pendingSign.length === 0) { alert("Không có hồ sơ nào đang chờ ký."); return; }
       if(await confirmAction(`Xác nhận chuyển ${pendingSign.length} hồ sơ sang "Đã ký"?`)) {
-          const todayStr = new Date().toISOString().split('T')[0];
-          const updates = { status: RecordStatus.SIGNED, approvalDate: todayStr, completedDate: null };
+          const nowStr = new Date().toISOString();
+          const updates = { status: RecordStatus.SIGNED, approvalDate: nowStr, completedDate: null };
           setRecords(prev => prev.map(r => pendingSign.find(p => p.id === r.id) ? { ...r, ...updates } : r));
           await Promise.all(pendingSign.map(r => updateRecordApi({ ...r, ...updates })));
           setToast({ type: 'success', message: `Đã chuyển ${pendingSign.length} hồ sơ sang "Đã ký".` });
@@ -668,6 +692,7 @@ function App() {
             setIsAssignModalOpen={setIsAssignModalOpen}
             setSubmitTargetRecords={setSubmitTargetRecords}
             setIsSubmitModalOpen={setIsSubmitModalOpen}
+            setIsSubmitCheckModalOpen={setIsSubmitCheckModalOpen}
             setExportModalType={setExportModalType}
             setIsExportModalOpen={setIsExportModalOpen}
             setDeletingRecord={setDeletingRecord}
@@ -747,6 +772,34 @@ function App() {
                 } catch (error) {
                     console.error("Lỗi khi trình ký:", error);
                     setToast({ type: 'error', message: 'Có lỗi xảy ra khi trình ký.' });
+                }
+            }}
+        />
+
+        <SubmitModal 
+            isOpen={isSubmitCheckModalOpen}
+            onClose={() => setIsSubmitCheckModalOpen(false)}
+            records={submitTargetRecords}
+            users={users}
+            employees={employees}
+            isCheckMode={true}
+            onConfirm={async (checkerId) => {
+                try {
+                    const updates = submitTargetRecords.map(r => ({
+                        ...r,
+                        status: RecordStatus.PENDING_CHECK,
+                        pendingCheckDate: new Date().toISOString(),
+                        checkedBy: checkerId
+                    }));
+                    await forceUpdateRecordsBatchApi(updates);
+                    setToast({ type: 'success', message: `Đã trình kiểm tra ${updates.length} hồ sơ thành công!` });
+                    setIsSubmitCheckModalOpen(false);
+                    setSubmitTargetRecords([]);
+                    setSelectedRecordIds(new Set());
+                    loadData();
+                } catch (error) {
+                    console.error("Lỗi khi trình kiểm tra:", error);
+                    setToast({ type: 'error', message: 'Có lỗi xảy ra khi trình kiểm tra.' });
                 }
             }}
         />

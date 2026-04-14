@@ -7,7 +7,8 @@ import { logError, getFromCache, saveToCache, CACHE_KEYS, sanitizeData, normaliz
 const RECORD_DB_COLUMNS = [
     'id', 'code', 'customerName', 'phoneNumber', 'cccd', 'customerAddress', 'ward', 'landPlot', 'mapSheet', 
     'area', 'address', 'group', 'content', 'recordType', 'receivedDate', 'receivedBy', 'deadline', 
-    'assignedDate', 'submissionDate', 'approvalDate', 'completedDate', 'status', 'assignedTo', 'submittedTo',
+    'assignedDate', 'submissionDate', 'approvalDate', 'completedDate', 'status', 'assignedTo', 'submittedTo', 'checkedBy',
+    'pendingCheckDate', 'checkedDate', 'completedWorkDate',
     'notes', 'privateNotes', 'personalNotes', 
     'authorizedBy', 'authDocType', 'otherDocs', 'exportBatch', 'exportDate', 'handoverWard',
     'measurementNumber', 'excerptNumber',
@@ -22,7 +23,7 @@ const OPTIONAL_NEW_COLUMNS = [
     'needsMapCorrection', 'receiptNumber', 'resultReturnedDate', 'receiverName',
     'reminderDate', 'lastRemindedAt', 'measurementNumber', 'excerptNumber',
     'exportBatch', 'exportDate', 'handoverWard', 'authorizedBy', 'authDocType', 'otherDocs',
-    'privateNotes', 'personalNotes'
+    'privateNotes', 'personalNotes', 'checkedBy', 'pendingCheckDate', 'checkedDate', 'completedWorkDate'
 ];
 
 export const fetchRecords = async (): Promise<RecordFile[]> => {

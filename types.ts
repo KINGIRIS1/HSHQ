@@ -5,6 +5,8 @@ export enum RecordStatus {
   ASSIGNED = 'ASSIGNED',         // Giao nhân viên
   IN_PROGRESS = 'IN_PROGRESS',   // Đang thực hiện
   COMPLETED_WORK = 'COMPLETED_WORK', // Đã thực hiện (Mới: Nhân viên làm xong, chưa trình)
+  PENDING_CHECK = 'PENDING_CHECK', // Chờ kiểm tra
+  CHECKED = 'CHECKED',           // Đã kiểm tra
   PENDING_SIGN = 'PENDING_SIGN', // Chờ ký duyệt (Đã trình)
   SIGNED = 'SIGNED',             // Đã ký (Lập danh sách ký)
   HANDOVER = 'HANDOVER',         // Giao 1 cửa (Hoàn thành nội bộ)
@@ -96,6 +98,10 @@ export interface RecordFile {
   
   submissionDate?: string | null; // Ngày trình ký
   submittedTo?: string | null;    // Người được trình ký (ID của giám đốc)
+  pendingCheckDate?: string | null; // Ngày trình kiểm tra
+  checkedBy?: string | null;      // Người kiểm tra (ID của tổ trưởng/tổ phó)
+  checkedDate?: string | null;    // Ngày đã kiểm tra
+  completedWorkDate?: string | null; // Ngày đã thực hiện
   approvalDate?: string | null;   // Ngày ký duyệt
   completedDate?: string | null; 
   

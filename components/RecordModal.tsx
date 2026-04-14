@@ -18,7 +18,7 @@ interface RecordModalProps {
 const RecordModal: React.FC<RecordModalProps> = ({ isOpen, onClose, onSubmit, initialData, employees, currentUser, wards, currentView }) => {
   const defaultState: Partial<RecordFile> = {
     code: '', customerName: '', phoneNumber: '', cccd: '', customerAddress: '', content: '', otherDocs: '',
-    receivedDate: new Date().toISOString().split('T')[0], deadline: '', assignedTo: '',
+    receivedDate: new Date().toISOString(), deadline: '', assignedTo: '',
     group: GROUPS[0], ward: '', landPlot: '', mapSheet: '', area: 0, address: '',
     recordType: EXTENDED_RECORD_TYPES[0], measurementNumber: '', excerptNumber: '',
     privateNotes: '', authorizedBy: '', authDocType: '', receiptNumber: '', resultReturnedDate: ''
@@ -79,7 +79,7 @@ const RecordModal: React.FC<RecordModalProps> = ({ isOpen, onClose, onSubmit, in
         }
     }
 
-    if (finalData.status === RecordStatus.WITHDRAWN && !finalData.completedDate) finalData.completedDate = new Date().toISOString().split('T')[0];
+    if (finalData.status === RecordStatus.WITHDRAWN && !finalData.completedDate) finalData.completedDate = new Date().toISOString();
     if (finalData.resultReturnedDate && finalData.status !== RecordStatus.RETURNED) {
         finalData.status = RecordStatus.RETURNED;
         if (!finalData.completedDate) finalData.completedDate = finalData.resultReturnedDate;
@@ -90,7 +90,7 @@ const RecordModal: React.FC<RecordModalProps> = ({ isOpen, onClose, onSubmit, in
         finalData.status = RecordStatus.HANDOVER;
         // Nếu chưa có completedDate, lấy luôn ngày xuất (nếu có) hoặc hôm nay
         if (!finalData.completedDate) {
-            finalData.completedDate = finalData.exportDate ? finalData.exportDate.split('T')[0] : new Date().toISOString().split('T')[0];
+            finalData.completedDate = finalData.exportDate ? finalData.exportDate : new Date().toISOString();
         }
     }
 
@@ -227,7 +227,7 @@ const RecordModal: React.FC<RecordModalProps> = ({ isOpen, onClose, onSubmit, in
                         {hasAdminRights && (
                             <div className="grid grid-cols-2 gap-4 bg-indigo-50 p-3 rounded border border-indigo-200">
                                 <div><label className="block text-[10px] font-bold text-indigo-500 uppercase mb-1">Đợt xuất (Batch)</label><input type="number" className="w-full border border-indigo-200 rounded-md px-2 py-1.5 text-sm" value={val(formData.exportBatch)} onChange={(e) => handleChange('exportBatch', parseInt(e.target.value))} /></div>
-                                <div><label className="block text-[10px] font-bold text-indigo-500 uppercase mb-1">Ngày xuất</label><input type="date" className="w-full border border-indigo-200 rounded-md px-2 py-1.5 text-sm" value={val(formData.exportDate ? formData.exportDate.split('T')[0] : '')} onChange={(e) => handleChange('exportDate', e.target.value)} /></div>
+                                <div><label className="block text-[10px] font-bold text-indigo-500 uppercase mb-1">Ngày xuất</label><input type="date" className="w-full border border-indigo-200 rounded-md px-2 py-1.5 text-sm" value={val(formData.exportDate ? formData.exportDate.split('T')[0] : '')} onChange={(e) => handleChange('exportDate', new Date(e.target.value).toISOString())} /></div>
                             </div>
                         )}
                         

@@ -9,23 +9,44 @@ interface SubmitModalProps {
     onConfirm: (directorId: string) => void;
     users: User[];
     employees: Employee[];
+    isCheckMode?: boolean; // MỚI: Chế độ trình kiểm tra
 }
 
-const SubmitModal: React.FC<SubmitModalProps> = ({ isOpen, onClose, records, onConfirm, users, employees }) => {
+const SubmitModal: React.FC<SubmitModalProps> = ({ isOpen, onClose, records, onConfirm, users, employees, isCheckMode }) => {
     const [selectedDirector, setSelectedDirector] = useState<string>('');
 
-    // Lọc ra các user thuộc Ban giám đốc (dựa vào phòng ban của nhân viên)
-    const directors = users.filter((u: User) => {
+    // Lọc ra các user phù hợp
+    let targetUsers = users.filter((u: User) => {
         if (!u.employeeId) return false;
         const emp = employees.find(e => e.id === u.employeeId);
-        return emp && (emp.department?.trim().toLowerCase() === 'ban giám đốc' || emp.department?.trim().toLowerCase() === 'ban lãnh đạo');
+        if (!emp) return false;
+        
+        if (isCheckMode) {
+            // Chế độ trình kiểm tra: CHỈ Tổ trưởng, Tổ phó của Tổ đo đạc
+            const dept = emp.department?.toLowerCase() || '';
+            const pos = emp.position?.toLowerCase() || '';
+            
+            const isDoDac = dept.includes('đo đạc');
+            const isLeader = pos.includes('tổ trưởng') || pos.includes('tổ phó');
+            
+            return isDoDac && isLeader;
+        } else {
+            // Chế độ trình ký: CHỈ Giám đốc, Phó giám đốc
+            const pos = emp.position?.toLowerCase() || '';
+            const dept = emp.department?.toLowerCase() || '';
+            
+            const isDirectorPos = pos.includes('giám đốc') || pos.includes('phó giám đốc');
+            const isDirectorDept = dept.includes('ban giám đốc') || dept.includes('ban lãnh đạo');
+            
+            return isDirectorPos || isDirectorDept;
+        }
     });
 
     if (!isOpen) return null;
 
     const handleSubmit = () => {
         if (!selectedDirector) {
-            alert('Vui lòng chọn người được trình ký.');
+            alert(isCheckMode ? 'Vui lòng chọn người kiểm tra.' : 'Vui lòng chọn người được trình ký.');
             return;
         }
         onConfirm(selectedDirector);
@@ -35,12 +56,12 @@ const SubmitModal: React.FC<SubmitModalProps> = ({ isOpen, onClose, records, onC
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 backdrop-blur-sm animate-fade-in">
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all animate-fade-in-up">
-                <div className="bg-indigo-600 p-4 flex justify-between items-center text-white">
+                <div className={`${isCheckMode ? 'bg-orange-600' : 'bg-indigo-600'} p-4 flex justify-between items-center text-white`}>
                     <h2 className="text-lg font-bold flex items-center gap-2">
                         <FileSignature size={20} />
-                        Trình Ký Duyệt
+                        {isCheckMode ? 'Trình Kiểm Tra' : 'Trình Ký Duyệt'}
                     </h2>
-                    <button onClick={onClose} className="text-indigo-200 hover:text-white transition-colors">
+                    <button onClick={onClose} className={`${isCheckMode ? 'text-orange-200' : 'text-indigo-200'} hover:text-white transition-colors`}>
                         <X size={24} />
                     </button>
                 </div>
@@ -48,17 +69,17 @@ const SubmitModal: React.FC<SubmitModalProps> = ({ isOpen, onClose, records, onC
                 <div className="p-6">
                     <div className="mb-6">
                         <p className="text-gray-700 mb-2 font-medium">
-                            Bạn đang trình ký <span className="font-bold text-indigo-600">{records.length}</span> hồ sơ.
+                            Bạn đang {isCheckMode ? 'trình kiểm tra' : 'trình ký'} <span className={`font-bold ${isCheckMode ? 'text-orange-600' : 'text-indigo-600'}`}>{records.length}</span> hồ sơ.
                         </p>
                         <p className="text-sm text-gray-500 mb-4">
-                            Vui lòng chọn Giám đốc/Phó giám đốc để trình ký:
+                            Vui lòng chọn {isCheckMode ? 'Tổ trưởng/Tổ phó' : 'Giám đốc/Phó giám đốc'} để {isCheckMode ? 'trình kiểm tra' : 'trình ký'}:
                         </p>
                         
                         <div className="space-y-2">
-                            {directors.map((director: User) => (
+                            {targetUsers.map((director: User) => (
                                 <label 
                                     key={director.employeeId} 
-                                    className={`flex items-center p-3 border rounded-xl cursor-pointer transition-all ${selectedDirector === director.employeeId ? 'border-indigo-500 bg-indigo-50 shadow-sm' : 'border-gray-200 hover:border-indigo-300 hover:bg-gray-50'}`}
+                                    className={`flex items-center p-3 border rounded-xl cursor-pointer transition-all ${selectedDirector === director.employeeId ? (isCheckMode ? 'border-orange-500 bg-orange-50 shadow-sm' : 'border-indigo-500 bg-indigo-50 shadow-sm') : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'}`}
                                 >
                                     <input 
                                         type="radio" 
@@ -66,7 +87,7 @@ const SubmitModal: React.FC<SubmitModalProps> = ({ isOpen, onClose, records, onC
                                         value={director.employeeId} 
                                         checked={selectedDirector === director.employeeId}
                                         onChange={(e) => setSelectedDirector(e.target.value)}
-                                        className="w-4 h-4 text-indigo-600 border-gray-300 focus:ring-indigo-500"
+                                        className={`w-4 h-4 ${isCheckMode ? 'text-orange-600 focus:ring-orange-500' : 'text-indigo-600 focus:ring-indigo-500'} border-gray-300`}
                                     />
                                     <div className="ml-3">
                                         <span className="block text-sm font-medium text-gray-900">{director.name}</span>
@@ -76,9 +97,9 @@ const SubmitModal: React.FC<SubmitModalProps> = ({ isOpen, onClose, records, onC
                                     </div>
                                 </label>
                             ))}
-                            {directors.length === 0 && (
+                            {targetUsers.length === 0 && (
                                 <div className="text-sm text-red-500 flex items-center gap-1 p-2 bg-red-50 rounded-lg">
-                                    <AlertCircle size={14} /> Không tìm thấy user Ban giám đốc nào.
+                                    <AlertCircle size={14} /> Không tìm thấy user {isCheckMode ? 'Tổ trưởng/Tổ phó' : 'Ban giám đốc'} nào.
                                 </div>
                             )}
                         </div>
@@ -94,10 +115,10 @@ const SubmitModal: React.FC<SubmitModalProps> = ({ isOpen, onClose, records, onC
                         <button 
                             onClick={handleSubmit} 
                             disabled={!selectedDirector}
-                            className={`flex items-center gap-2 px-5 py-2 rounded-xl font-bold text-white transition-all shadow-md ${selectedDirector ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-indigo-300 cursor-not-allowed'}`}
+                            className={`flex items-center gap-2 px-5 py-2 rounded-xl font-bold text-white transition-all shadow-md ${selectedDirector ? (isCheckMode ? 'bg-orange-600 hover:bg-orange-700' : 'bg-indigo-600 hover:bg-indigo-700') : 'bg-gray-300 cursor-not-allowed'}`}
                         >
                             <CheckCircle size={18} />
-                            Xác nhận trình ký
+                            Xác nhận {isCheckMode ? 'trình kiểm tra' : 'trình ký'}
                         </button>
                     </div>
                 </div>

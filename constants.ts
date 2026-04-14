@@ -14,6 +14,8 @@ export const STATUS_LABELS: Record<RecordStatus, string> = {
   [RecordStatus.ASSIGNED]: 'Đã giao việc',
   [RecordStatus.IN_PROGRESS]: 'Đang thực hiện',
   [RecordStatus.COMPLETED_WORK]: 'Đã thực hiện', // MỚI: Đã bổ sung
+  [RecordStatus.PENDING_CHECK]: 'Chờ kiểm tra',
+  [RecordStatus.CHECKED]: 'Đã kiểm tra',
   [RecordStatus.PENDING_SIGN]: 'Chờ ký duyệt',
   [RecordStatus.SIGNED]: 'Đã ký duyệt',
   [RecordStatus.HANDOVER]: 'Đã giao 1 cửa',
@@ -26,6 +28,8 @@ export const STATUS_COLORS: Record<RecordStatus, string> = {
   [RecordStatus.ASSIGNED]: 'bg-blue-100 text-blue-800',
   [RecordStatus.IN_PROGRESS]: 'bg-yellow-100 text-yellow-800',
   [RecordStatus.COMPLETED_WORK]: 'bg-cyan-100 text-cyan-800', // MỚI: Đã bổ sung
+  [RecordStatus.PENDING_CHECK]: 'bg-orange-100 text-orange-800',
+  [RecordStatus.CHECKED]: 'bg-teal-100 text-teal-800',
   [RecordStatus.PENDING_SIGN]: 'bg-purple-100 text-purple-800',
   [RecordStatus.SIGNED]: 'bg-indigo-100 text-indigo-800',
   [RecordStatus.HANDOVER]: 'bg-green-100 text-green-800',
@@ -51,7 +55,8 @@ export const RECORD_TYPES = [
   'Cung cấp số thửa đất',
   'Trích đo',
   'Cắm mốc',
-  'Trích lục'
+  'Trích lục',
+  'Tách thửa'
 ];
 
 // Danh sách loại hồ sơ MỞ RỘNG (Dùng cho form Thêm mới trong "Tất cả hồ sơ" - Admin/Nội bộ)

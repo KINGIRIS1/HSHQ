@@ -12,7 +12,7 @@ interface ScheduleFormProps {
 
 const ScheduleForm: React.FC<ScheduleFormProps> = ({ initialData, currentUser, onSave, onCancel }) => {
     const [formData, setFormData] = useState<Partial<WorkSchedule>>({
-        date: new Date().toISOString().split('T')[0],
+        date: new Date().toISOString(),
         executors: currentUser.name,
         content: '',
         partner: ''
@@ -30,7 +30,7 @@ const ScheduleForm: React.FC<ScheduleFormProps> = ({ initialData, currentUser, o
         } else {
             // Reset khi tạo mới
             setFormData({
-                date: new Date().toISOString().split('T')[0],
+                date: new Date().toISOString(),
                 executors: currentUser.name,
                 content: '',
                 partner: ''

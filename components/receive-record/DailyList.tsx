@@ -57,7 +57,8 @@ const DailyList: React.FC<DailyListProps> = ({ records, wards, currentUser, empl
           }
 
           // 1. Lọc theo ngày nhận
-          if (r.receivedDate !== filterDate) return false;
+          const recordDate = r.receivedDate ? r.receivedDate.split('T')[0] : '';
+          if (recordDate !== filterDate) return false;
           
           // 3. Tìm kiếm từ khóa
           if (searchTerm) {

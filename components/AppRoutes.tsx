@@ -108,6 +108,7 @@ interface AppRoutesProps {
     setIsAssignModalOpen: (b: boolean) => void;
     setSubmitTargetRecords: (r: RecordFile[]) => void;
     setIsSubmitModalOpen: (b: boolean) => void;
+    setIsSubmitCheckModalOpen: (b: boolean) => void; // MỚI: Trình kiểm tra
     setExportModalType: (t: 'handover' | 'check_list') => void;
     setIsExportModalOpen: (b: boolean) => void;
     setDeletingRecord: (r: RecordFile | null) => void;
@@ -146,7 +147,7 @@ const AppRoutes: React.FC<AppRoutesProps> = (props) => {
     // --- RENDER RECORD LIST (Extracted to be used in switch) ---
     const renderRecordList = () => {
         // Kiểm tra xem có đang ở chế độ xem Hồ sơ đo đạc (bao gồm tất cả các tab con)
-        const isMeasurementView = ['all_records', 'assign_tasks', 'completed_list', 'check_list', 'handover_list', 'director_completed'].includes(currentView);
+        const isMeasurementView = ['all_records', 'assign_tasks', 'completed_list', 'pending_check_list', 'check_list', 'handover_list', 'director_completed'].includes(currentView);
         const isOtherView = ['other_records', 'other_assign_tasks', 'other_check_list', 'other_handover_list', 'other_director_completed'].includes(currentView);
         
         let title = 'Danh sách Hồ sơ';
@@ -155,6 +156,7 @@ const AppRoutes: React.FC<AppRoutesProps> = (props) => {
         else if (currentView === 'handover_list' || currentView === 'other_handover_list') title = 'Danh sách Giao 1 cửa';
         else if (currentView === 'assign_tasks' || currentView === 'other_assign_tasks') title = 'Hồ sơ chưa giao';
         else if (currentView === 'completed_list') title = 'Hồ sơ đã thực hiện';
+        else if (currentView === 'pending_check_list') title = 'Hồ sơ chờ kiểm tra';
         else if (currentView === 'all_records') title = 'Hồ sơ đo đạc';
         else if (currentView === 'other_records') title = 'Hồ sơ khác';
 
@@ -187,6 +189,13 @@ const AppRoutes: React.FC<AppRoutesProps> = (props) => {
                                     className={`px-4 py-3 text-sm font-bold flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap ${currentView === 'completed_list' ? 'border-blue-600 text-blue-700 bg-white' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
                                 >
                                     <CheckSquare size={16} /> Đã thực hiện
+                                </button>
+                                
+                                <button 
+                                    onClick={() => props.setCurrentView('pending_check_list')}
+                                    className={`px-4 py-3 text-sm font-bold flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap ${currentView === 'pending_check_list' ? 'border-orange-600 text-orange-700 bg-white' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                                >
+                                    <ClipboardList size={16} /> Kiểm tra
                                 </button>
                             </>
                         )}
@@ -429,6 +438,18 @@ const AppRoutes: React.FC<AppRoutesProps> = (props) => {
                             </button>
                         )}
                         {canPerformAction && currentView === 'completed_list' && props.selectedRecordIds.size > 0 && (
+                            <button 
+                                onClick={() => {
+                                    const targets = records.filter(r => props.selectedRecordIds.has(r.id));
+                                    props.setSubmitTargetRecords(targets);
+                                    props.setIsSubmitCheckModalOpen(true);
+                                }}
+                                className="flex items-center gap-2 bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 font-bold shadow-md transition-all animate-pulse"
+                            >
+                                <ClipboardList size={18} /> Trình Kiểm Tra ({props.selectedRecordIds.size})
+                            </button>
+                        )}
+                        {canPerformAction && currentView === 'pending_check_list' && props.selectedRecordIds.size > 0 && (
                             <button 
                                 onClick={() => {
                                     const targets = records.filter(r => props.selectedRecordIds.has(r.id));

@@ -37,7 +37,7 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose, records, war
           // Logic cho Trình Ký: Dựa vào ngày tiếp nhận (receivedDate) để gom nhóm
           // Lấy các hồ sơ đang Chờ ký hoặc Đã ký (nhưng chưa giao)
           if (r.status === RecordStatus.PENDING_SIGN || r.status === RecordStatus.SIGNED) {
-             const dateStr = r.receivedDate;
+             const dateStr = r.receivedDate ? r.receivedDate.split('T')[0] : null;
              if (!dateStr) return;
              const key = `date_${dateStr}`;
              if (!batches[key]) {

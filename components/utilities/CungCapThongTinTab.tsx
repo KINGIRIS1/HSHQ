@@ -48,7 +48,7 @@ const CungCapThongTinTab: React.FC<CungCapThongTinTabProps> = ({ currentUser, no
     const [tempPlanningConfigs, setTempPlanningConfigs] = useState<PlanningConfig[]>([]);
 
     const [formData, setFormData] = useState<PhieuInfoData>({
-        Ten_Nguoi_Yeu_Cau: '', UQ: '', Dia_Chi: '', Ngay_Nop: new Date().toISOString().split('T')[0],
+        Ten_Nguoi_Yeu_Cau: '', UQ: '', Dia_Chi: '', Ngay_Nop: new Date().toISOString(),
         UQ_Loai: '', UQ_So: '', UQ_Ngay: '', UQ_VPCC: '',
         Ten_CSD: '', Dia_Chi_Thua_Dat: '', Phuong: 'thị trấn Tân Khai',
         Thua_Cu: '', To_Cu: '', 
@@ -203,7 +203,7 @@ const CungCapThongTinTab: React.FC<CungCapThongTinTabProps> = ({ currentUser, no
     const handleResetForm = () => {
         setEditingId(null);
         const resetData: PhieuInfoData = {
-            Ten_Nguoi_Yeu_Cau: '', UQ: '', Dia_Chi: '', Ngay_Nop: new Date().toISOString().split('T')[0],
+            Ten_Nguoi_Yeu_Cau: '', UQ: '', Dia_Chi: '', Ngay_Nop: new Date().toISOString(),
             UQ_Loai: '', UQ_So: '', UQ_Ngay: '', UQ_VPCC: '',
             Ten_CSD: '', Dia_Chi_Thua_Dat: '', Phuong: 'thị trấn Tân Khai',
             Thua_Cu: '', To_Cu: '', 

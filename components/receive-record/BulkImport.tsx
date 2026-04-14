@@ -85,7 +85,7 @@ const BulkImport: React.FC<BulkImportProps> = ({ onSave, calculateDeadline, calc
               'CL': 'Trích đo chỉnh lý bản đồ địa chính',
               'CHỈNH LÝ': 'Trích đo chỉnh lý bản đồ địa chính',
               'HIẾN ĐƯỜNG': 'Trích đo chỉnh lý bản đồ địa chính',
-              'TÁCH THỬA': 'Trích đo bản đồ địa chính',
+              'TÁCH THỬA': 'Tách thửa',
               'HỢP THỬA': 'Trích đo bản đồ địa chính',
               'CẤP ĐỔI': 'Trích đo bản đồ địa chính'
           };
@@ -111,7 +111,8 @@ const BulkImport: React.FC<BulkImportProps> = ({ onSave, calculateDeadline, calc
                   const lower = rawType.toLowerCase();
                   if (lower.includes('trích lục')) recordType = 'Trích lục bản đồ địa chính';
                   else if (lower.includes('chỉnh lý') || lower.includes('hiến đường')) recordType = 'Trích đo chỉnh lý bản đồ địa chính';
-                  else if (lower.includes('trích đo') || lower.includes('tách thửa') || lower.includes('hợp thửa')) recordType = 'Trích đo bản đồ địa chính';
+                  else if (lower.includes('tách thửa')) recordType = 'Tách thửa';
+                  else if (lower.includes('trích đo') || lower.includes('hợp thửa')) recordType = 'Trích đo bản đồ địa chính';
                   else if (lower.includes('đo đạc')) recordType = 'Đo đạc';
                   else if (lower.includes('cắm mốc')) recordType = 'Cắm mốc';
                   else if (rawType) recordType = rawType;
@@ -121,8 +122,8 @@ const BulkImport: React.FC<BulkImportProps> = ({ onSave, calculateDeadline, calc
               const authorizedBy = String(getVal(['NGƯỜI ỦY QUYỀN', 'ỦY QUYỀN', 'AUTHORIZED BY']) || '');
               const authDocType = String(getVal(['LOẠI ỦY QUYỀN', 'GIẤY ỦY QUYỀN', 'AUTH DOC']) || '');
 
-              const receivedDate = new Date().toISOString().split('T')[0];
-              const deadline = calculateDeadline(String(recordType), receivedDate);
+              const receivedDate = new Date().toISOString();
+              const deadline = calculateDeadline(String(recordType), receivedDate.split('T')[0]);
 
               newBulkRecords.push({
                   tempId: Math.random().toString(36).substr(2, 9),
@@ -170,7 +171,7 @@ const BulkImport: React.FC<BulkImportProps> = ({ onSave, calculateDeadline, calc
       const newRecord: RecordFile = { 
           ...record, 
           id: Math.random().toString(36).substr(2, 9),
-          receivedDate: record.receivedDate || new Date().toISOString().split('T')[0],
+          receivedDate: record.receivedDate || new Date().toISOString(),
           deadline: record.deadline || '',
           status: RecordStatus.RECEIVED,
           receivedBy: currentUser?.employeeId

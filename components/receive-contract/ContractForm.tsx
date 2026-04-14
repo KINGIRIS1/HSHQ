@@ -34,7 +34,7 @@ const ContractForm: React.FC<ContractFormProps> = ({ initialData, onSave, onPrin
     code: '', customerName: '', phoneNumber: '', address: '', ward: '', landPlot: '', mapSheet: '', area: 0,
     contractType: 'Đo đạc', serviceType: '', areaType: '', plotCount: 1, markerCount: 1, quantity: 1, 
     unitPrice: 0, vatRate: 8, vatAmount: 0, totalAmount: 0, deposit: 0, content: '',
-    createdDate: new Date().toISOString().split('T')[0], status: 'PENDING',
+    createdDate: new Date().toISOString(), status: 'PENDING',
     liquidationArea: 0, liquidationAmount: 0 // Init
   });
 
@@ -354,7 +354,7 @@ const ContractForm: React.FC<ContractFormProps> = ({ initialData, onSave, onPrin
         contractType: activeTab === 'tt' ? 'Tách thửa' : activeTab === 'cm' ? 'Cắm mốc' : activeTab === 'tl' ? 'Trích lục' : 'Đo đạc', 
         serviceType: '', areaType: '', plotCount: 1, markerCount: 1, quantity: 1, 
         unitPrice: 0, vatRate: 8, vatAmount: 0, totalAmount: 0, deposit: 0, content: '',
-        createdDate: new Date().toISOString().split('T')[0], status: 'PENDING',
+        createdDate: new Date().toISOString(), status: 'PENDING',
         liquidationArea: 0, liquidationAmount: 0
       });
       setTachThuaItems([]);

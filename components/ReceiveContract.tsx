@@ -170,7 +170,7 @@ const ReceiveContract: React.FC<ReceiveContractProps> = ({ wards, currentUser, e
                   vatAmount: 0, 
                   totalAmount: 0, 
                   deposit: 0,
-                  createdDate: new Date().toISOString().split('T')[0],
+                  createdDate: new Date().toISOString(),
                   status: 'PENDING',
                   liquidationArea: recordToLiquidate.area || 0
               };

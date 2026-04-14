@@ -79,7 +79,7 @@ const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImport, em
       const lowerType = (type || '').toLowerCase();
       if (lowerType.includes('trích lục')) daysToAdd = 10; 
       else if (lowerType.includes('trích đo chỉnh lý')) daysToAdd = 15; 
-      else if (lowerType.includes('trích đo') || lowerType.includes('đo đạc') || lowerType.includes('cắm mốc')) daysToAdd = 30; 
+      else if (lowerType.includes('trích đo') || lowerType.includes('đo đạc') || lowerType.includes('cắm mốc') || lowerType.includes('tách thửa')) daysToAdd = 30; 
       
       const startDate = new Date(receivedDateStr);
       let count = 0;
@@ -223,7 +223,7 @@ const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImport, em
             // 2. NGÀY THÁNG
             const receivedRaw = getVal(['NGÀY NHẬN', 'NGÀY NỘP']);
             if (receivedRaw !== undefined) record.receivedDate = parseExcelDate(receivedRaw);
-            else if (mode === 'create') record.receivedDate = new Date().toISOString().split('T')[0];
+            else if (mode === 'create') record.receivedDate = new Date().toISOString();
 
             const deadlineRaw = getVal(['HẸN TRẢ', 'DEADLINE']);
             if (deadlineRaw !== undefined) record.deadline = parseExcelDate(deadlineRaw);
@@ -275,7 +275,7 @@ const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImport, em
                 
                 // Nếu chưa có ngày hoàn thành, lấy ngày xuất làm ngày hoàn thành
                 if (!record.completedDate && record.exportDate) {
-                    record.completedDate = record.exportDate.split('T')[0];
+                    record.completedDate = record.exportDate;
                 }
             } else if (explicitStatus) {
                 // Nếu không có thông tin xuất, dùng trạng thái từ Excel

@@ -35,7 +35,7 @@ const ExportHandoverModal: React.FC<ExportHandoverModalProps> = ({ isOpen, onClo
             if (r.type !== type || r.status !== 'completed') return;
             
             // Filter by date (ngay_hoan_thanh)
-            if (r.data?.ngay_hoan_thanh !== selectedDate) return;
+            if ((r.data?.ngay_hoan_thanh || '').split('T')[0] !== selectedDate) return;
 
             // Filter by ward (if applicable and selected)
             if (type === 'saoluc' && selectedWard !== 'all') {
@@ -54,7 +54,7 @@ const ExportHandoverModal: React.FC<ExportHandoverModalProps> = ({ isOpen, onClo
         // Filter records to export
         const exportData = records.filter(r => {
             if (r.type !== type || r.status !== 'completed') return false;
-            if (r.data?.ngay_hoan_thanh !== selectedDate) return false;
+            if ((r.data?.ngay_hoan_thanh || '').split('T')[0] !== selectedDate) return false;
             if (type === 'saoluc' && selectedWard !== 'all' && r.data?.xa_phuong !== selectedWard) return false;
             if (selectedBatch !== 'all' && r.data?.danh_sach !== selectedBatch) return false;
             return true;

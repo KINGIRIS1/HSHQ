@@ -28,7 +28,7 @@ const RecordForm: React.FC<RecordFormProps> = ({ onSave, wards, records, holiday
 
   const [formData, setFormData] = useState<Partial<RecordFile>>({
     code: '', customerName: '', phoneNumber: '', cccd: '', customerAddress: '', authorizedBy: '', authDocType: '', otherDocs: '', content: '',
-    receivedDate: new Date().toISOString().split('T')[0], deadline: '', ward: processingWard, landPlot: '', mapSheet: '', area: 0,
+    receivedDate: new Date().toISOString(), deadline: '', ward: processingWard, landPlot: '', mapSheet: '', area: 0,
     address: '', recordType: '', status: RecordStatus.RECEIVED,
     issueNumber: '', entryNumber: '', issueDate: '', residentialArea: 0
   });
@@ -102,7 +102,7 @@ const RecordForm: React.FC<RecordFormProps> = ({ onSave, wards, records, holiday
       setFormData({ 
           code: '', customerName: '', phoneNumber: '', cccd: '', customerAddress: '', 
           authorizedBy: '', authDocType: '', otherDocs: '', content: '', 
-          receivedDate: new Date().toISOString().split('T')[0], deadline: '', 
+          receivedDate: new Date().toISOString(), deadline: '', 
           ward: processingWard, landPlot: '', mapSheet: '', area: 0, address: '', 
           recordType: '', status: RecordStatus.RECEIVED,
           issueNumber: '', entryNumber: '', issueDate: '', residentialArea: 0
