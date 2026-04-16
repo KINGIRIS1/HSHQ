@@ -272,7 +272,7 @@ const PersonalProfile: React.FC<PersonalProfileProps> = ({ user, records, isDire
   };
 
   const handleExportExcel = () => {
-      const dataToExport = myRecords.map((r, idx) => ({
+      const dataToExport = displayRecords.map((r, idx) => ({
           'STT': idx + 1,
           'Mã hồ sơ': r.code,
           'Chủ sử dụng': r.customerName,
@@ -288,7 +288,7 @@ const PersonalProfile: React.FC<PersonalProfileProps> = ({ user, records, isDire
           'Diện tích': r.area || '',
           'Địa chỉ': r.address || '',
           'Nội dung': r.content || '',
-          'Ngày giao': r.assignedDate ? r.assignedDate.split('T')[0] : '',
+          'Ngày giao việc': r.assignedDate ? r.assignedDate.split('T')[0] : '',
           'Ngày trình ký': r.submissionDate ? r.submissionDate.split('T')[0] : '',
           'Ngày duyệt': r.approvalDate ? r.approvalDate.split('T')[0] : '',
           'Ngày hoàn thành': r.completedDate ? r.completedDate.split('T')[0] : '',
@@ -637,13 +637,14 @@ const PersonalProfile: React.FC<PersonalProfileProps> = ({ user, records, isDire
         
         <div className="flex-1 overflow-y-auto">
             {displayRecords.length > 0 ? (
-                <table className="w-full text-left table-fixed min-w-[1050px]">
+                <table className="w-full text-left table-fixed min-w-[1160px]">
                     <thead className="bg-white border-b border-gray-200 text-xs text-gray-500 uppercase sticky top-0 shadow-sm z-10">
                         <tr>
                             <th className="p-3 w-10 text-center">#</th>
                             <th className="p-3 w-[120px]">{renderSortHeader('Mã HS', 'code')}</th>
                             <th className="p-3 w-[180px]">{renderSortHeader('Chủ sử dụng', 'customerName')}</th>
                             <th className="p-3 w-[130px]">{renderSortHeader('Loại hồ sơ', 'recordType')}</th>
+                            <th className="p-3 w-[130px]">{renderSortHeader('Ngày giao việc', 'assignedDate')}</th>
                             <th className="p-3 w-[110px]">{renderSortHeader('Ngày trình', 'submissionDate')}</th>
                             
                             <th className="p-3 w-[150px]">
@@ -673,6 +674,7 @@ const PersonalProfile: React.FC<PersonalProfileProps> = ({ user, records, isDire
                                     <td className="p-3 font-medium text-blue-600 align-middle"><div className="truncate" title={r.code || ''}>{r.code}</div></td>
                                     <td className="p-3 font-medium text-gray-800 align-middle"><div className="truncate" title={r.customerName || ''}>{r.customerName}</div></td>
                                     <td className="p-3 text-gray-600 align-middle"><div className="truncate" title={r.recordType || ''}>{getShortRecordType(r.recordType || undefined)}</div></td>
+                                    <td className="p-3 text-gray-600 align-middle text-center">{formatDate(r.assignedDate || undefined)}</td>
                                     <td className="p-3 text-gray-600 align-middle text-center">{formatDate(r.submissionDate || undefined)}</td>
                                     
                                     <td className="p-3 align-middle">

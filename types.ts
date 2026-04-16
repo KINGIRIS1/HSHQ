@@ -23,13 +23,14 @@ export enum UserRole {
 }
 
 export type RolePermissions = Record<string, string[]>;
+export type DepartmentPermissions = Record<string, string[]>;
 
 export const DEFAULT_ROLE_PERMISSIONS: RolePermissions = {
   [UserRole.ADMIN]: ['*'],
-  [UserRole.SUBADMIN]: ['VIEW_RECORDS', 'ADD_RECORDS', 'EDIT_RECORDS', 'DELETE_RECORDS', 'VIEW_CONTRACTS', 'MANAGE_CONTRACTS', 'VIEW_EXCERPTS', 'MANAGE_EXCERPTS', 'VIEW_ARCHIVE', 'MANAGE_ARCHIVE', 'VIEW_REPORTS', 'MANAGE_EMPLOYEES', 'VIEW_CHAT', 'VIEW_SCHEDULE', 'MANAGE_SCHEDULE'],
-  [UserRole.TEAM_LEADER]: ['VIEW_RECORDS', 'EDIT_RECORDS', 'VIEW_CONTRACTS', 'VIEW_EXCERPTS', 'MANAGE_EXCERPTS', 'VIEW_ARCHIVE', 'VIEW_REPORTS', 'VIEW_CHAT', 'VIEW_SCHEDULE'],
-  [UserRole.ONEDOOR]: ['VIEW_RECORDS', 'ADD_RECORDS', 'VIEW_CONTRACTS', 'ADD_CONTRACTS', 'VIEW_EXCERPTS', 'VIEW_ARCHIVE', 'VIEW_CHAT', 'VIEW_SCHEDULE'],
-  [UserRole.EMPLOYEE]: ['VIEW_RECORDS', 'EDIT_RECORDS', 'VIEW_CONTRACTS', 'VIEW_EXCERPTS', 'VIEW_ARCHIVE', 'VIEW_CHAT', 'VIEW_SCHEDULE']
+  [UserRole.SUBADMIN]: ['VIEW_RECORDS', 'ADD_RECORDS', 'EDIT_RECORDS', 'DELETE_RECORDS', 'ASSIGN_RECORDS', 'CHECK_RECORDS', 'SIGN_RECORDS', 'HANDOVER_RECORDS', 'RETURN_RECORDS', 'EXPORT_RECORDS', 'VIEW_CONTRACTS', 'ADD_CONTRACTS', 'EDIT_CONTRACTS', 'DELETE_CONTRACTS', 'EXPORT_CONTRACTS', 'VIEW_EXCERPTS', 'MANAGE_EXCERPTS', 'VIEW_ARCHIVE', 'MANAGE_ARCHIVE', 'VIEW_REPORTS', 'MANAGE_EMPLOYEES', 'VIEW_CHAT', 'VIEW_SCHEDULE', 'MANAGE_SCHEDULE', 'VIEW_PERSONAL_PROFILE'],
+  [UserRole.TEAM_LEADER]: ['VIEW_RECORDS', 'EDIT_RECORDS', 'ASSIGN_RECORDS', 'CHECK_RECORDS', 'EXPORT_RECORDS', 'VIEW_CONTRACTS', 'VIEW_EXCERPTS', 'MANAGE_EXCERPTS', 'VIEW_ARCHIVE', 'VIEW_REPORTS', 'VIEW_CHAT', 'VIEW_SCHEDULE', 'VIEW_PERSONAL_PROFILE'],
+  [UserRole.ONEDOOR]: ['VIEW_RECORDS', 'ADD_RECORDS', 'HANDOVER_RECORDS', 'RETURN_RECORDS', 'EXPORT_RECORDS', 'VIEW_CONTRACTS', 'ADD_CONTRACTS', 'VIEW_EXCERPTS', 'VIEW_ARCHIVE', 'VIEW_CHAT', 'VIEW_SCHEDULE'],
+  [UserRole.EMPLOYEE]: ['VIEW_RECORDS', 'EDIT_RECORDS', 'VIEW_CONTRACTS', 'VIEW_EXCERPTS', 'VIEW_ARCHIVE', 'VIEW_CHAT', 'VIEW_SCHEDULE', 'VIEW_PERSONAL_PROFILE']
 };
 
 export const AVAILABLE_PERMISSIONS = [
@@ -37,8 +38,17 @@ export const AVAILABLE_PERMISSIONS = [
   { id: 'ADD_RECORDS', label: 'Thêm hồ sơ' },
   { id: 'EDIT_RECORDS', label: 'Sửa hồ sơ' },
   { id: 'DELETE_RECORDS', label: 'Xóa hồ sơ' },
+  { id: 'ASSIGN_RECORDS', label: 'Giao hồ sơ' },
+  { id: 'CHECK_RECORDS', label: 'Kiểm tra hồ sơ' },
+  { id: 'SIGN_RECORDS', label: 'Ký duyệt hồ sơ' },
+  { id: 'HANDOVER_RECORDS', label: 'Bàn giao hồ sơ' },
+  { id: 'RETURN_RECORDS', label: 'Trả kết quả hồ sơ' },
+  { id: 'EXPORT_RECORDS', label: 'Xuất danh sách hồ sơ' },
   { id: 'VIEW_CONTRACTS', label: 'Xem hợp đồng' },
-  { id: 'MANAGE_CONTRACTS', label: 'Quản lý hợp đồng' },
+  { id: 'ADD_CONTRACTS', label: 'Thêm hợp đồng' },
+  { id: 'EDIT_CONTRACTS', label: 'Sửa hợp đồng' },
+  { id: 'DELETE_CONTRACTS', label: 'Xóa hợp đồng' },
+  { id: 'EXPORT_CONTRACTS', label: 'Xuất danh sách hợp đồng' },
   { id: 'VIEW_EXCERPTS', label: 'Xem trích lục' },
   { id: 'MANAGE_EXCERPTS', label: 'Quản lý trích lục' },
   { id: 'VIEW_ARCHIVE', label: 'Xem lưu trữ' },
@@ -49,7 +59,8 @@ export const AVAILABLE_PERMISSIONS = [
   { id: 'SYSTEM_SETTINGS', label: 'Cài đặt hệ thống' },
   { id: 'VIEW_CHAT', label: 'Sử dụng nội bộ' },
   { id: 'VIEW_SCHEDULE', label: 'Xem lịch công tác' },
-  { id: 'MANAGE_SCHEDULE', label: 'Quản lý lịch công tác' }
+  { id: 'MANAGE_SCHEDULE', label: 'Quản lý lịch công tác' },
+  { id: 'VIEW_PERSONAL_PROFILE', label: 'Xem hồ sơ cá nhân' }
 ];
 
 export interface User {

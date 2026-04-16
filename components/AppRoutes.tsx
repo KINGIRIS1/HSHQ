@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { RecordFile, Employee, User, UserRole, Holiday, RolePermissions } from '../types';
+import { RecordFile, Employee, User, UserRole, Holiday, RolePermissions, DepartmentPermissions } from '../types';
 import { STATUS_LABELS } from '../constants';
 import { COLUMN_DEFS } from '../utils/appHelpers';
 
@@ -34,6 +34,7 @@ interface AppRoutesProps {
     wards: string[];
     holidays: Holiday[]; 
     rolePermissions: RolePermissions;
+    departmentPermissions: DepartmentPermissions;
     
     // States & Setters passed from App
     setUnreadMessages: (n: number) => void;
@@ -120,13 +121,28 @@ interface AppRoutesProps {
 const AppRoutes: React.FC<AppRoutesProps> = (props) => {
     // Simplify destructuring to avoid TS errors with complex objects
     const { 
-        currentView, currentUser, records, employees, users, wards, holidays, rolePermissions
+        currentView, currentUser, records, employees, users, wards, holidays, rolePermissions, departmentPermissions
     } = props;
 
     const hasPermission = (permissionId: string) => {
         if (currentUser.role === UserRole.ADMIN) return true;
-        const perms = rolePermissions[currentUser.role] || [];
-        return perms.includes('*') || perms.includes(permissionId);
+        
+        const rolePerms = rolePermissions[currentUser.role] || [];
+        if (rolePerms.includes('*') || rolePerms.includes(permissionId)) return true;
+
+        if (currentUser.employeeId && employees) {
+            const emp = employees.find(e => e.id === currentUser.employeeId);
+            if (emp && emp.department) {
+                const empDeptLower = emp.department.trim().toLowerCase();
+                const matchingKey = Object.keys(departmentPermissions).find(k => k.trim().toLowerCase() === empDeptLower);
+                if (matchingKey) {
+                    const deptPerms = departmentPermissions[matchingKey] || [];
+                    if (deptPerms.includes('*') || deptPerms.includes(permissionId)) return true;
+                }
+            }
+        }
+
+        return false;
     };
 
     const isAdmin = currentUser.role === UserRole.ADMIN;

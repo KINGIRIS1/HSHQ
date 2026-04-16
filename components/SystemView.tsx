@@ -87,6 +87,7 @@ const SystemView: React.FC<SystemViewProps> = ({
                     <SystemSettingsView 
                         onDeleteAllData={onDeleteAllData} 
                         onHolidaysChanged={onHolidaysChanged} 
+                        employees={employees}
                     />
                 )}
             </div>

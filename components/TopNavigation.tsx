@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { LayoutDashboard, FileText, ClipboardList, Send, BarChart3, Settings, LogOut, UserCircle, Users, Briefcase, BookOpen, UserPlus, ShieldAlert, X, FolderInput, FileSignature, MessageSquare, Loader2, UserCog, ShieldCheck, PenTool, CalendarDays, Archive, FolderArchive, ChevronDown, Bell, FilePlus, Ruler, ChevronRight, User, Shield, Settings2, Layers } from 'lucide-react';
-import { User as UserType, UserRole, RolePermissions } from '../types';
+import { User as UserType, UserRole, RolePermissions, DepartmentPermissions, Employee } from '../types';
 
 interface TopNavigationProps {
   currentView: string;
@@ -15,6 +15,9 @@ interface TopNavigationProps {
   mobileOpen: boolean;
   setMobileOpen: (open: boolean) => void;
   rolePermissions: RolePermissions;
+  departmentPermissions: DepartmentPermissions;
+  employees: Employee[];
+  connectionStatus: 'connected' | 'offline';
 }
 
 const TopNavigation: React.FC<TopNavigationProps> = ({ 
@@ -28,7 +31,10 @@ const TopNavigation: React.FC<TopNavigationProps> = ({
   reminderCount,
   mobileOpen,
   setMobileOpen,
-  rolePermissions
+  rolePermissions,
+  departmentPermissions,
+  employees,
+  connectionStatus
 }) => {
   const isAdmin = currentUser.role === UserRole.ADMIN;
   const isSubadmin = currentUser.role === UserRole.SUBADMIN;
@@ -38,8 +44,23 @@ const TopNavigation: React.FC<TopNavigationProps> = ({
 
   const hasPermission = (permissionId: string) => {
     if (isAdmin) return true;
-    const perms = rolePermissions[currentUser.role] || [];
-    return perms.includes('*') || perms.includes(permissionId);
+    
+    const rolePerms = rolePermissions[currentUser.role] || [];
+    if (rolePerms.includes('*') || rolePerms.includes(permissionId)) return true;
+
+    if (currentUser.employeeId && employees) {
+        const emp = employees.find(e => e.id === currentUser.employeeId);
+        if (emp && emp.department) {
+            const empDeptLower = emp.department.trim().toLowerCase();
+            const matchingKey = Object.keys(departmentPermissions).find(k => k.trim().toLowerCase() === empDeptLower);
+            if (matchingKey) {
+                const deptPerms = departmentPermissions[matchingKey] || [];
+                if (deptPerms.includes('*') || deptPerms.includes(permissionId)) return true;
+            }
+        }
+    }
+
+    return false;
   };
 
   // Cập nhật danh sách các view được phép

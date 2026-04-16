@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import TopNavigation from '../TopNavigation';
 import { Menu, WifiOff, ShieldCheck, UserCircle, LogOut, UserCog, ChevronDown, Settings } from 'lucide-react';
-import { User, UserRole, RolePermissions } from '../../types';
+import { User, UserRole, RolePermissions, DepartmentPermissions, Employee } from '../../types';
 import UpdateRequiredModal from '../UpdateRequiredModal';
 
 interface MainLayoutProps {
@@ -23,6 +23,8 @@ interface MainLayoutProps {
     warningCount: { overdue: number; approaching: number };
     activeRemindersCount: number;
     rolePermissions: RolePermissions;
+    departmentPermissions: DepartmentPermissions;
+    employees: Employee[];
     
     // Connection status
     connectionStatus: 'connected' | 'offline';
@@ -53,6 +55,8 @@ const MainLayout: React.FC<MainLayoutProps> = ({
     warningCount,
     activeRemindersCount,
     rolePermissions,
+    departmentPermissions,
+    employees,
     connectionStatus,
     // Update props defaults
     showUpdateModal = false,
@@ -185,6 +189,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                     warningRecordsCount={warningCount.overdue + warningCount.approaching}
                     reminderCount={activeRemindersCount}
                     rolePermissions={rolePermissions}
+                    departmentPermissions={departmentPermissions}
+                    employees={employees}
+                    connectionStatus={connectionStatus}
                 />
 
                 {/* CONTENT */}

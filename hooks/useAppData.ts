@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { RecordFile, Employee, User, RecordStatus, Holiday, RolePermissions, DEFAULT_ROLE_PERMISSIONS } from '../types';
+import { RecordFile, Employee, User, RecordStatus, Holiday, RolePermissions, DepartmentPermissions, DEFAULT_ROLE_PERMISSIONS } from '../types';
 import { 
     fetchRecords, fetchEmployees, fetchUsers, fetchUpdateInfo, fetchHolidays,
     createRecordApi, updateRecordApi, deleteRecordApi, createRecordsBatchApi,
@@ -14,6 +14,7 @@ export const useAppData = (currentUser: User | null) => {
     const [users, setUsers] = useState<User[]>([]);
     const [holidays, setHolidays] = useState<Holiday[]>([]); // State mới cho ngày nghỉ
     const [rolePermissions, setRolePermissions] = useState<RolePermissions>(DEFAULT_ROLE_PERMISSIONS);
+    const [departmentPermissions, setDepartmentPermissions] = useState<DepartmentPermissions>({});
     const [connectionStatus, setConnectionStatus] = useState<'connected' | 'offline'>('connected');
     
     // Wards State
@@ -41,11 +42,12 @@ export const useAppData = (currentUser: User | null) => {
                 fetchUsers(),
                 fetchUpdateInfo(),
                 fetchHolidays(), // Tải thêm danh sách ngày nghỉ
-                getSystemSetting('role_permissions')
+                getSystemSetting('role_permissions'),
+                getSystemSetting('department_permissions')
             ]);
 
             // Race giữa fetch data và timeout
-            const [recData, empData, userData, updateInfo, holidayData, permsData] = await Promise.race([dataPromise, timeoutPromise]) as any;
+            const [recData, empData, userData, updateInfo, holidayData, permsData, deptPermsData] = await Promise.race([dataPromise, timeoutPromise]) as any;
 
             setRecords(recData);
             setEmployees(empData);
@@ -56,6 +58,13 @@ export const useAppData = (currentUser: User | null) => {
                     setRolePermissions(JSON.parse(permsData));
                 } catch (e) {
                     console.error("Failed to parse role_permissions", e);
+                }
+            }
+            if (deptPermsData) {
+                try {
+                    setDepartmentPermissions(JSON.parse(deptPermsData));
+                } catch (e) {
+                    console.error("Failed to parse department_permissions", e);
                 }
             }
             setConnectionStatus('connected');
@@ -227,7 +236,7 @@ export const useAppData = (currentUser: User | null) => {
     };
 
     return {
-        records, employees, users, wards, holidays, rolePermissions, connectionStatus,
+        records, employees, users, wards, holidays, rolePermissions, departmentPermissions, connectionStatus,
         isUpdateAvailable, latestVersion, updateUrl,
         setWards, setEmployees, setUsers, setRecords,
         loadData,
