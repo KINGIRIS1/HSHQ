@@ -26,9 +26,12 @@ const RecordForm: React.FC<RecordFormProps> = ({ onSave, wards, records, holiday
   const linkedEmp = employees.find(e => e.id === currentUser.employeeId);
   const processingWard = linkedEmp?.managedWards?.[0] || 'Tân Khai';
 
+    const d = new Date();
+    const todayStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
   const [formData, setFormData] = useState<Partial<RecordFile>>({
     code: '', customerName: '', phoneNumber: '', cccd: '', customerAddress: '', authorizedBy: '', authDocType: '', otherDocs: '', content: '',
-    receivedDate: new Date().toISOString(), deadline: '', ward: processingWard, landPlot: '', mapSheet: '', area: 0,
+    receivedDate: todayStr, deadline: '', ward: processingWard, landPlot: '', mapSheet: '', area: 0,
     address: '', recordType: '', status: RecordStatus.RECEIVED,
     issueNumber: '', entryNumber: '', issueDate: '', residentialArea: 0
   });
@@ -99,10 +102,12 @@ const RecordForm: React.FC<RecordFormProps> = ({ onSave, wards, records, holiday
   };
 
   const handleReset = (keepNotification = false) => {
+      const d = new Date();
+      const todayStrLocal = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
       setFormData({ 
           code: '', customerName: '', phoneNumber: '', cccd: '', customerAddress: '', 
           authorizedBy: '', authDocType: '', otherDocs: '', content: '', 
-          receivedDate: new Date().toISOString(), deadline: '', 
+          receivedDate: todayStrLocal, deadline: '', 
           ward: processingWard, landPlot: '', mapSheet: '', area: 0, address: '', 
           recordType: '', status: RecordStatus.RECEIVED,
           issueNumber: '', entryNumber: '', issueDate: '', residentialArea: 0

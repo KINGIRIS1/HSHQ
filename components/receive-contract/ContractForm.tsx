@@ -30,11 +30,14 @@ const ContractForm: React.FC<ContractFormProps> = ({ initialData, onSave, onPrin
   const [splitImportText, setSplitImportText] = useState('');
   const [isImportExpanded, setIsImportExpanded] = useState(false);
 
+  const d = new Date();
+  const todayStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
   const [formData, setFormData] = useState<Partial<Contract>>({
     code: '', customerName: '', phoneNumber: '', address: '', ward: '', landPlot: '', mapSheet: '', area: 0,
     contractType: 'Đo đạc', serviceType: '', areaType: '', plotCount: 1, markerCount: 1, quantity: 1, 
     unitPrice: 0, vatRate: 8, vatAmount: 0, totalAmount: 0, deposit: 0, content: '',
-    createdDate: new Date().toISOString(), status: 'PENDING',
+    createdDate: todayStr, status: 'PENDING',
     liquidationArea: 0, liquidationAmount: 0 // Init
   });
 
@@ -349,12 +352,14 @@ const ContractForm: React.FC<ContractFormProps> = ({ initialData, onSave, onPrin
   };
 
   const handleReset = (keepNotification = false) => {
+      const d = new Date();
+      const todayStrLocal = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
       setFormData({
         code: generateCode(), customerName: '', phoneNumber: '', address: '', ward: '', landPlot: '', mapSheet: '', area: 0,
         contractType: activeTab === 'tt' ? 'Tách thửa' : activeTab === 'cm' ? 'Cắm mốc' : activeTab === 'tl' ? 'Trích lục' : 'Đo đạc', 
         serviceType: '', areaType: '', plotCount: 1, markerCount: 1, quantity: 1, 
         unitPrice: 0, vatRate: 8, vatAmount: 0, totalAmount: 0, deposit: 0, content: '',
-        createdDate: new Date().toISOString(), status: 'PENDING',
+        createdDate: todayStrLocal, status: 'PENDING',
         liquidationArea: 0, liquidationAmount: 0
       });
       setTachThuaItems([]);
