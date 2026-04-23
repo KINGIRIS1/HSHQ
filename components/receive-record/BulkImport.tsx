@@ -126,7 +126,7 @@ const BulkImport: React.FC<BulkImportProps> = ({ onSave, calculateDeadline, calc
               const deadline = calculateDeadline(String(recordType), receivedDate.split('T')[0]);
 
               newBulkRecords.push({
-                  tempId: Math.random().toString(36).substr(2, 9),
+                  tempId: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substr(2, 9),
                   isSaved: false,
                   customerName: String(customerName),
                   phoneNumber: String(getVal(['SĐT', 'ĐIỆN THOẠI']) || ''),
@@ -170,7 +170,7 @@ const BulkImport: React.FC<BulkImportProps> = ({ onSave, calculateDeadline, calc
 
       const newRecord: RecordFile = { 
           ...record, 
-          id: Math.random().toString(36).substr(2, 9),
+          id: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substr(2, 9),
           receivedDate: record.receivedDate || new Date().toISOString(),
           deadline: record.deadline || '',
           status: RecordStatus.RECEIVED,

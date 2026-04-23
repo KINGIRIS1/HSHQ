@@ -188,7 +188,7 @@ export const createRecordApi = async (record: RecordFile): Promise<RecordFile | 
         
         const recordToSave = { ...record, code: finalCode };
         if (!recordToSave.id) {
-            recordToSave.id = Math.random().toString(36).substr(2, 9);
+            recordToSave.id = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substr(2, 9);
         }
         
         const payload = sanitizeData(recordToSave, RECORD_DB_COLUMNS);
@@ -261,7 +261,7 @@ export const createRecordsBatchApi = async (records: RecordFile[]): Promise<bool
             
             const recordPayload = { ...r, code: finalCode };
             if (!recordPayload.id) {
-                recordPayload.id = Math.random().toString(36).substr(2, 9);
+                recordPayload.id = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substr(2, 9);
             }
             
             payload.push(sanitizeData(recordPayload, RECORD_DB_COLUMNS));

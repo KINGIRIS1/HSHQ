@@ -33,11 +33,13 @@ const formatDateKey = (date: Date): string => {
 };
 
 const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImport, employees }) => {
-  const [previewData, setPreviewData] = useState<RecordFile[]>([]);
+  type PreviewRecord = RecordFile & { _errors?: string[] };
+  const [previewData, setPreviewData] = useState<PreviewRecord[]>([]);
   const [fileName, setFileName] = useState('');
   const [holidays, setHolidays] = useState<Holiday[]>([]);
   const [loading, setLoading] = useState(false);
   const [mode, setMode] = useState<'create' | 'update'>('create');
+  const [viewFilter, setViewFilter] = useState<'all' | 'valid' | 'errors'>('all');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -45,6 +47,7 @@ const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImport, em
         fetchHolidays().then(setHolidays);
         setPreviewData([]);
         setFileName('');
+        setViewFilter('all');
         if(fileInputRef.current) fileInputRef.current.value = '';
     }
   }, [isOpen]);
@@ -199,11 +202,29 @@ const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImport, em
             const landPlotRaw = getVal(['THỬA', 'THỬA ĐẤT SỐ']);
             if (landPlotRaw !== undefined) record.landPlot = String(landPlotRaw);
 
-            const areaRaw = getVal(['DIỆN TÍCH', 'AREA']);
-            if (areaRaw !== undefined) record.area = parseFloat(String(areaRaw)) || 0;
+            const errors: string[] = [];
 
-            const resAreaRaw = getVal(['ĐẤT Ở', 'THỔ CƯ']);
-            if (resAreaRaw !== undefined) record.residentialArea = parseFloat(String(resAreaRaw)) || 0;
+            const rawArea = getVal(['DIỆN TÍCH', 'AREA']);
+            if (rawArea !== undefined && rawArea !== null && rawArea !== '') {
+                const parsedArea = parseFloat(String(rawArea));
+                record.area = isNaN(parsedArea) ? 0 : parsedArea;
+                if (isNaN(parsedArea)) {
+                    errors.push(`Diện tích "${rawArea}" không hợp lệ.`);
+                }
+            } else if (rawArea !== undefined) {
+                record.area = null;
+            }
+
+            const rawResArea = getVal(['ĐẤT Ở', 'THỔ CƯ']);
+            if (rawResArea !== undefined && rawResArea !== null && rawResArea !== '') {
+                 const parsedResArea = parseFloat(String(rawResArea));
+                 record.residentialArea = isNaN(parsedResArea) ? 0 : parsedResArea;
+                 if (isNaN(parsedResArea)) {
+                     errors.push(`Đất ở "${rawResArea}" không hợp lệ.`);
+                 }
+            } else if (rawResArea !== undefined) {
+                 record.residentialArea = null;
+            }
 
             const issueNumRaw = getVal(['SỐ PHÁT HÀNH']);
             if (issueNumRaw !== undefined) record.issueNumber = String(issueNumRaw);
@@ -295,12 +316,20 @@ const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImport, em
             }
 
             // ID giả lập cho preview
-            record.id = Math.random().toString(36).substr(2, 9);
+            record.id = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substr(2, 9);
             
+            if (mode === 'create') {
+                if (!record.customerName) errors.push("Thiếu tên Chủ sử dụng.");
+                if (!record.recordType) errors.push("Thiếu Loại hồ sơ.");
+            } else {
+                if (!record.code) errors.push("Thiếu Mã HS (Bắt buộc để cập nhật).");
+            }
+
+            record._errors = errors;
             mappedRecords.push(record);
         }
 
-        setPreviewData(mappedRecords as RecordFile[]);
+        setPreviewData(mappedRecords as PreviewRecord[]);
         setLoading(false);
 
       } catch (error) {
@@ -409,9 +438,35 @@ const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImport, em
                     <FileSpreadsheet size={18} /> Tải File Mẫu
                 </button>
                 {fileName && <span className="text-sm text-gray-600 font-medium">{fileName}</span>}
-                {previewData.length > 0 && <div className="ml-auto flex items-center gap-2 text-sm text-blue-700 bg-blue-100 px-3 py-1.5 rounded-full"><Check size={16} /> Đã đọc <strong>{previewData.length}</strong> dòng hợp lệ</div>}
+                {previewData.length > 0 && <div className="ml-auto flex items-center gap-2 text-sm text-blue-700 bg-blue-100 px-3 py-1.5 rounded-full">
+                    <Check size={16} /> Đã đọc <strong>{previewData.length}</strong> dòng
+                </div>}
             </div>
         </div>
+
+        {/* CÔNG CỤ LỌC (CHỈ HIỂN THỊ KHI CÓ DATA) */}
+        {previewData.length > 0 && !loading && (
+            <div className="bg-white border-b px-5 py-3 flex gap-2 shrink-0">
+                <button 
+                    onClick={() => setViewFilter('all')}
+                    className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${viewFilter === 'all' ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                >
+                    Tất cả ({previewData.length})
+                </button>
+                <button 
+                    onClick={() => setViewFilter('valid')}
+                    className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${viewFilter === 'valid' ? 'bg-green-600 text-white' : 'bg-green-50 text-green-700 hover:bg-green-100 border border-green-200'}`}
+                >
+                    Hợp lệ ({previewData.filter(r => !r._errors?.length).length})
+                </button>
+                <button 
+                    onClick={() => setViewFilter('errors')}
+                    className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${viewFilter === 'errors' ? 'bg-red-600 text-white' : 'bg-red-50 text-red-700 hover:bg-red-100 border border-red-200'}`}
+                >
+                    Có lỗi ({previewData.filter(r => r._errors?.length).length})
+                </button>
+            </div>
+        )}
 
         {/* PREVIEW TABLE */}
         <div className="flex-1 overflow-auto p-0">
@@ -430,21 +485,38 @@ const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImport, em
                             <th className="p-3 border-b">Trạng Thái (Dự kiến)</th>
                             <th className="p-3 border-b">Ngày Xuất</th>
                             <th className="p-3 border-b">Đợt</th>
-                            <th className="p-3 border-b">Ghi Chú</th>
+                            <th className="p-3 border-b">Kiểm duyệt lỗi</th>
                         </tr>
                     </thead>
                     <tbody className="text-sm text-gray-700 divide-y divide-gray-100">
-                        {previewData.map((record, idx) => (
-                            <tr key={idx} className="hover:bg-blue-50">
-                                <td className="p-3">{idx + 1}</td>
-                                <td className="p-3 font-medium text-blue-600">{record.code}</td>
-                                <td className="p-3 font-medium text-gray-500">{record.customerName || <span className="text-gray-300 italic">(Giữ nguyên)</span>}</td>
-                                <td className="p-3">{record.status ? <span className={`text-xs px-2 py-1 rounded-full font-bold ${record.status === RecordStatus.HANDOVER ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>{record.status}</span> : <span className="text-gray-300 italic">(Giữ nguyên)</span>}</td>
-                                <td className="p-3 font-mono text-green-700">{record.exportDate ? record.exportDate.split('T')[0] : '-'}</td>
-                                <td className="p-3 font-bold">{record.exportBatch || '-'}</td>
-                                <td className="p-3 text-gray-500 italic truncate max-w-[200px]">{record.content}</td>
-                            </tr>
-                        ))}
+                        {previewData.filter(r => {
+                            if (viewFilter === 'valid') return !r._errors?.length;
+                            if (viewFilter === 'errors') return r._errors && r._errors.length > 0;
+                            return true;
+                        }).map((record, idx) => {
+                            const hasError = record._errors && record._errors.length > 0;
+                            // Find original index for display
+                            const originalIdx = previewData.indexOf(record) + 1;
+                            return (
+                                <tr key={originalIdx} className={`hover:bg-blue-50 ${hasError ? 'bg-red-50' : ''}`}>
+                                    <td className="p-3">{originalIdx}</td>
+                                    <td className="p-3 font-medium text-blue-600">{record.code}</td>
+                                    <td className="p-3 font-medium text-gray-500">{record.customerName || <span className="text-gray-300 italic">(Giữ nguyên)</span>}</td>
+                                    <td className="p-3">{record.status ? <span className={`text-xs px-2 py-1 rounded-full font-bold ${record.status === RecordStatus.HANDOVER ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>{record.status}</span> : <span className="text-gray-300 italic">(Giữ nguyên)</span>}</td>
+                                    <td className="p-3 font-mono text-green-700">{record.exportDate ? record.exportDate.split('T')[0] : '-'}</td>
+                                    <td className="p-3 font-bold">{record.exportBatch || '-'}</td>
+                                    <td className="p-3">
+                                        {hasError ? (
+                                            <ul className="text-red-600 list-disc pl-4 text-xs font-medium">
+                                                {record._errors!.map((err, i) => <li key={i}>{err}</li>)}
+                                            </ul>
+                                        ) : (
+                                            <span className="text-green-600 text-xs flex items-center gap-1 font-medium"><Check size={14} /> Hợp lệ</span>
+                                        )}
+                                    </td>
+                                </tr>
+                            );
+                        })}
                     </tbody>
                 </table>
             ) : (
@@ -456,11 +528,22 @@ const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImport, em
         </div>
 
         {/* FOOTER */}
-        <div className="p-5 border-t bg-white flex justify-end gap-3 shrink-0 rounded-b-lg">
-            <button onClick={onClose} className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 font-medium">Hủy bỏ</button>
-            <button onClick={handleSave} disabled={previewData.length === 0} className={`flex items-center gap-2 px-6 py-2 text-white rounded-md disabled:opacity-50 font-medium shadow-sm active:scale-95 hover:opacity-90 ${mode === 'create' ? 'bg-blue-600' : 'bg-orange-600'}`}>
-                <Save size={18} /> {mode === 'create' ? 'Lưu vào hệ thống' : 'Tiến hành cập nhật'}
-            </button>
+        <div className="p-5 border-t bg-white flex justify-between items-center shrink-0 rounded-b-lg">
+            {previewData.length > 0 ? (
+                <div className="flex gap-4 text-sm font-medium">
+                    <span className="text-green-600">✅ Hợp lệ: {previewData.filter(r => !r._errors?.length).length}</span>
+                    {previewData.some(r => r._errors?.length) && <span className="text-red-500">❌ Lỗi: {previewData.filter(r => r._errors?.length).length} (Vui lòng sửa Excel và tải lại)</span>}
+                </div>
+            ) : <div />}
+            <div className="flex gap-3">
+                <button onClick={onClose} className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 font-medium">Hủy bỏ</button>
+                <button 
+                    onClick={handleSave} 
+                    disabled={previewData.length === 0 || previewData.some(r => r._errors?.length)} 
+                    className={`flex items-center gap-2 px-6 py-2 text-white rounded-md disabled:opacity-50 font-medium shadow-sm active:scale-95 hover:opacity-90 ${mode === 'create' ? 'bg-blue-600' : 'bg-orange-600'}`}>
+                    <Save size={18} /> {mode === 'create' ? 'Lưu vào hệ thống' : 'Tiến hành cập nhật'}
+                </button>
+            </div>
         </div>
       </div>
     </div>

@@ -128,7 +128,7 @@ export const useAppData = (currentUser: User | null) => {
                 return updated;
             }
         } else {
-            const newRecord = await createRecordApi({ ...recordData, id: Math.random().toString(36).substr(2, 9) });
+            const newRecord = await createRecordApi({ ...recordData, id: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substr(2, 9) });
             if (newRecord) {
                 setRecords(prev => [newRecord, ...prev]);
                 return newRecord;

@@ -258,7 +258,7 @@ function App() {
       if (mode === 'create') {
           const result = await handleImportRecords(data);
           if (result) {
-              setToast({ type: 'success', message: `Đã nhập dữ liệu thành công.` });
+              setToast({ type: 'success', message: `Đã nhập thành công ${data.length} hồ sơ mới.` });
               loadData();
               return true;
           } else {
