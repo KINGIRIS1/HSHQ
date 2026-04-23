@@ -314,8 +314,8 @@ function App() {
       setToast({ type: 'success', message: `Đã giao ${assignTargetRecords.length} hồ sơ thành công!` });
   };
 
-  const getUpdatesForStatusChange = (newStatus: RecordStatus) => {
-      const nowStr = new Date().toISOString();
+  const getUpdatesForStatusChange = (newStatus: RecordStatus, customDateStr?: string) => {
+      const targetDateStr = customDateStr || new Date().toISOString();
       const updates: any = { status: newStatus };
 
       switch (newStatus) {
@@ -330,7 +330,7 @@ function App() {
               break;
           case RecordStatus.ASSIGNED:
           case RecordStatus.IN_PROGRESS:
-              if (!updates.assignedDate) updates.assignedDate = nowStr;
+              updates.assignedDate = targetDateStr;
               updates.submissionDate = null;
               updates.approvalDate = null;
               updates.completedDate = null;
@@ -341,7 +341,7 @@ function App() {
           // MỚI: Trạng thái Đã thực hiện
           case RecordStatus.COMPLETED_WORK:
               // Giữ nguyên assignedDate
-              updates.completedWorkDate = nowStr;
+              updates.completedWorkDate = targetDateStr;
               updates.pendingCheckDate = null;
               updates.checkedDate = null;
               updates.submissionDate = null; 
@@ -349,7 +349,7 @@ function App() {
               updates.completedDate = null;
               break;
           case RecordStatus.PENDING_CHECK:
-              updates.pendingCheckDate = nowStr;
+              updates.pendingCheckDate = targetDateStr;
               updates.checkedDate = null;
               updates.submissionDate = null;
               updates.approvalDate = null;
@@ -357,46 +357,46 @@ function App() {
               updates.resultReturnedDate = null;
               break;
           case RecordStatus.CHECKED:
-              updates.checkedDate = nowStr;
+              updates.checkedDate = targetDateStr;
               updates.submissionDate = null;
               updates.approvalDate = null;
               updates.completedDate = null;
               updates.resultReturnedDate = null;
               break;
           case RecordStatus.PENDING_SIGN:
-              updates.submissionDate = nowStr; 
+              updates.submissionDate = targetDateStr; 
               updates.approvalDate = null;
               updates.completedDate = null;
               updates.resultReturnedDate = null;
               break;
           case RecordStatus.SIGNED:
-              updates.approvalDate = nowStr; 
+              updates.approvalDate = targetDateStr; 
               updates.completedDate = null;
               updates.resultReturnedDate = null;
               break;
           case RecordStatus.HANDOVER:
-              updates.completedDate = nowStr; 
+              updates.completedDate = targetDateStr; 
               updates.resultReturnedDate = null;
               break;
           case RecordStatus.RETURNED:
-              updates.resultReturnedDate = nowStr;
-              if (!updates.completedDate) updates.completedDate = nowStr;
+              updates.resultReturnedDate = targetDateStr;
+              if (!updates.completedDate) updates.completedDate = targetDateStr;
               break;
       }
       return updates;
   };
 
-  const handleBulkUpdate = async (field: keyof RecordFile, value: any) => {
+  const handleBulkUpdate = async (field: keyof RecordFile, value: any, customDateStr?: string) => {
       const selectedIds = Array.from(selectedRecordIds);
       let updates: any = { [field]: value };
-      const nowStr = new Date().toISOString();
+      const targetDateStr = customDateStr || new Date().toISOString();
 
       if (field === 'status') {
-          updates = getUpdatesForStatusChange(value as RecordStatus);
+          updates = getUpdatesForStatusChange(value as RecordStatus, targetDateStr);
       }
       
       if (field === 'assignedTo') {
-          updates.assignedDate = nowStr;
+          updates.assignedDate = targetDateStr;
           updates.status = RecordStatus.ASSIGNED;
           updates.submissionDate = null;
           updates.approvalDate = null;

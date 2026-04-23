@@ -10,7 +10,7 @@ interface BulkUpdateModalProps {
   selectedRecords: RecordFile[];
   employees: Employee[];
   wards: string[];
-  onConfirm: (field: keyof RecordFile, value: any) => Promise<void>;
+  onConfirm: (field: keyof RecordFile, value: any, customDate?: string) => Promise<void>;
 }
 
 const BulkUpdateModal: React.FC<BulkUpdateModalProps> = ({ 
@@ -18,6 +18,8 @@ const BulkUpdateModal: React.FC<BulkUpdateModalProps> = ({
 }) => {
   const [targetField, setTargetField] = useState<string>('status');
   const [targetValue, setTargetValue] = useState<string>('');
+  const [useCustomDate, setUseCustomDate] = useState<boolean>(false);
+  const [customDate, setCustomDate] = useState<string>('');
   const [isProcessing, setIsProcessing] = useState(false);
 
   if (!isOpen) return null;
@@ -29,11 +31,14 @@ const BulkUpdateModal: React.FC<BulkUpdateModalProps> = ({
     }
     if (confirm(`Bạn có chắc chắn muốn cập nhật ${selectedRecords.length} hồ sơ đang chọn không?`)) {
         setIsProcessing(true);
-        await onConfirm(targetField as keyof RecordFile, targetValue);
+        const isoDate = useCustomDate && customDate ? new Date(customDate).toISOString() : undefined;
+        await onConfirm(targetField as keyof RecordFile, targetValue, isoDate);
         setIsProcessing(false);
         onClose();
     }
   };
+
+  const showDatePicker = targetField === 'status' || targetField === 'assignedTo';
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[70] p-4 backdrop-blur-sm">
@@ -64,7 +69,12 @@ const BulkUpdateModal: React.FC<BulkUpdateModalProps> = ({
                     <select 
                         className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none font-medium"
                         value={targetField}
-                        onChange={(e) => { setTargetField(e.target.value); setTargetValue(''); }}
+                        onChange={(e) => { 
+                            setTargetField(e.target.value); 
+                            setTargetValue(''); 
+                            setUseCustomDate(false);
+                            setCustomDate('');
+                        }}
                     >
                         <option value="status">Trạng thái hồ sơ (Quy trình)</option>
                         <option value="assignedTo">Người xử lý (Giao việc)</option>
@@ -129,6 +139,33 @@ const BulkUpdateModal: React.FC<BulkUpdateModalProps> = ({
                         />
                     )}
                 </div>
+
+                {showDatePicker && (
+                    <div className="pt-2">
+                        <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2 cursor-pointer">
+                            <input 
+                                type="checkbox" 
+                                className="rounded text-orange-600 focus:ring-orange-500"
+                                checked={useCustomDate}
+                                onChange={(e) => setUseCustomDate(e.target.checked)}
+                            />
+                            Xác định ngày thực hiện / ngày giao việc (Tùy chọn)
+                        </label>
+                        
+                        {useCustomDate && (
+                            <input 
+                                type="date"
+                                className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-orange-500 outline-none"
+                                value={customDate}
+                                onChange={(e) => setCustomDate(e.target.value)}
+                            />
+                        )}
+                        <p className="text-xs text-gray-500 mt-1">
+                            Nếu không chọn, hệ thống sẽ mặc định dùng mốc thời gian hiện tại.
+                        </p>
+                    </div>
+                )}
+
             </div>
         </div>
 
@@ -138,7 +175,7 @@ const BulkUpdateModal: React.FC<BulkUpdateModalProps> = ({
             </button>
             <button 
                 onClick={handleConfirm} 
-                disabled={isProcessing || !targetValue}
+                disabled={isProcessing || !targetValue || (useCustomDate && !customDate)}
                 className="flex items-center gap-2 px-6 py-2.5 bg-orange-600 text-white rounded-lg hover:bg-orange-700 font-bold text-sm shadow-md transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
             >
                 {isProcessing ? 'Đang xử lý...' : <><CheckCircle2 size={18} /> Cập nhật ngay</>}
