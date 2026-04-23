@@ -112,8 +112,8 @@ const CongVanView: React.FC<CongVanViewProps> = ({ currentUser }) => {
 
         const reader = new FileReader();
         reader.onload = async (evt) => {
-            const bstr = evt.target?.result;
-            const wb = XLSX.read(bstr, { type: 'binary' });
+            const ab = evt.target?.result;
+            const wb = XLSX.read(ab, { type: 'array' });
             const wsname = wb.SheetNames[0];
             const ws = wb.Sheets[wsname];
             const data = XLSX.utils.sheet_to_json(ws, { header: 1 });
@@ -264,7 +264,7 @@ const CongVanView: React.FC<CongVanViewProps> = ({ currentUser }) => {
                 alert('Không tìm thấy dữ liệu hợp lệ trong file.');
             }
         };
-        reader.readAsBinaryString(file);
+        reader.readAsArrayBuffer(file);
     };
 
     const handleAssign = () => {

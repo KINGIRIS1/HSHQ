@@ -342,8 +342,8 @@ const VaoSoView: React.FC<VaoSoViewProps> = ({ currentUser, wards }) => {
         const reader = new FileReader();
         reader.onload = async (evt) => {
             try {
-                const bstr = evt.target?.result;
-                const wb = XLSX.read(bstr, { type: 'binary' });
+                const ab = evt.target?.result;
+                const wb = XLSX.read(ab, { type: 'array' });
                 const wsname = wb.SheetNames[0];
                 const ws = wb.Sheets[wsname];
                 const data: any[][] = XLSX.utils.sheet_to_json(ws, { header: 1 });
@@ -510,7 +510,7 @@ const VaoSoView: React.FC<VaoSoViewProps> = ({ currentUser, wards }) => {
                 if (fileInputRef.current) fileInputRef.current.value = '';
             }
         };
-        reader.readAsBinaryString(file);
+        reader.readAsArrayBuffer(file);
     };
 
     const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {

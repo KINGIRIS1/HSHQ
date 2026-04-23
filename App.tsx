@@ -256,7 +256,15 @@ function App() {
 
   const onImportRecords = async (data: RecordFile[], mode: 'create' | 'update') => {
       if (mode === 'create') {
-          return handleImportRecords(data);
+          const result = await handleImportRecords(data);
+          if (result) {
+              setToast({ type: 'success', message: `Đã nhập dữ liệu thành công.` });
+              loadData();
+              return true;
+          } else {
+              setToast({ type: 'error', message: "Lỗi khi nhập dữ liệu. Vui lòng thử lại." });
+              return false;
+          }
       } else {
           const result = await forceUpdateRecordsBatchApi(data);
           if (result.success) {

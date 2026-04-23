@@ -9,7 +9,7 @@ import { X, Upload, FileSpreadsheet, Save, Loader2, AlertCircle, Check, RefreshC
 interface ImportModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onImport: (records: RecordFile[], mode: 'create' | 'update') => void;
+  onImport: (records: RecordFile[], mode: 'create' | 'update') => Promise<boolean>;
   employees: Employee[];
 }
 
@@ -124,8 +124,8 @@ const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImport, em
     const reader = new FileReader();
     reader.onload = (evt) => {
       try {
-        const bstr = evt.target?.result;
-        const wb = XLSX.read(bstr, { type: 'binary' });
+        const ab = evt.target?.result;
+        const wb = XLSX.read(ab, { type: 'array' });
         const wsname = wb.SheetNames[0];
         const ws = wb.Sheets[wsname];
         const data = XLSX.utils.sheet_to_json(ws, { header: 1 });
@@ -309,12 +309,16 @@ const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImport, em
         setLoading(false);
       }
     };
-    reader.readAsBinaryString(file);
+    reader.readAsArrayBuffer(file);
   };
 
-  const handleSave = () => {
-      onImport(previewData, mode);
-      onClose();
+  const handleSave = async () => {
+      setLoading(true);
+      const success = await onImport(previewData, mode);
+      setLoading(false);
+      if (success) {
+          onClose();
+      }
   };
 
   const handleDownloadTemplate = () => {

@@ -53,8 +53,8 @@ const BulkImport: React.FC<BulkImportProps> = ({ onSave, calculateDeadline, calc
 
       const reader = new FileReader();
       reader.onload = (evt) => {
-          const bstr = evt.target?.result;
-          const wb = XLSX.read(bstr, { type: 'binary' });
+          const ab = evt.target?.result;
+          const wb = XLSX.read(ab, { type: 'array' });
           const wsname = wb.SheetNames[0];
           const ws = wb.Sheets[wsname];
           const data = XLSX.utils.sheet_to_json(ws, { header: 1 });
@@ -149,7 +149,7 @@ const BulkImport: React.FC<BulkImportProps> = ({ onSave, calculateDeadline, calc
           setBulkRecords(newBulkRecords);
           if (bulkFileInputRef.current) bulkFileInputRef.current.value = '';
       };
-      reader.readAsBinaryString(file);
+      reader.readAsArrayBuffer(file);
   };
 
   const handleGenerateBulkCode = (index: number) => {
@@ -179,7 +179,11 @@ const BulkImport: React.FC<BulkImportProps> = ({ onSave, calculateDeadline, calc
 
       const savedRecord = await onSave(newRecord);
       if (savedRecord) {
-          setBulkRecords(prev => prev.filter(r => r.tempId !== record.tempId));
+          setBulkRecords(prev => {
+              const newList = [...prev];
+              newList[index] = { ...newList[index], isSaved: true, code: savedRecord.code };
+              return newList;
+          });
       } else {
           alert("Lỗi khi lưu.");
       }

@@ -176,59 +176,59 @@ export const sanitizeData = (data: any, allowedColumns: string[]) => {
 export const mapContractToDb = (c: Contract) => ({
     id: c.id,
     code: c.code,
-    customer_name: c.customerName,
-    phone_number: c.phoneNumber,
+    "customerName": c.customerName,
+    "phoneNumber": c.phoneNumber,
     ward: c.ward,
     address: c.address,
-    land_plot: c.landPlot,
-    map_sheet: c.mapSheet,
+    "landPlot": c.landPlot,
+    "mapSheet": c.mapSheet,
     area: c.area,
-    contract_type: c.contractType,
-    service_type: c.serviceType,
-    area_type: c.areaType,
-    plot_count: c.plotCount,
-    marker_count: c.markerCount,
-    split_items: c.splitItems,
+    "contractType": c.contractType,
+    "serviceType": c.serviceType,
+    "areaType": c.areaType,
+    "plotCount": c.plotCount,
+    "markerCount": c.markerCount,
+    "splitItems": c.splitItems,
     quantity: c.quantity,
-    unit_price: c.unitPrice,
-    vat_rate: c.vatRate,
-    vat_amount: c.vatAmount,
-    total_amount: c.totalAmount,
+    "unitPrice": c.unitPrice,
+    "vatRate": c.vatRate,
+    "vatAmount": c.vatAmount,
+    "totalAmount": c.totalAmount,
     deposit: c.deposit,
     content: c.content,
-    created_date: c.createdDate,
+    "createdDate": c.createdDate,
     status: c.status,
-    liquidation_area: c.liquidationArea,
-    liquidation_amount: c.liquidationAmount
+    "liquidationArea": c.liquidationArea,
+    "liquidationAmount": c.liquidationAmount
 });
 
 export const mapContractFromDb = (c: any): Contract => ({
     id: c.id,
     code: c.code,
-    customerName: c.customer_name || c.customerName, 
-    phoneNumber: c.phone_number || c.phoneNumber,
+    customerName: c.customerName || c.customer_name, 
+    phoneNumber: c.phoneNumber || c.phone_number,
     ward: c.ward,
     address: c.address,
-    landPlot: c.land_plot || c.landPlot,
-    mapSheet: c.map_sheet || c.mapSheet,
+    landPlot: c.landPlot || c.land_plot,
+    mapSheet: c.mapSheet || c.map_sheet,
     area: c.area,
-    contractType: c.contract_type || c.contractType,
-    serviceType: c.service_type || c.serviceType,
-    areaType: c.area_type || c.areaType,
-    plotCount: c.plot_count || c.plotCount,
-    markerCount: c.marker_count || c.markerCount,
-    splitItems: c.split_items || c.splitItems,
+    contractType: c.contractType || c.contract_type,
+    serviceType: c.serviceType || c.service_type,
+    areaType: c.areaType || c.area_type,
+    plotCount: c.plotCount || c.plot_count,
+    markerCount: c.markerCount || c.marker_count,
+    splitItems: c.splitItems || c.split_items,
     quantity: c.quantity,
-    unitPrice: c.unit_price || c.unitPrice,
-    vatRate: c.vat_rate || c.vatRate,
-    vatAmount: c.vat_amount || c.vatAmount,
-    totalAmount: c.total_amount || c.totalAmount,
+    unitPrice: c.unitPrice || c.unit_price,
+    vatRate: c.vatRate || c.vat_rate,
+    vatAmount: c.vatAmount || c.vat_amount,
+    totalAmount: c.totalAmount || c.total_amount,
     deposit: c.deposit,
     content: c.content,
-    createdDate: c.created_date || c.createdDate,
+    createdDate: c.createdDate || c.created_date,
     status: c.status,
-    liquidationArea: c.liquidation_area || c.liquidationArea,
-    liquidationAmount: c.liquidation_amount || c.liquidationAmount
+    liquidationArea: c.liquidationArea || c.liquidation_area,
+    liquidationAmount: c.liquidationAmount || c.liquidation_amount
 });
 
 export const mapEmployeeToDb = (e: Employee) => ({
@@ -236,21 +236,27 @@ export const mapEmployeeToDb = (e: Employee) => ({
     name: e.name,
     department: e.department,
     position: e.position,
-    managed_wards: Array.isArray(e.managedWards) ? JSON.stringify(e.managedWards) : e.managedWards
+    "managedWards": Array.isArray(e.managedWards) ? JSON.stringify(e.managedWards) : e.managedWards
 });
 
 export const mapEmployeeFromDb = (e: any): Employee => {
     let parsedWards = [];
-    if (typeof e.managed_wards === 'string') {
+    if (typeof e.managedWards === 'string') {
+        try {
+            parsedWards = JSON.parse(e.managedWards);
+        } catch (err) {
+            parsedWards = e.managedWards.split(',').map((w: string) => w.trim()).filter(Boolean);
+        }
+    } else if (typeof e.managed_wards === 'string') {
         try {
             parsedWards = JSON.parse(e.managed_wards);
         } catch (err) {
             parsedWards = e.managed_wards.split(',').map((w: string) => w.trim()).filter(Boolean);
         }
-    } else if (Array.isArray(e.managed_wards)) {
-        parsedWards = e.managed_wards;
     } else if (Array.isArray(e.managedWards)) {
         parsedWards = e.managedWards;
+    } else if (Array.isArray(e.managed_wards)) {
+        parsedWards = e.managed_wards;
     }
     
     return {
@@ -267,7 +273,7 @@ export const mapUserToDb = (u: User) => ({
     password: u.password,
     name: u.name,
     role: u.role,
-    employeeid: u.employeeId
+    "employeeId": u.employeeId
 });
 
 export const mapUserFromDb = (u: any): User => ({
@@ -275,31 +281,31 @@ export const mapUserFromDb = (u: any): User => ({
     password: u.password,
     name: u.name,
     role: u.role,
-    employeeId: u.employeeid || u.employeeId
+    employeeId: u.employeeId || u.employeeid
 });
 
 export const mapPriceFromDb = (item: any): PriceItem => ({
     id: item.id,
-    serviceGroup: item.service_group || item.serviceGroup,
-    areaType: item.area_type || item.areaType,
-    serviceName: item.service_name || item.serviceName,
-    minArea: item.min_area !== undefined ? item.min_area : item.minArea,
-    maxArea: item.max_area !== undefined ? item.max_area : item.maxArea,
+    serviceGroup: item.serviceGroup || item.service_group,
+    areaType: item.areaType || item.area_type,
+    serviceName: item.serviceName || item.service_name,
+    minArea: item.minArea !== undefined ? item.minArea : item.min_area,
+    maxArea: item.maxArea !== undefined ? item.maxArea : item.max_area,
     unit: item.unit,
     price: item.price,
-    vatRate: item.vat_rate !== undefined ? item.vat_rate : item.vatRate,
-    vatIsPercent: item.vat_is_percent !== undefined ? item.vat_is_percent : item.vatIsPercent
+    vatRate: item.vatRate !== undefined ? item.vatRate : item.vat_rate,
+    vatIsPercent: item.vatIsPercent !== undefined ? item.vatIsPercent : item.vat_is_percent
 });
 
 export const mapPriceToDb = (item: PriceItem) => ({
     id: item.id,
-    service_group: item.serviceGroup,
-    area_type: item.areaType,
-    service_name: item.serviceName,
-    min_area: item.minArea,
-    max_area: item.maxArea,
+    "serviceGroup": item.serviceGroup,
+    "areaType": item.areaType,
+    "serviceName": item.serviceName,
+    "minArea": item.minArea,
+    "maxArea": item.maxArea,
     unit: item.unit,
     price: item.price,
-    vat_rate: item.vatRate,
-    vat_is_percent: item.vatIsPercent
+    "vatRate": item.vatRate,
+    "vatIsPercent": item.vatIsPercent
 });

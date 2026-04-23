@@ -205,7 +205,7 @@ export const importArchiveRecords = async (records: Partial<ArchiveRecord>[]): P
         // Chuẩn hóa dữ liệu trước khi insert
         const payload = records.map(r => {
             const p: any = { ...r };
-            delete p.id; // Để DB tự sinh UUID
+            if (!p.id) p.id = Math.random().toString(36).substr(2, 9); // Sinh ID nếu chưa có
             if (p.ngay_thang === '') p.ngay_thang = null;
             return p;
         });

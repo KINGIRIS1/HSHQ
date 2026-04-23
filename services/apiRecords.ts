@@ -186,7 +186,12 @@ export const createRecordApi = async (record: RecordFile): Promise<RecordFile | 
             finalCode = await getNextGlobalRecordCode(record.receivedDate || new Date().toISOString());
         }
         
-        const payload = sanitizeData({ ...record, code: finalCode }, RECORD_DB_COLUMNS);
+        const recordToSave = { ...record, code: finalCode };
+        if (!recordToSave.id) {
+            recordToSave.id = Math.random().toString(36).substr(2, 9);
+        }
+        
+        const payload = sanitizeData(recordToSave, RECORD_DB_COLUMNS);
         const { data, error } = await supabase.from('land_records').insert([payload]).select();
         
         if (error && error.code === 'PGRST204') {
@@ -247,27 +252,40 @@ export const createRecordsBatchApi = async (records: RecordFile[]): Promise<bool
         const payload = [];
         for (const r of records) {
             let finalCode = r.code;
-            const isGeneratedFormat = finalCode && (/^[A-ZĐ]{2,3}-\d{6}-\d{3,4}$/.test(finalCode) || /^\d{6}-\d{3,4}$/.test(finalCode));
-            if (!finalCode || finalCode.includes('?') || isGeneratedFormat) {
+            
+            // Chỉ tạo mới code tự động nếu như mã bị thiếu hoặc có chứa dấu '?' (mã nháp)
+            // KHÔNG GHI ĐÈ các mã có định dạng chuẩn (isGeneratedFormat) vì đây là data từ Excel đưa vào
+            if (!finalCode || finalCode.includes('?')) {
                 finalCode = await getNextGlobalRecordCode(r.receivedDate || new Date().toISOString());
             }
-            payload.push(sanitizeData({ ...r, code: finalCode }, RECORD_DB_COLUMNS));
+            
+            const recordPayload = { ...r, code: finalCode };
+            if (!recordPayload.id) {
+                recordPayload.id = Math.random().toString(36).substr(2, 9);
+            }
+            
+            payload.push(sanitizeData(recordPayload, RECORD_DB_COLUMNS));
         }
-        const { error } = await supabase.from('land_records').insert(payload);
-        
-        if (error && error.code === 'PGRST204') {
-            console.warn("⚠️ [Fallback] Database is missing columns. Retrying batch insert without new columns...");
-            const fallbackPayload = payload.map(p => {
-                const fp = { ...p };
-                OPTIONAL_NEW_COLUMNS.forEach(col => delete fp[col]);
-                return fp;
-            });
-            const { error: fallbackError } = await supabase.from('land_records').insert(fallbackPayload);
-            if (fallbackError) throw fallbackError;
-            return true;
+
+        const CHUNK_SIZE = 500;
+        for (let i = 0; i < payload.length; i += CHUNK_SIZE) {
+            const chunk = payload.slice(i, i + CHUNK_SIZE);
+            const { error } = await supabase.from('land_records').insert(chunk);
+            
+            if (error && error.code === 'PGRST204') {
+                console.warn(`⚠️ [Fallback] Database is missing columns. Retrying batch insert chunk ${i} without new columns...`);
+                const fallbackPayload = chunk.map(p => {
+                    const fp = { ...p };
+                    OPTIONAL_NEW_COLUMNS.forEach(col => delete fp[col]);
+                    return fp;
+                });
+                const { error: fallbackError } = await supabase.from('land_records').insert(fallbackPayload);
+                if (fallbackError) throw fallbackError;
+            } else if (error) {
+                throw error;
+            }
         }
         
-        if (error) throw error;
         return true;
     } catch (error) {
         logError("createRecordsBatchApi", error);
@@ -287,81 +305,79 @@ export const forceUpdateRecordsBatchApi = async (records: RecordFile[]): Promise
         const rawCodes = records.map(r => r.code).filter(c => c);
         if (rawCodes.length === 0) return { success: true, count: 0 };
 
-        let allDbRecords: any[] = [];
-        let from = 0;
-        const step = 1000;
-        let hasMore = true;
+        let updateCount = 0;
+        const CHUNK_SIZE = 500;
 
-        while (hasMore) {
-            const { data, error } = await supabase
+        for (let i = 0; i < records.length; i += CHUNK_SIZE) {
+            const chunkRecords = records.slice(i, i + CHUNK_SIZE);
+            const chunkCodes = chunkRecords.map(r => r.code).filter(c => c);
+            const normalizedChunkCodes = chunkCodes.map(c => normalizeCode(c));
+            
+            const searchCodes = Array.from(new Set([...chunkCodes, ...normalizedChunkCodes]));
+
+            if (searchCodes.length === 0) continue;
+
+            const { data: existingData, error: fetchError } = await supabase
                 .from('land_records')
                 .select('*')
-                .range(from, from + step - 1);
-            
-            if (error) throw error;
+                .in('code', searchCodes);
 
-            if (data && data.length > 0) {
-                allDbRecords = [...allDbRecords, ...data];
-                from += step;
-                if (data.length < step) hasMore = false;
-            } else {
-                hasMore = false;
-            }
-        }
+            if (fetchError) throw fetchError;
 
-        const dbMap = new Map<string, any>();
-        allDbRecords.forEach((r: any) => {
-            if (r.code) {
-                dbMap.set(normalizeCode(r.code), r);
-            }
-        });
-
-        const updatesToPush: any[] = [];
-        let updateCount = 0;
-
-        records.forEach((excelRecord) => {
-            const normCode = normalizeCode(excelRecord.code);
-            const dbRecord = dbMap.get(normCode);
-            
-            if (dbRecord) {
-                const merged = { ...dbRecord };
-                let hasChange = false;
-
-                Object.keys(excelRecord).forEach(key => {
-                    const newVal = (excelRecord as any)[key];
-                    const isValidValue = newVal !== null && newVal !== undefined && newVal !== '';
-                    
-                    if (isValidValue && key !== 'id') {
-                        if (String(merged[key]) !== String(newVal)) {
-                            merged[key] = newVal;
-                            hasChange = true;
-                        }
+            const dbMap = new Map<string, any>();
+            if (existingData) {
+                existingData.forEach((r: any) => {
+                    if (r.code) {
+                        dbMap.set(normalizeCode(r.code), r);
                     }
                 });
+            }
 
-                if (hasChange) {
-                    updatesToPush.push(sanitizeData(merged, RECORD_DB_COLUMNS));
-                    updateCount++;
+            const updatesToPush: any[] = [];
+
+            chunkRecords.forEach((excelRecord) => {
+                const normCode = normalizeCode(excelRecord.code);
+                const dbRecord = dbMap.get(normCode);
+                
+                if (dbRecord) {
+                    const merged = { ...dbRecord };
+                    let hasChange = false;
+
+                    Object.keys(excelRecord).forEach(key => {
+                        const newVal = (excelRecord as any)[key];
+                        const isValidValue = newVal !== null && newVal !== undefined && newVal !== '';
+                        
+                        if (isValidValue && key !== 'id') {
+                            if (String(merged[key]) !== String(newVal)) {
+                                merged[key] = newVal;
+                                hasChange = true;
+                            }
+                        }
+                    });
+
+                    if (hasChange) {
+                        updatesToPush.push(sanitizeData(merged, RECORD_DB_COLUMNS));
+                        updateCount++;
+                    }
+                }
+            });
+
+            if (updatesToPush.length > 0) {
+                const { error: upsertError } = await supabase.from('land_records').upsert(updatesToPush);
+                
+                if (upsertError && upsertError.code === 'PGRST204') {
+                    console.warn(`⚠️ [Fallback] Retrying chunk target upsert without new columns...`);
+                    const fallbackPayload = updatesToPush.map(p => {
+                        const fp = { ...p };
+                        OPTIONAL_NEW_COLUMNS.forEach(col => delete fp[col]);
+                        return fp;
+                    });
+                    const { error: fallbackError } = await supabase.from('land_records').upsert(fallbackPayload);
+                    if (fallbackError) throw fallbackError;
+                } else if (upsertError) {
+                    throw upsertError;
                 }
             }
-        });
-
-        if (updatesToPush.length > 0) {
-            const { error: upsertError } = await supabase.from('land_records').upsert(updatesToPush);
-            
-            if (upsertError && upsertError.code === 'PGRST204') {
-                console.warn("⚠️ [Fallback] Database is missing columns. Retrying batch upsert without new columns...");
-                const fallbackPayload = updatesToPush.map(p => {
-                    const fp = { ...p };
-                    OPTIONAL_NEW_COLUMNS.forEach(col => delete fp[col]);
-                    return fp;
-                });
-                const { error: fallbackError } = await supabase.from('land_records').upsert(fallbackPayload);
-                if (fallbackError) throw fallbackError;
-                return { success: true, count: updateCount };
-            }
-            
-            if (upsertError) throw upsertError;
         }
 
         return { success: true, count: updateCount };

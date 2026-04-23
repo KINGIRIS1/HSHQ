@@ -88,11 +88,9 @@ export const useAppData = (currentUser: User | null) => {
         }
     }, []);
 
-    // Initial Load & Polling
+    // Initial Load (NO POLLING)
     useEffect(() => {
         loadData();
-        const interval = setInterval(loadData, 30000); // 30s refresh
-        return () => clearInterval(interval);
     }, [loadData]);
 
     // --- Record Handlers ---

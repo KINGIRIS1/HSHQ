@@ -65,8 +65,8 @@ const ChuyenDoiToBanDoTab: React.FC<Props> = ({ notify }) => {
         const reader = new FileReader();
         reader.onload = (evt) => {
             try {
-                const bstr = evt.target?.result;
-                const wb = XLSX.read(bstr, { type: 'binary' });
+                const ab = evt.target?.result;
+                const wb = XLSX.read(ab, { type: 'array' });
                 const wsname = wb.SheetNames[0];
                 const ws = wb.Sheets[wsname];
                 const jsonData = XLSX.utils.sheet_to_json(ws, { header: 1 }) as any[][];
@@ -115,7 +115,7 @@ const ChuyenDoiToBanDoTab: React.FC<Props> = ({ notify }) => {
                 notify('Lỗi khi đọc file Excel', 'error');
             }
         };
-        reader.readAsBinaryString(file);
+        reader.readAsArrayBuffer(file);
         if (fileInputRef.current) fileInputRef.current.value = '';
     };
 
