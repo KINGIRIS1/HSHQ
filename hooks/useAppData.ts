@@ -1,11 +1,11 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { RecordFile, Employee, User, RecordStatus, Holiday, RolePermissions, DepartmentPermissions, DEFAULT_ROLE_PERMISSIONS } from '../types';
-import { 
-    fetchRecords, fetchEmployees, fetchUsers, fetchUpdateInfo, fetchHolidays,
+import { fetchRecords, fetchEmployees, fetchUsers, fetchUpdateInfo, fetchHolidays,
     createRecordApi, updateRecordApi, deleteRecordApi, createRecordsBatchApi,
     saveEmployeeApi, deleteEmployeeApi, saveUserApi, deleteUserApi, deleteAllDataApi, getSystemSetting
 } from '../services/api';
+import { supabase } from '../services/supabaseClient';
 import { DEFAULT_WARDS as STATIC_WARDS, APP_VERSION } from '../constants';
 
 export const useAppData = (currentUser: User | null) => {
@@ -92,6 +92,42 @@ export const useAppData = (currentUser: User | null) => {
     useEffect(() => {
         loadData();
     }, [loadData]);
+
+    // Lắng nghe thay đổi Realtime từ bảng land_records
+    useEffect(() => {
+        if (!supabase) return;
+
+        const landRecordsChannel = supabase.channel('land_records_changes')
+            .on(
+                'postgres_changes',
+                { event: 'INSERT', schema: 'public', table: 'land_records' },
+                (payload) => {
+                    setRecords(prev => {
+                        if (prev.some(r => r.id === payload.new.id)) return prev;
+                        return [payload.new as RecordFile, ...prev];
+                    });
+                }
+            )
+            .on(
+                'postgres_changes',
+                { event: 'UPDATE', schema: 'public', table: 'land_records' },
+                (payload) => {
+                    setRecords(prev => prev.map(r => r.id === payload.new.id ? { ...r, ...payload.new } as RecordFile : r));
+                }
+            )
+            .on(
+                'postgres_changes',
+                { event: 'DELETE', schema: 'public', table: 'land_records' },
+                (payload) => {
+                    setRecords(prev => prev.filter(r => r.id !== payload.old.id));
+                }
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(landRecordsChannel);
+        };
+    }, []);
 
     // --- Record Handlers ---
     const handleAddOrUpdateRecord = async (recordData: any): Promise<RecordFile | null> => {

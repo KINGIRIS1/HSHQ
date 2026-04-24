@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { ArchiveRecord, fetchArchiveRecords, saveArchiveRecord, deleteArchiveRecord, importArchiveRecords, updateArchiveRecordsBatch } from '../../services/apiArchive';
+import { useArchiveRealtime } from '../../hooks/useArchiveRealtime';
 import { User } from '../../types';
 import { Loader2, Plus, Search, Trash2, Upload, FileSpreadsheet, Send, CheckCircle2, X, History, Calendar, FileOutput, Settings, Hash, Edit, FileText } from 'lucide-react';
 import * as XLSX from 'xlsx-js-style';
@@ -70,6 +71,8 @@ const VaoSoView: React.FC<VaoSoViewProps> = ({ currentUser, wards }) => {
     const [toDate, setToDate] = useState('');
     const [filterWard, setFilterWard] = useState('');
     const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'scanned'>('all');
+
+    useArchiveRealtime('vaoso', setRecords);
 
     useEffect(() => {
         loadData();
