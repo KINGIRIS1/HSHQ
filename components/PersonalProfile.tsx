@@ -185,12 +185,13 @@ const PersonalProfile: React.FC<PersonalProfileProps> = ({ user, records, isDire
       return filterAndSort(list, searchTerm, sortConfig);
   }, [myRecords, searchTerm, sortConfig]);
 
-  // 4. Hồ sơ Hoàn thành (SIGNED, HANDOVER, RETURNED, WITHDRAWN)
+  // 4. Hồ sơ Hoàn thành (SIGNED, HANDOVER, RETURNED, REJECTED, WITHDRAWN)
   const finishedRecords = useMemo(() => {
       let list = myRecords.filter(r => 
           r.status === RecordStatus.SIGNED || 
           r.status === RecordStatus.HANDOVER || 
           r.status === RecordStatus.RETURNED ||
+          r.status === RecordStatus.REJECTED ||
           r.status === RecordStatus.WITHDRAWN
       );
       return filterAndSort(list, searchTerm, sortConfig);
@@ -202,6 +203,7 @@ const PersonalProfile: React.FC<PersonalProfileProps> = ({ user, records, isDire
           r.reminderDate && 
           r.status !== RecordStatus.HANDOVER && 
           r.status !== RecordStatus.WITHDRAWN &&
+          r.status !== RecordStatus.REJECTED &&
           r.status !== RecordStatus.RETURNED
       );
       // Logic search & sort riêng cho reminder
@@ -442,6 +444,7 @@ const PersonalProfile: React.FC<PersonalProfileProps> = ({ user, records, isDire
           record.status === RecordStatus.HANDOVER || 
           record.status === RecordStatus.RETURNED || 
           record.status === RecordStatus.WITHDRAWN ||
+          record.status === RecordStatus.REJECTED ||
           record.status === RecordStatus.SIGNED ||
           record.exportBatch || 
           record.exportDate ||

@@ -188,10 +188,11 @@ const ReportSection: React.FC<ReportSectionProps> = ({ reportContent, isGenerati
         ).length;
         
         const withdrawn = sourceData.filter(r => r.status === RecordStatus.WITHDRAWN).length;
+        const rejected = sourceData.filter(r => r.status === RecordStatus.REJECTED).length;
         
         // Logic overdue pending: Quá hạn và chưa xong (chưa xuất/chưa trả/chưa rút)
         const overduePending = sourceData.filter(r => {
-            if (r.status === RecordStatus.WITHDRAWN || r.status === RecordStatus.HANDOVER || r.status === RecordStatus.RETURNED || r.status === RecordStatus.SIGNED || r.exportBatch) return false;
+            if (r.status === RecordStatus.WITHDRAWN || r.status === RecordStatus.REJECTED || r.status === RecordStatus.HANDOVER || r.status === RecordStatus.RETURNED || r.status === RecordStatus.SIGNED || r.exportBatch) return false;
             return isRecordOverdue(r);
         }).length;
         
@@ -495,6 +496,7 @@ const ReportSection: React.FC<ReportSectionProps> = ({ reportContent, isGenerati
                                                 <span className={`px-2 py-1 rounded text-xs border ${
                                                     r.status === RecordStatus.HANDOVER || r.status === RecordStatus.RETURNED ? 'bg-green-100 text-green-700 border-green-200' : 
                                                     r.status === RecordStatus.WITHDRAWN ? 'bg-gray-100 text-gray-600 border-gray-200' :
+                                                    r.status === RecordStatus.REJECTED ? 'bg-red-100 text-red-700 border-red-200' :
                                                     isOverdue ? 'bg-red-100 text-red-700 border-red-200 font-bold' :
                                                     'bg-blue-50 text-blue-700 border-blue-100'
                                                 }`}>

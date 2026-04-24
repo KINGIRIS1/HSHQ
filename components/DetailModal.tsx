@@ -373,7 +373,7 @@ export const DetailModal: React.FC<DetailModalProps> = ({ isOpen, onClose, recor
 
   // LOGIC HIỂN THỊ STATUS
   const getDisplayStatus = (r: RecordFile) => {
-      if ((r.exportBatch || r.exportDate) && r.status !== RecordStatus.WITHDRAWN && r.status !== RecordStatus.RETURNED) {
+      if ((r.exportBatch || r.exportDate) && r.status !== RecordStatus.WITHDRAWN && r.status !== RecordStatus.RETURNED && r.status !== RecordStatus.REJECTED) {
           return RecordStatus.HANDOVER;
       }
       return r.status;
@@ -752,9 +752,9 @@ export const DetailModal: React.FC<DetailModalProps> = ({ isOpen, onClose, recor
                             
                             <TimelineItem 
                                 date={record.completedDate} 
-                                label="HOÀN THÀNH" 
+                                label={record.status === RecordStatus.REJECTED ? "HỒ SƠ TRẢ" : record.status === RecordStatus.WITHDRAWN ? "RÚT HỒ SƠ" : "HOÀN THÀNH"} 
                                 icon={CheckSquare}
-                                colorClass={{text: 'text-green-700', border: 'border-green-600', bg: 'bg-green-600'}}
+                                colorClass={{text: record.status === RecordStatus.REJECTED ? 'text-red-700' : 'text-green-700', border: record.status === RecordStatus.REJECTED ? 'border-red-600' : 'border-green-600', bg: record.status === RecordStatus.REJECTED ? 'bg-red-600' : 'bg-green-600'}}
                             />
                             
                             <TimelineItem 

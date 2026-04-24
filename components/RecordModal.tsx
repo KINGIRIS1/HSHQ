@@ -80,13 +80,15 @@ const RecordModal: React.FC<RecordModalProps> = ({ isOpen, onClose, onSubmit, in
     }
 
     if (finalData.status === RecordStatus.WITHDRAWN && !finalData.completedDate) finalData.completedDate = new Date().toISOString();
+    if (finalData.status === RecordStatus.REJECTED && !finalData.completedDate) finalData.completedDate = new Date().toISOString();
+    
     if (finalData.resultReturnedDate && finalData.status !== RecordStatus.RETURNED) {
         finalData.status = RecordStatus.RETURNED;
         if (!finalData.completedDate) finalData.completedDate = finalData.resultReturnedDate;
     }
     
-    // LOGIC QUAN TRỌNG: Nếu có Đợt xuất hoặc Ngày xuất thì phải là HANDOVER (trừ khi Đã rút hoặc Đã trả)
-    if ((finalData.exportBatch || finalData.exportDate) && finalData.status !== RecordStatus.WITHDRAWN && finalData.status !== RecordStatus.RETURNED) {
+    // LOGIC QUAN TRỌNG: Nếu có Đợt xuất hoặc Ngày xuất thì phải là HANDOVER (trừ khi Đã rút, Đã trả hoặc Bị từ chối)
+    if ((finalData.exportBatch || finalData.exportDate) && finalData.status !== RecordStatus.WITHDRAWN && finalData.status !== RecordStatus.RETURNED && finalData.status !== RecordStatus.REJECTED) {
         finalData.status = RecordStatus.HANDOVER;
         // Nếu chưa có completedDate, lấy luôn ngày xuất (nếu có) hoặc hôm nay
         if (!finalData.completedDate) {
@@ -163,8 +165,8 @@ const RecordModal: React.FC<RecordModalProps> = ({ isOpen, onClose, onSubmit, in
                                 <div><label className="block text-xs font-bold text-gray-700 mb-1">Ngày giao NV</label><input type="date" className="w-full border border-gray-300 rounded-md px-3 py-2" value={val(formData.assignedDate)} onChange={(e) => handleChange('assignedDate', e.target.value)} /></div>
                                 <div><label className="block text-xs font-bold text-gray-700 mb-1">Trạng thái</label><select className="w-full border border-gray-300 rounded-md px-3 py-2 bg-yellow-50 font-medium" value={val(formData.status)} onChange={(e) => handleChange('status', e.target.value)}>{Object.values(RecordStatus).map(s => <option key={s} value={s}>{STATUS_LABELS[s] || s}</option>)}</select></div>
                                 
-                                {(formData.status === RecordStatus.HANDOVER || formData.status === RecordStatus.WITHDRAWN || formData.status === RecordStatus.RETURNED || formData.exportBatch) && (
-                                    <div><label className="block text-xs font-bold text-green-700 mb-1">{formData.status === RecordStatus.WITHDRAWN ? 'Ngày rút hồ sơ' : 'Ngày hoàn thành'}</label><input type="date" className="w-full border border-green-300 rounded-md px-3 py-2 bg-green-50 font-semibold text-green-800" value={val(formData.completedDate)} onChange={(e) => handleChange('completedDate', e.target.value)} /></div>
+                                {(formData.status === RecordStatus.HANDOVER || formData.status === RecordStatus.WITHDRAWN || formData.status === RecordStatus.RETURNED || formData.status === RecordStatus.REJECTED || formData.exportBatch) && (
+                                    <div><label className="block text-xs font-bold text-green-700 mb-1">{formData.status === RecordStatus.WITHDRAWN ? 'Ngày rút hồ sơ' : formData.status === RecordStatus.REJECTED ? 'Ngày trả hồ sơ' : 'Ngày hoàn thành'}</label><input type="date" className="w-full border border-green-300 rounded-md px-3 py-2 bg-green-50 font-semibold text-green-800" value={val(formData.completedDate)} onChange={(e) => handleChange('completedDate', e.target.value)} /></div>
                                 )}
                                 
                                 {/* Thêm trường hiển thị Ngày Trình Ký và Ngày Ký Duyệt nếu trạng thái tương ứng */}

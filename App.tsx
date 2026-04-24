@@ -25,6 +25,8 @@ import { useIsMobile } from './hooks/useIsMobile';
 import MobileLayout from './components/layout/MobileLayout';
 import MobileRoutes from './components/mobile/MobileRoutes';
 import SubmitModal from './components/receive-record/SubmitModal';
+import GlobalConfirmModal from './components/GlobalConfirmModal';
+import GlobalAlertModal from './components/GlobalAlertModal';
 
 function App() {
   const isMobile = useIsMobile(768);
@@ -487,10 +489,10 @@ function App() {
   const executeBatchExport = async (batchNumber: number, batchDate: string, handoverWard?: string) => {
       const nowStr = new Date().toISOString();
       const candidates = selectedRecordIds.size > 0 ? records.filter(r => selectedRecordIds.has(r.id)) : recordFilterProps.filteredRecords;
-      const recordsToExport = candidates.filter(r => r.status === RecordStatus.SIGNED || (r.status === RecordStatus.WITHDRAWN && !r.exportBatch));
+      const recordsToExport = candidates.filter(r => r.status === RecordStatus.SIGNED || r.status === RecordStatus.REJECTED || (r.status === RecordStatus.WITHDRAWN && !r.exportBatch));
       if (recordsToExport.length === 0) return;
       const updatesToApply = recordsToExport.map(r => {
-          const nextStatus = r.status === RecordStatus.WITHDRAWN ? RecordStatus.WITHDRAWN : RecordStatus.HANDOVER;
+          const nextStatus = r.status === RecordStatus.WITHDRAWN ? RecordStatus.WITHDRAWN : r.status === RecordStatus.REJECTED ? RecordStatus.REJECTED : RecordStatus.HANDOVER;
           return { ...r, exportBatch: batchNumber, exportDate: batchDate, status: nextStatus, completedDate: r.completedDate || nowStr, handoverWard: handoverWard || r.handoverWard };
       });
       setRecords(prev => prev.map(r => {
@@ -518,6 +520,21 @@ function App() {
   const handleExportReturnedList = () => {
       if (!canPerformAction) return;
       exportReturnedListToExcel(recordFilterProps.filteredRecords, recordFilterProps.filterFromDate, recordFilterProps.filterToDate, recordFilterProps.filterWard);
+  };
+
+  const handleMarkAsRejected = async () => {
+      if (selectedRecordIds.size === 0) return;
+      if (await confirmAction(`Xác nhận đánh dấu ${selectedRecordIds.size} hồ sơ đang chọn thành "Hồ sơ trả"?\n\nHồ sơ sẽ được chuyển vào danh sách Chờ giao của bộ phận 1 cửa.`)) {
+          const nowStr = new Date().toISOString();
+          const targets = records.filter(r => selectedRecordIds.has(r.id));
+          const updates = { status: RecordStatus.REJECTED, completedDate: nowStr };
+          
+          setRecords(prev => prev.map(r => targets.find(p => p.id === r.id) ? { ...r, ...updates } : r));
+          await Promise.all(targets.map(r => updateRecordApi({ ...r, ...updates })));
+          
+          setSelectedRecordIds(new Set());
+          setToast({ type: 'success', message: `Đã đánh dấu ${targets.length} hồ sơ thành "Hồ sơ trả".` });
+      }
   };
 
   if (!currentUser) return <Login onLogin={setCurrentUser} users={users} />;
@@ -614,6 +631,8 @@ function App() {
                 {toast.message}
             </div>
         )}
+        <GlobalConfirmModal />
+        <GlobalAlertModal />
       </MobileLayout>
     );
   }
@@ -694,6 +713,7 @@ function App() {
             
             setIsModalOpen={setIsModalOpen}
             setEditingRecord={setEditingRecord}
+            handleMarkAsRejected={handleMarkAsRejected}
             setIsImportModalOpen={setIsImportModalOpen}
             setIsBulkUpdateModalOpen={setIsBulkUpdateModalOpen}
             setIsAddToBatchModalOpen={setIsAddToBatchModalOpen}
@@ -821,6 +841,8 @@ function App() {
                 {toast.message}
             </div>
         )}
+        <GlobalConfirmModal />
+        <GlobalAlertModal />
     </MainLayout>
   );
 }

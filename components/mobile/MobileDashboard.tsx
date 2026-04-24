@@ -63,7 +63,7 @@ const MobileDashboard: React.FC<MobileDashboardProps> = ({ records }) => {
   }, [records, selectedYear, viewMode]);
 
   const total = filteredRecords.length;
-  const completed = filteredRecords.filter(r => r.status === RecordStatus.HANDOVER || r.status === RecordStatus.RETURNED).length;
+  const completed = filteredRecords.filter(r => r.status === RecordStatus.HANDOVER || r.status === RecordStatus.RETURNED || r.status === RecordStatus.REJECTED).length;
   const withdrawn = filteredRecords.filter(r => r.status === RecordStatus.WITHDRAWN).length;
   const processing = total - completed - withdrawn;
 

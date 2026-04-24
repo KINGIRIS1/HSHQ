@@ -26,14 +26,30 @@ export function toTitleCase(str: string | null | undefined): string {
 }
 
 // --- CONFIRM ACTION WRAPPER ---
-// Sử dụng Native Dialog của Electron nếu có, ngược lại dùng window.confirm
+let globalConfirmCallback: null | ((message: string, title: string) => Promise<boolean>) = null;
+
+export const setGlobalConfirmCallback = (cb: (message: string, title: string) => Promise<boolean>) => {
+    globalConfirmCallback = cb;
+};
+
+// Sử dụng Native Dialog của Electron nếu có, hoặc Global Modal, hoặc fallback dùng window.confirm
 export const confirmAction = async (message: string, title: string = 'Xác nhận'): Promise<boolean> => {
     if ((window as any).electronAPI && (window as any).electronAPI.showConfirmDialog) {
         // Chờ kết quả từ Main Process (không block renderer)
         return await (window as any).electronAPI.showConfirmDialog(message, title);
     }
-    // Fallback cho trình duyệt web
-    return window.confirm(message);
+    
+    if (globalConfirmCallback) {
+        return await globalConfirmCallback(message, title);
+    }
+    
+    try {
+        // Fallback cho trình duyệt web (có thể lỗi nếu sandboxed)
+        return window.confirm(message);
+    } catch {
+        // Nếu không cho confirm (Iframe sandbox preview) -> Auto true
+        return true; 
+    }
 };
 
 // --- ĐỊNH NGHĨA CÁC CỘT HIỂN THỊ ---
@@ -76,6 +92,7 @@ export const isRecordOverdue = (record: RecordFile): boolean => {
       RecordStatus.HANDOVER,
       RecordStatus.RETURNED,
       RecordStatus.WITHDRAWN,
+      RecordStatus.REJECTED,
       RecordStatus.SIGNED
   ];
 
@@ -100,6 +117,7 @@ export const isRecordApproaching = (record: RecordFile): boolean => {
       RecordStatus.HANDOVER,
       RecordStatus.RETURNED,
       RecordStatus.WITHDRAWN,
+      RecordStatus.REJECTED,
       RecordStatus.SIGNED
   ];
 

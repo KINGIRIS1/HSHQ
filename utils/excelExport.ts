@@ -97,7 +97,7 @@ export const exportReportToExcel = async (
                     completedDate.setHours(0,0,0,0);
                     if (completedDate > deadline) overdueCompleted++;
                 }
-            } else if (r.status !== RecordStatus.WITHDRAWN) {
+            } else if (r.status !== RecordStatus.WITHDRAWN && r.status !== RecordStatus.REJECTED) {
                 const today = new Date();
                 today.setHours(0,0,0,0);
                 if (today > deadline) overduePending++;

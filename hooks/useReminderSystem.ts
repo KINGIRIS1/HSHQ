@@ -14,7 +14,7 @@ export const useReminderSystem = (records: RecordFile[], onUpdateRecord: (r: Rec
         const count = records.filter(r => {
             if (!r.reminderDate) return false;
             // Nếu hồ sơ đã xong hoặc rút thì không tính là active reminder
-            if (r.status === RecordStatus.HANDOVER || r.status === RecordStatus.WITHDRAWN) return false;
+            if (r.status === RecordStatus.HANDOVER || r.status === RecordStatus.WITHDRAWN || r.status === RecordStatus.REJECTED) return false;
             
             const reminderTime = new Date(r.reminderDate).getTime();
             const now = Date.now();
@@ -32,7 +32,7 @@ export const useReminderSystem = (records: RecordFile[], onUpdateRecord: (r: Rec
                 if (!r.reminderDate) continue;
                 
                 // Bỏ qua nếu hồ sơ đã xong
-                if (r.status === RecordStatus.HANDOVER || r.status === RecordStatus.WITHDRAWN) continue;
+                if (r.status === RecordStatus.HANDOVER || r.status === RecordStatus.WITHDRAWN || r.status === RecordStatus.REJECTED) continue;
 
                 const reminderTime = new Date(r.reminderDate).getTime();
                 

@@ -56,9 +56,9 @@ const RecordRow: React.FC<RecordRowProps> = ({
   const resultReturnedDateStr = record.resultReturnedDate ? formatDate(record.resultReturnedDate) : '';
 
   // LOGIC MỚI: Tự động xác định trạng thái hiển thị
-  // Nếu có thông tin xuất (Batch/Date) và chưa hoàn thành (Trả/Rút), coi như là Đã giao 1 cửa
+  // Nếu có thông tin xuất (Batch/Date) và chưa hoàn thành (Trả/Rút/Từ chối), coi như là Đã giao 1 cửa
   const getDisplayStatus = (r: RecordFile) => {
-      if ((r.exportBatch || r.exportDate) && r.status !== RecordStatus.WITHDRAWN && r.status !== RecordStatus.RETURNED) {
+      if ((r.exportBatch || r.exportDate) && r.status !== RecordStatus.WITHDRAWN && r.status !== RecordStatus.RETURNED && r.status !== RecordStatus.REJECTED) {
           return RecordStatus.HANDOVER;
       }
       return r.status;
@@ -163,7 +163,7 @@ const RecordRow: React.FC<RecordRowProps> = ({
       {visibleColumns.completed && (
         <td className={`${cellClass} text-center text-gray-600`}>
           {record.exportBatch ? (
-             <span className={`inline-flex flex-col items-center px-2 py-1 rounded border ${record.status === RecordStatus.WITHDRAWN ? 'bg-slate-100 text-slate-700 border-slate-300' : 'bg-green-50 text-green-700 border-green-200'}`}>
+             <span className={`inline-flex flex-col items-center px-2 py-1 rounded border ${record.status === RecordStatus.WITHDRAWN ? 'bg-slate-100 text-slate-700 border-slate-300' : record.status === RecordStatus.REJECTED ? 'bg-red-50 text-red-700 border-red-200' : 'bg-green-50 text-green-700 border-green-200'}`}>
                 <span className="text-[11px] font-bold">Đợt {record.exportBatch}</span>
                 <span className="text-[11px] font-medium whitespace-nowrap">{formatDate(record.exportDate || record.completedDate)}</span>
              </span>
@@ -171,6 +171,11 @@ const RecordRow: React.FC<RecordRowProps> = ({
              <div className="flex flex-col items-center">
                 <span className="text-xs font-bold bg-slate-200 text-slate-600 px-2 py-0.5 rounded mb-1">Rút HS</span>
                 <span className="text-sm font-bold text-slate-600">{formatDate(record.completedDate)}</span>
+             </div>
+          ) : record.status === RecordStatus.REJECTED ? (
+             <div className="flex flex-col items-center">
+                <span className="text-xs font-bold bg-red-100 text-red-700 border border-red-200 px-2 py-0.5 rounded mb-1">Hồ sơ trả</span>
+                <span className="text-sm font-bold text-red-700">{formatDate(record.completedDate)}</span>
              </div>
           ) : (
              <span className="text-sm font-bold text-green-700">{formatDate(record.completedDate) || '--'}</span>
@@ -263,7 +268,7 @@ const RecordRow: React.FC<RecordRowProps> = ({
                 </button>
             )}
 
-            {displayStatus !== RecordStatus.HANDOVER && displayStatus !== RecordStatus.WITHDRAWN && !record.resultReturnedDate && (
+            {displayStatus !== RecordStatus.HANDOVER && displayStatus !== RecordStatus.WITHDRAWN && displayStatus !== RecordStatus.REJECTED && !record.resultReturnedDate && (
               <button onClick={() => onAdvanceStatus(record)} className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-colors" title="Chuyển bước"><ArrowRight size={16} /></button>
             )}
             <button onClick={() => onEdit(record)} className="p-1.5 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors" title="Sửa"><Pencil size={16} /></button>

@@ -21,6 +21,7 @@ export const STATUS_LABELS: Record<RecordStatus, string> = {
   [RecordStatus.HANDOVER]: 'Đã giao 1 cửa',
   [RecordStatus.RETURNED]: 'Đã trả kết quả',
   [RecordStatus.WITHDRAWN]: 'CSD rút hồ sơ',
+  [RecordStatus.REJECTED]: 'Hồ sơ trả',
 };
 
 export const STATUS_COLORS: Record<RecordStatus, string> = {
@@ -35,6 +36,7 @@ export const STATUS_COLORS: Record<RecordStatus, string> = {
   [RecordStatus.HANDOVER]: 'bg-green-100 text-green-800',
   [RecordStatus.RETURNED]: 'bg-emerald-100 text-emerald-800 border border-emerald-200 font-bold',
   [RecordStatus.WITHDRAWN]: 'bg-slate-600 text-white',
+  [RecordStatus.REJECTED]: 'bg-red-100 text-red-800',
 };
 
 export const GROUPS = ['Tân Khai', 'Tân Quan', 'Minh Đức', 'Tân Hưng'];

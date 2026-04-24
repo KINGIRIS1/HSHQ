@@ -11,7 +11,8 @@ export enum RecordStatus {
   SIGNED = 'SIGNED',             // Đã ký (Lập danh sách ký)
   HANDOVER = 'HANDOVER',         // Giao 1 cửa (Hoàn thành nội bộ)
   RETURNED = 'RETURNED',         // Đã trả kết quả (Hoàn thành trả dân)
-  WITHDRAWN = 'WITHDRAWN'        // CSD rút hồ sơ (Kết thúc)
+  WITHDRAWN = 'WITHDRAWN',       // CSD rút hồ sơ (Kết thúc)
+  REJECTED = 'REJECTED'          // Hồ sơ trả (Trả về OneDoor)
 }
 
 export enum UserRole {

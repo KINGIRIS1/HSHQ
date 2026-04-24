@@ -77,7 +77,7 @@ export const generateReport = async (
     today.setHours(0,0,0,0);
 
     records.forEach(r => {
-        const isCompleted = r.status === RecordStatus.HANDOVER || r.status === RecordStatus.RETURNED;
+        const isCompleted = r.status === RecordStatus.HANDOVER || r.status === RecordStatus.RETURNED || r.status === RecordStatus.REJECTED;
         
         if (isCompleted) completedCount++;
         else if (r.status === RecordStatus.PENDING_SIGN) pendingSignCount++;
@@ -98,8 +98,8 @@ export const generateReport = async (
                         overdueCompletedCount++;
                     }
                 }
-            } else if (r.status !== RecordStatus.WITHDRAWN) {
-                // Nếu chưa xong và chưa rút, so sánh hôm nay với ngày hẹn
+            } else if (r.status !== RecordStatus.WITHDRAWN && r.status !== RecordStatus.REJECTED) {
+                // Nếu chưa xong, chưa rút, và chưa trả, so sánh hôm nay với ngày hẹn
                 if (today > deadlineDate) {
                     overduePendingCount++;
                 }

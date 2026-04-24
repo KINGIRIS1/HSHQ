@@ -100,6 +100,7 @@ interface AppRoutesProps {
     // Modal Openers
     setIsModalOpen: (b: boolean) => void;
     setEditingRecord: (r: RecordFile | null) => void;
+    handleMarkAsRejected: () => void;
     setIsImportModalOpen: (b: boolean) => void;
     setIsBulkUpdateModalOpen: (b: boolean) => void;
     setIsAddToBatchModalOpen: (b: boolean) => void;
@@ -478,16 +479,25 @@ const AppRoutes: React.FC<AppRoutesProps> = (props) => {
                             </button>
                         )}
                         {canPerformAction && (currentView === 'assign_tasks' || currentView === 'other_assign_tasks' || currentView === 'all_records' || currentView === 'other_records') && props.selectedRecordIds.size > 0 && (
-                            <button 
-                                onClick={() => {
-                                    const targets = records.filter(r => props.selectedRecordIds.has(r.id));
-                                    props.setAssignTargetRecords(targets);
-                                    props.setIsAssignModalOpen(true);
-                                }}
-                                className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 font-bold shadow-md transition-all animate-pulse"
-                            >
-                                <UserPlus size={18} /> Giao Nhân Viên ({props.selectedRecordIds.size})
-                            </button>
+                            <>
+                                <button 
+                                    onClick={props.handleMarkAsRejected}
+                                    className="flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 font-bold shadow-md transition-all"
+                                    title="Trả hồ sơ về Bộ phận 1 cửa"
+                                >
+                                    <ClipboardList size={18} /> Hồ sơ trả ({props.selectedRecordIds.size})
+                                </button>
+                                <button 
+                                    onClick={() => {
+                                        const targets = records.filter(r => props.selectedRecordIds.has(r.id));
+                                        props.setAssignTargetRecords(targets);
+                                        props.setIsAssignModalOpen(true);
+                                    }}
+                                    className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 font-bold shadow-md transition-all animate-pulse"
+                                >
+                                    <UserPlus size={18} /> Giao Nhân Viên ({props.selectedRecordIds.size})
+                                </button>
+                            </>
                         )}
                         {(currentView !== 'handover_list' && currentView !== 'other_handover_list' || props.handoverTab !== 'returned') && currentView !== 'assign_tasks' && currentView !== 'other_assign_tasks' && currentView !== 'all_records' && currentView !== 'other_records' && (
                             <button onClick={() => { props.setExportModalType(currentView === 'check_list' || currentView === 'other_check_list' ? 'check_list' : 'handover'); props.setIsExportModalOpen(true); }} className="flex items-center gap-2 bg-white text-gray-700 border border-gray-300 px-4 py-2 rounded-lg hover:bg-gray-50 font-medium shadow-sm">
