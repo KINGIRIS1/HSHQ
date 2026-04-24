@@ -111,6 +111,9 @@ export const logError = (context: string, error: any) => {
     } else if (code === '21000') {
          console.error(`❌ Lỗi tại ${context}: Dữ liệu trùng lặp trong cùng một yêu cầu (Lỗi ${code}).`);
          alert(`LỖI TRÙNG LẶP: File Excel có chứa nhiều dòng cùng Mã Hồ Sơ. Hệ thống đã cố gắng xử lý nhưng Server từ chối.\nVui lòng kiểm tra file Excel và xóa các dòng trùng lặp mã.`);
+    } else if (code === '42501') {
+         console.error(`❌ Lỗi tại ${context}: Lỗi phân quyền bảo mật RLS (Code: 42501)`);
+         alert(`LỖI PHÂN QUYỀN (Row-Level Security): \nSupabase đang từ chối LƯU HOẶC SỬA dữ liệu do bạn đang bật tính năng bảo mật Row-Level Security (RLS) trên bảng dữ liệu nhưng chưa cấu hình Policy.\n\nHƯỚNG DẪN SỬA LỖI:\n1. Mở trang Quản lý Supabase của bạn\n2. Chọn phần "SQL Editor"\n3. Copy và chạy tập lệnh sau để cho phép truy cập:\n\nALTER TABLE land_records DISABLE ROW LEVEL SECURITY;\nALTER TABLE archive_records DISABLE ROW LEVEL SECURITY;\nALTER TABLE system_settings DISABLE ROW LEVEL SECURITY;`);
     } else {
         console.error(`❌ [Chi tiết] ${context}: ${msg} ${code ? `(Code: ${code})` : ''} ${details ? `Details: ${details}` : ''}`);
     }
