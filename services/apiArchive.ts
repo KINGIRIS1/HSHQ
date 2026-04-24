@@ -122,7 +122,7 @@ export const saveArchiveRecord = async (record: Partial<ArchiveRecord>): Promise
         } else {
             const newRec = { 
                 ...record, 
-                id: Math.random().toString(36).substr(2, 9), 
+                id: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substr(2, 9), 
                 created_at: new Date().toISOString() 
             } as ArchiveRecord;
             MOCK_ARCHIVE.unshift(newRec);
@@ -151,9 +151,9 @@ export const saveArchiveRecord = async (record: Partial<ArchiveRecord>): Promise
             if (error) throw error;
             return data as ArchiveRecord;
         } else {
-            // Khi Insert: KHÔNG tự sinh ID bằng Math.random() vì DB dùng UUID.
-            // Để Supabase/Postgres tự sinh ID.
-            delete payload.id; 
+            if (!payload.id) {
+                payload.id = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substr(2, 9);
+            }
             
             const { data, error } = await supabase.from('archive_records').insert([payload]).select().single();
             if (error) throw error;
@@ -193,7 +193,7 @@ export const importArchiveRecords = async (records: Partial<ArchiveRecord>[]): P
         records.forEach(r => {
             const newRec = { 
                 ...r, 
-                id: Math.random().toString(36).substr(2, 9), 
+                id: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substr(2, 9), 
                 created_at: new Date().toISOString() 
             } as ArchiveRecord;
             MOCK_ARCHIVE.unshift(newRec);
@@ -205,7 +205,7 @@ export const importArchiveRecords = async (records: Partial<ArchiveRecord>[]): P
         // Chuẩn hóa dữ liệu trước khi insert
         const payload = records.map(r => {
             const p: any = { ...r };
-            if (!p.id) p.id = Math.random().toString(36).substr(2, 9); // Sinh ID nếu chưa có
+            if (!p.id) p.id = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substr(2, 9);
             if (p.ngay_thang === '') p.ngay_thang = null;
             return p;
         });
