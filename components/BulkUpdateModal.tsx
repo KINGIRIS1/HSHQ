@@ -79,6 +79,7 @@ const BulkUpdateModal: React.FC<BulkUpdateModalProps> = ({
                         <option value="status">Trạng thái hồ sơ (Quy trình)</option>
                         <option value="assignedTo">Người xử lý (Giao việc)</option>
                         <option value="deadline">Ngày hẹn trả (Gia hạn)</option>
+                        <option value="receivedDate">Ngày nhận hồ sơ</option>
                         <option value="ward">Xã / Phường (Địa bàn)</option>
                     </select>
                 </div>
@@ -130,7 +131,7 @@ const BulkUpdateModal: React.FC<BulkUpdateModalProps> = ({
                         </select>
                     )}
 
-                    {targetField === 'deadline' && (
+                    {(targetField === 'deadline' || targetField === 'receivedDate') && (
                         <input 
                             type="date"
                             className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-orange-500 outline-none"
