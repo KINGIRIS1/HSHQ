@@ -158,10 +158,18 @@ const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImport, em
 
             // Hàm helper: Trả về undefined nếu cột không tồn tại, trả về giá trị nếu có
             const getVal = (possibleHeaders: string[]) => {
-                const idx = headers.findIndex(h => {
+                // Ưu tiên khớp chính xác (exact match)
+                let idx = headers.findIndex(h => {
                     const hUpper = h.trim().toUpperCase();
-                    return possibleHeaders.some(ph => hUpper === ph || hUpper.includes(ph) || h.trim() === ph || h.trim().toLowerCase() === ph.toLowerCase());
+                    return possibleHeaders.some(ph => hUpper === ph.toUpperCase());
                 });
+                // Nếu không có khớp chính xác, tìm khớp chứa chuỗi (contains)
+                if (idx === -1) {
+                    idx = headers.findIndex(h => {
+                        const hUpper = h.trim().toUpperCase();
+                        return possibleHeaders.some(ph => hUpper.includes(ph.toUpperCase()));
+                    });
+                }
                 return idx !== -1 ? row[idx] : undefined;
             };
 
@@ -253,10 +261,9 @@ const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImport, em
             if (deadlineRaw !== undefined) record.deadline = parseExcelDate(deadlineRaw);
 
             // 3. LOẠI HỒ SƠ
-            const typeRaw = getVal(['LOẠI', 'LOẠI HỒ SƠ', 'recordtype', 'record_type', 'recordType']);
+            const typeRaw = getVal(['LOẠI HỒ SƠ', 'LOAI HO SO', 'recordtype', 'record_type']);
             if (typeRaw !== undefined) {
-                const rawTypeStr = String(typeRaw).trim();
-                record.recordType = typeMapping[rawTypeStr.toUpperCase()] || rawTypeStr;
+                record.recordType = String(typeRaw).trim();
             } else if (mode === 'create') {
                 record.recordType = RECORD_TYPES[0];
             }
