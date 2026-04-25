@@ -395,6 +395,8 @@ function App() {
 
       if (field === 'status') {
           updates = getUpdatesForStatusChange(value as RecordStatus, targetDateStr);
+      } else if (field === 'deadline' || field === 'receivedDate') {
+          updates[field] = targetDateStr;
       }
       
       if (field === 'assignedTo') {

@@ -158,11 +158,14 @@ const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImport, em
 
             // Hàm helper: Trả về undefined nếu cột không tồn tại, trả về giá trị nếu có
             const getVal = (possibleHeaders: string[]) => {
-                const idx = headers.findIndex(h => possibleHeaders.some(ph => h.includes(ph)));
+                const idx = headers.findIndex(h => {
+                    const hUpper = h.trim().toUpperCase();
+                    return possibleHeaders.some(ph => hUpper === ph || hUpper.includes(ph) || h.trim() === ph || h.trim().toLowerCase() === ph.toLowerCase());
+                });
                 return idx !== -1 ? row[idx] : undefined;
             };
 
-            const codeRaw = getVal(['MÃ HỒ SƠ', 'MÃ HS', 'CODE']);
+            const codeRaw = getVal(['MÃ HỒ SƠ', 'MÃ HS', 'CODE', 'code']);
             const code = codeRaw ? String(codeRaw).trim() : undefined;
             
             if (mode === 'update' && !code) continue; // Update bắt buộc phải có mã
@@ -174,37 +177,37 @@ const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImport, em
             if (code) record.code = code;
             else if (mode === 'create') record.code = `AUTO-${Math.floor(Math.random()*10000)}`;
 
-            const nameRaw = getVal(['CHỦ SỬ DỤNG', 'TÊN', 'HỌ TÊN', 'CUSTOMER']);
+            const nameRaw = getVal(['CHỦ SỬ DỤNG', 'TÊN', 'HỌ TÊN', 'CUSTOMER', 'customername', 'customer_name', 'customerName']);
             if (nameRaw !== undefined) record.customerName = String(nameRaw);
             else if (mode === 'create') record.customerName = 'Chưa cập nhật';
 
-            const phoneRaw = getVal(['SĐT', 'ĐIỆN THOẠI']);
+            const phoneRaw = getVal(['SĐT', 'ĐIỆN THOẠI', 'phonenumber', 'phone_number', 'phoneNumber']);
             if (phoneRaw !== undefined) record.phoneNumber = String(phoneRaw);
 
-            const addressRaw = getVal(['ĐỊA CHỈ', 'ADDRESS']);
-            if (addressRaw !== undefined) record.address = String(addressRaw);
+            const addressRaw = getVal(['ĐỊA CHỈ', 'ADDRESS', 'customeraddress', 'customer_address', 'customerAddress', 'address']);
+            if (addressRaw !== undefined) record.customerAddress = String(addressRaw);
 
-            const cccdRaw = getVal(['CCCD', 'CMND']);
+            const cccdRaw = getVal(['CCCD', 'CMND', 'cccd']);
             if (cccdRaw !== undefined) record.cccd = String(cccdRaw);
 
-            const authByRaw = getVal(['NGƯỜI ỦY QUYỀN', 'ỦY QUYỀN']);
-            const authTypeRaw = getVal(['LOẠI ỦY QUYỀN', 'GIẤY ỦY QUYỀN']);
+            const authByRaw = getVal(['NGƯỜI ỦY QUYỀN', 'ỦY QUYỀN', 'authorizedby', 'authorized_by', 'authorizedBy']);
+            const authTypeRaw = getVal(['LOẠI ỦY QUYỀN', 'GIẤY ỦY QUYỀN', 'authdoctype', 'auth_doc_type', 'authDocType']);
             if (authByRaw !== undefined || authTypeRaw !== undefined) {
                 record.authDocType = `${authByRaw || ''}|${authTypeRaw || ''}`;
             }
 
-            const wardRaw = getVal(['XÃ', 'PHƯỜNG', 'WARD']);
+            const wardRaw = getVal(['XÃ', 'PHƯỜNG', 'WARD', 'ward']);
             if (wardRaw !== undefined) record.ward = String(wardRaw);
 
-            const mapSheetRaw = getVal(['TỜ', 'BẢN ĐỒ SỐ']);
+            const mapSheetRaw = getVal(['TỜ', 'BẢN ĐỒ SỐ', 'mapsheet', 'map_sheet', 'mapSheet']);
             if (mapSheetRaw !== undefined) record.mapSheet = String(mapSheetRaw);
 
-            const landPlotRaw = getVal(['THỬA', 'THỬA ĐẤT SỐ']);
+            const landPlotRaw = getVal(['THỬA', 'THỬA ĐẤT SỐ', 'landplot', 'land_plot', 'landPlot']);
             if (landPlotRaw !== undefined) record.landPlot = String(landPlotRaw);
 
             const errors: string[] = [];
 
-            const rawArea = getVal(['DIỆN TÍCH', 'AREA']);
+            const rawArea = getVal(['DIỆN TÍCH', 'AREA', 'area']);
             if (rawArea !== undefined && rawArea !== null && rawArea !== '') {
                 const parsedArea = parseFloat(String(rawArea));
                 record.area = isNaN(parsedArea) ? 0 : parsedArea;
@@ -215,7 +218,7 @@ const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImport, em
                 record.area = null;
             }
 
-            const rawResArea = getVal(['ĐẤT Ở', 'THỔ CƯ']);
+            const rawResArea = getVal(['ĐẤT Ở', 'THỔ CƯ', 'residentialarea', 'residential_area', 'residentialArea']);
             if (rawResArea !== undefined && rawResArea !== null && rawResArea !== '') {
                  const parsedResArea = parseFloat(String(rawResArea));
                  record.residentialArea = isNaN(parsedResArea) ? 0 : parsedResArea;
@@ -226,31 +229,31 @@ const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImport, em
                  record.residentialArea = null;
             }
 
-            const issueNumRaw = getVal(['SỐ PHÁT HÀNH']);
+            const issueNumRaw = getVal(['SỐ PHÁT HÀNH', 'issuenumber', 'issue_number', 'issueNumber']);
             if (issueNumRaw !== undefined) record.issueNumber = String(issueNumRaw);
 
-            const entryNumRaw = getVal(['SỐ VÀO SỔ']);
+            const entryNumRaw = getVal(['SỐ VÀO SỔ', 'entrynumber', 'entry_number', 'entryNumber']);
             if (entryNumRaw !== undefined) record.entryNumber = String(entryNumRaw);
 
-            const issueDateRaw = getVal(['NGÀY CẤP']);
+            const issueDateRaw = getVal(['NGÀY CẤP', 'issuedate', 'issue_date', 'issueDate']);
             if (issueDateRaw !== undefined) record.issueDate = parseExcelDate(issueDateRaw);
 
-            const contentRaw = getVal(['NỘI DUNG', 'GHI CHÚ']);
+            const contentRaw = getVal(['NỘI DUNG', 'GHI CHÚ', 'content', 'notes']);
             if (contentRaw !== undefined) record.content = String(contentRaw);
 
-            const otherDocsRaw = getVal(['GIẤY TỜ KÈM THEO', 'GIẤY TỜ']);
+            const otherDocsRaw = getVal(['GIẤY TỜ KÈM THEO', 'GIẤY TỜ', 'otherdocs', 'other_docs', 'otherDocs']);
             if (otherDocsRaw !== undefined) record.otherDocs = String(otherDocsRaw);
 
             // 2. NGÀY THÁNG
-            const receivedRaw = getVal(['NGÀY NHẬN', 'NGÀY NỘP']);
+            const receivedRaw = getVal(['NGÀY NHẬN', 'NGÀY NỘP', 'receiveddate', 'received_date', 'receivedDate']);
             if (receivedRaw !== undefined) record.receivedDate = parseExcelDate(receivedRaw);
             else if (mode === 'create') record.receivedDate = new Date().toISOString();
 
-            const deadlineRaw = getVal(['HẸN TRẢ', 'DEADLINE']);
+            const deadlineRaw = getVal(['HẸN TRẢ', 'DEADLINE', 'deadline']);
             if (deadlineRaw !== undefined) record.deadline = parseExcelDate(deadlineRaw);
 
             // 3. LOẠI HỒ SƠ
-            const typeRaw = getVal(['LOẠI', 'LOẠI HỒ SƠ']);
+            const typeRaw = getVal(['LOẠI', 'LOẠI HỒ SƠ', 'recordtype', 'record_type', 'recordType']);
             if (typeRaw !== undefined) {
                 const rawTypeStr = String(typeRaw).trim();
                 record.recordType = typeMapping[rawTypeStr.toUpperCase()] || rawTypeStr;
@@ -263,13 +266,13 @@ const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImport, em
             }
 
             // 4. THÔNG TIN XUẤT (QUAN TRỌNG CHO VIỆC TỰ ĐỘNG HANDOVER)
-            const exportBatchRaw = getVal(['ĐỢT', 'BATCH']);
+            const exportBatchRaw = getVal(['ĐỢT', 'BATCH', 'exportbatch', 'export_batch', 'exportBatch']);
             if (exportBatchRaw !== undefined) {
                 const numStr = String(exportBatchRaw).replace(/[^0-9]/g, '');
                 if (numStr) record.exportBatch = parseInt(numStr, 10);
             }
 
-            const exportDateRaw = getVal(['NGÀY XUẤT', 'EXPORT DATE', 'NGÀY TRẢ']);
+            const exportDateRaw = getVal(['NGÀY XUẤT', 'EXPORT DATE', 'NGÀY TRẢ', 'exportdate', 'export_date', 'exportDate']);
             if (exportDateRaw !== undefined) {
                 record.exportDate = parseExcelDate(exportDateRaw);
             }
@@ -279,7 +282,7 @@ const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImport, em
             let explicitStatus: RecordStatus | undefined = undefined;
 
             // Kiểm tra cột trạng thái từ Excel trước
-            const statusRaw = getVal(['TRẠNG THÁI', 'STATUS']);
+            const statusRaw = getVal(['TRẠNG THÁI', 'STATUS', 'status']);
             if (statusRaw !== undefined) {
                 let sStr = String(statusRaw).toUpperCase();
                 if (sStr.includes('GIAO') || sStr.includes('ASSIGNED')) explicitStatus = RecordStatus.ASSIGNED;
@@ -306,7 +309,7 @@ const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImport, em
                 record.status = RecordStatus.RECEIVED;
             }
 
-            const assigneeRaw = getVal(['NGƯỜI XỬ LÝ', 'NHÂN VIÊN']);
+            const assigneeRaw = getVal(['NGƯỜI XỬ LÝ', 'NHÂN VIÊN', 'assignedto', 'assigned_to', 'assignedTo']);
             if (assigneeRaw !== undefined) {
                 const emp = employees.find(e => e.name.toLowerCase().includes(String(assigneeRaw).toLowerCase()));
                 if (emp) {
