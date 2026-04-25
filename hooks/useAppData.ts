@@ -6,6 +6,7 @@ import { fetchRecords, fetchEmployees, fetchUsers, fetchUpdateInfo, fetchHoliday
     saveEmployeeApi, deleteEmployeeApi, saveUserApi, deleteUserApi, deleteAllDataApi, getSystemSetting
 } from '../services/api';
 import { supabase } from '../services/supabaseClient';
+import { mapRecordFromDb } from '../services/apiCore';
 import { DEFAULT_WARDS as STATIC_WARDS, APP_VERSION } from '../constants';
 
 export const useAppData = (currentUser: User | null) => {
@@ -104,7 +105,7 @@ export const useAppData = (currentUser: User | null) => {
                 (payload) => {
                     setRecords(prev => {
                         if (prev.some(r => r.id === payload.new.id)) return prev;
-                        return [payload.new as RecordFile, ...prev];
+                        return [mapRecordFromDb(payload.new) as RecordFile, ...prev];
                     });
                 }
             )
@@ -112,7 +113,7 @@ export const useAppData = (currentUser: User | null) => {
                 'postgres_changes',
                 { event: 'UPDATE', schema: 'public', table: 'land_records' },
                 (payload) => {
-                    setRecords(prev => prev.map(r => r.id === payload.new.id ? { ...r, ...payload.new } as RecordFile : r));
+                    setRecords(prev => prev.map(r => r.id === payload.new.id ? { ...r, ...mapRecordFromDb(payload.new) } as RecordFile : r));
                 }
             )
             .on(

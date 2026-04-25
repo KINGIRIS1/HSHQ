@@ -176,6 +176,62 @@ export const sanitizeData = (data: any, allowedColumns: string[]) => {
 };
 
 // --- MAPPERS ---
+export const mapRecordFromDb = (item: any): any => {
+    if (!item) return item;
+    const r = { ...item };
+    
+    // Normalization mapping from potential snake_case or lowercase
+    if (r.receivedDate === undefined && (r.receiveddate !== undefined || r.received_date !== undefined)) r.receivedDate = r.receiveddate || r.received_date;
+    if (r.customerName === undefined && (r.customername !== undefined || r.customer_name !== undefined)) r.customerName = r.customername || r.customer_name;
+    if (r.phoneNumber === undefined && (r.phonenumber !== undefined || r.phone_number !== undefined)) r.phoneNumber = r.phonenumber || r.phone_number;
+    if (r.customerAddress === undefined && (r.customeraddress !== undefined || r.customer_address !== undefined)) r.customerAddress = r.customeraddress || r.customer_address;
+    if (r.landPlot === undefined && (r.landplot !== undefined || r.land_plot !== undefined)) r.landPlot = r.landplot || r.land_plot;
+    if (r.mapSheet === undefined && (r.mapsheet !== undefined || r.map_sheet !== undefined)) r.mapSheet = r.mapsheet || r.map_sheet;
+    if (r.issueNumber === undefined && (r.issuenumber !== undefined || r.issue_number !== undefined)) r.issueNumber = r.issuenumber || r.issue_number;
+    if (r.entryNumber === undefined && (r.entrynumber !== undefined || r.entry_number !== undefined)) r.entryNumber = r.entrynumber || r.entry_number;
+    if (r.issueDate === undefined && (r.issuedate !== undefined || r.issue_date !== undefined)) r.issueDate = r.issuedate || r.issue_date;
+    if (r.residentialArea === undefined && (r.residentialarea !== undefined || r.residential_area !== undefined)) r.residentialArea = r.residentialarea || r.residential_area;
+    if (r.needsMapCorrection === undefined && (r.needsmapcorrection !== undefined || r.needs_map_correction !== undefined)) r.needsMapCorrection = r.needsmapcorrection || r.needs_map_correction;
+    if (r.receiptNumber === undefined && (r.receiptnumber !== undefined || r.receipt_number !== undefined)) r.receiptNumber = r.receiptnumber || r.receipt_number;
+    if (r.recordType === undefined && (r.recordtype !== undefined || r.record_type !== undefined)) r.recordType = r.recordtype || r.record_type;
+    
+    if (r.receivedBy === undefined && (r.receivedby !== undefined || r.received_by !== undefined)) r.receivedBy = r.receivedby || r.received_by;
+    if (r.assignedDate === undefined && (r.assigneddate !== undefined || r.assigned_date !== undefined)) r.assignedDate = r.assigneddate || r.assigned_date;
+    if (r.assignedTo === undefined && (r.assignedto !== undefined || r.assigned_to !== undefined)) r.assignedTo = r.assignedto || r.assigned_to;
+    
+    if (r.submissionDate === undefined && (r.submissiondate !== undefined || r.submission_date !== undefined)) r.submissionDate = r.submissiondate || r.submission_date;
+    if (r.submittedTo === undefined && (r.submittedto !== undefined || r.submitted_to !== undefined)) r.submittedTo = r.submittedto || r.submitted_to;
+    
+    if (r.pendingCheckDate === undefined && (r.pendingcheckdate !== undefined || r.pending_check_date !== undefined)) r.pendingCheckDate = r.pendingcheckdate || r.pending_check_date;
+    if (r.checkedBy === undefined && (r.checkedby !== undefined || r.checked_by !== undefined)) r.checkedBy = r.checkedby || r.checked_by;
+    if (r.checkedDate === undefined && (r.checkeddate !== undefined || r.checked_date !== undefined)) r.checkedDate = r.checkeddate || r.checked_date;
+    
+    if (r.completedWorkDate === undefined && (r.completedworkdate !== undefined || r.completed_work_date !== undefined)) r.completedWorkDate = r.completedworkdate || r.completed_work_date;
+    if (r.approvalDate === undefined && (r.approvaldate !== undefined || r.approval_date !== undefined)) r.approvalDate = r.approvaldate || r.approval_date;
+    if (r.completedDate === undefined && (r.completeddate !== undefined || r.completed_date !== undefined)) r.completedDate = r.completeddate || r.completed_date;
+    
+    if (r.authorizedBy === undefined && (r.authorizedby !== undefined || r.authorized_by !== undefined)) r.authorizedBy = r.authorizedby || r.authorized_by;
+    if (r.authDocType === undefined && (r.authdoctype !== undefined || r.auth_doc_type !== undefined)) r.authDocType = r.authdoctype || r.auth_doc_type;
+    if (r.otherDocs === undefined && (r.otherdocs !== undefined || r.other_docs !== undefined)) r.otherDocs = r.otherdocs || r.other_docs;
+    
+    if (r.resultReturnedDate === undefined && (r.resultreturneddate !== undefined || r.result_returned_date !== undefined)) r.resultReturnedDate = r.resultreturneddate || r.result_returned_date;
+    
+    if (r.exportBatch === undefined && (r.exportbatch !== undefined || r.export_batch !== undefined)) r.exportBatch = r.exportbatch || r.export_batch;
+    if (r.exportDate === undefined && (r.exportdate !== undefined || r.export_date !== undefined)) r.exportDate = r.exportdate || r.export_date;
+    if (r.handoverWard === undefined && (r.handoverward !== undefined || r.handover_ward !== undefined)) r.handoverWard = r.handoverward || r.handover_ward;
+    
+    if (r.measurementNumber === undefined && (r.measurementnumber !== undefined || r.measurement_number !== undefined)) r.measurementNumber = r.measurementnumber || r.measurement_number;
+    if (r.excerptNumber === undefined && (r.excerptnumber !== undefined || r.excerpt_number !== undefined)) r.excerptNumber = r.excerptnumber || r.excerpt_number;
+    
+    if (r.reminderDate === undefined && (r.reminderdate !== undefined || r.reminder_date !== undefined)) r.reminderDate = r.reminderdate || r.reminder_date;
+    if (r.lastRemindedAt === undefined && (r.lastremindedat !== undefined || r.last_reminded_at !== undefined)) r.lastRemindedAt = r.lastremindedat || r.last_reminded_at;
+    
+    if (r.privateNotes === undefined && (r.privatenotes !== undefined || r.private_notes !== undefined)) r.privateNotes = r.privatenotes || r.private_notes;
+    if (r.personalNotes === undefined && (r.personalnotes !== undefined || r.personal_notes !== undefined)) r.personalNotes = r.personalnotes || r.personal_notes;
+    
+    return r;
+};
+
 export const mapContractToDb = (c: Contract) => ({
     id: c.id,
     code: c.code,

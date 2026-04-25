@@ -2,7 +2,7 @@
 import { supabase, isConfigured } from './supabaseClient';
 import { RecordFile } from '../types';
 import { MOCK_RECORDS, API_BASE_URL } from '../constants';
-import { logError, getFromCache, saveToCache, CACHE_KEYS, sanitizeData, normalizeCode } from './apiCore';
+import { logError, getFromCache, saveToCache, CACHE_KEYS, sanitizeData, normalizeCode, mapRecordFromDb } from './apiCore';
 
 const RECORD_DB_COLUMNS = [
     'id', 'code', 'customerName', 'phoneNumber', 'cccd', 'customerAddress', 'ward', 'landPlot', 'mapSheet', 
@@ -71,7 +71,9 @@ export const fetchRecords = async (): Promise<RecordFile[]> => {
     
     const uniqueMap = new Map();
     allRecords.forEach((item: any) => {
-        if (item.id) uniqueMap.set(item.id, item);
+        if (item.id) {
+            uniqueMap.set(item.id, mapRecordFromDb(item));
+        }
     });
     const uniqueRecords = Array.from(uniqueMap.values());
     
