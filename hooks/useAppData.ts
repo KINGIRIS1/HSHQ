@@ -182,14 +182,14 @@ export const useAppData = (currentUser: User | null) => {
         return success;
     };
 
-    const handleImportRecords = async (newRecords: RecordFile[]) => {
+    const handleImportRecords = async (newRecords: RecordFile[], onProgress?: (processed: number, total: number) => void) => {
         const landRecordsToImport = newRecords.filter(r => r.recordType !== 'Cung cấp tài liệu đất đai');
         const archiveRecordsToImport = newRecords.filter(r => r.recordType === 'Cung cấp tài liệu đất đai');
 
         let success = true;
 
         if (landRecordsToImport.length > 0) {
-            const landSuccess = await createRecordsBatchApi(landRecordsToImport);
+            const landSuccess = await createRecordsBatchApi(landRecordsToImport, onProgress);
             if (!landSuccess) success = false;
         }
 
@@ -212,6 +212,7 @@ export const useAppData = (currentUser: User | null) => {
             }));
             const archiveSuccess = await importArchiveRecords(archiveData);
             if (!archiveSuccess) success = false;
+            // Note: Didn't wire onProgress for archive mode yet, but usually it's small or we can add it later
         }
 
         if (success) {

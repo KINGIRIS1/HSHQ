@@ -9,7 +9,7 @@ import { X, Upload, FileSpreadsheet, Save, Loader2, AlertCircle, Check, RefreshC
 interface ImportModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onImport: (records: RecordFile[], mode: 'create' | 'update') => Promise<boolean>;
+  onImport: (records: RecordFile[], mode: 'create' | 'update', onProgress?: (processed: number, total: number) => void) => Promise<boolean>;
   employees: Employee[];
 }
 
@@ -42,12 +42,15 @@ const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImport, em
   const [viewFilter, setViewFilter] = useState<'all' | 'valid' | 'errors'>('all');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const [progress, setProgress] = useState<{ processed: number, total: number } | null>(null);
+
   useEffect(() => {
     if (isOpen) {
         fetchHolidays().then(setHolidays);
         setPreviewData([]);
         setFileName('');
         setViewFilter('all');
+        setProgress(null);
         if(fileInputRef.current) fileInputRef.current.value = '';
     }
   }, [isOpen]);
@@ -325,6 +328,11 @@ const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImport, em
                 }
             }
 
+            const assignedDateRaw = getVal(['NGÀY GIAO', 'NGÀY GIAO VIỆC', 'assigneddate', 'assigned_date', 'assignedDate']);
+            if (assignedDateRaw !== undefined) {
+                record.assignedDate = parseExcelDate(assignedDateRaw);
+            }
+
             // ID giả lập cho preview
             record.id = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substr(2, 9);
             
@@ -353,8 +361,12 @@ const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImport, em
 
   const handleSave = async () => {
       setLoading(true);
-      const success = await onImport(previewData, mode);
+      setProgress({ processed: 0, total: previewData.length });
+      const success = await onImport(previewData, mode, (processed, total) => {
+          setProgress({ processed, total });
+      });
       setLoading(false);
+      setProgress(null);
       if (success) {
           onClose();
       }
@@ -365,14 +377,14 @@ const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImport, em
           'MÃ HỒ SƠ', 'CHỦ SỬ DỤNG', 'CCCD', 'SĐT', 'ĐỊA CHỈ', 'NGƯỜI ỦY QUYỀN', 'LOẠI ỦY QUYỀN', 
           'XÃ', 'THỬA', 'TỜ', 'DIỆN TÍCH', 'ĐẤT Ở', 'SỐ PHÁT HÀNH', 'SỐ VÀO SỔ', 'NGÀY CẤP', 
           'LOẠI HỒ SƠ', 'NỘI DUNG', 'GIẤY TỜ KÈM THEO', 'NGÀY NHẬN', 'HẸN TRẢ', 
-          'TRẠNG THÁI', 'NGÀY XUẤT', 'ĐỢT', 'NGƯỜI XỬ LÝ'
+          'TRẠNG THÁI', 'NGÀY XUẤT', 'ĐỢT', 'NGƯỜI XỬ LÝ', 'NGÀY GIAO'
       ];
       
       const sampleData = [
           ['HS001', 'Nguyễn Văn A', '070012345678', '0901234567', 'Tổ 1, KP 2', 'Lê Văn C', 'Giấy ủy quyền', 
            'Tân Khai', '123', '45', '100.5', '50', 'CD 123456', 'CH 01234', '2024-01-01', 
            'Đo đạc', 'Đo đạc cắm mốc', 'Sổ đỏ|Bản chính', '2024-01-01', '2024-01-15', 
-           'Đã nhận', '', '', '']
+           'Đã nhận', '', '', '', '']
       ];
 
       const ws = XLSX.utils.aoa_to_sheet([headers, ...sampleData]);
@@ -545,13 +557,27 @@ const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImport, em
                     {previewData.some(r => r._errors?.length) && <span className="text-red-500">❌ Lỗi: {previewData.filter(r => r._errors?.length).length} (Vui lòng sửa Excel và tải lại)</span>}
                 </div>
             ) : <div />}
-            <div className="flex gap-3">
-                <button onClick={onClose} className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 font-medium">Hủy bỏ</button>
+            <div className="flex gap-3 items-center">
+                {progress && (
+                    <div className="w-48 bg-gray-200 rounded-full h-2.5 mr-4 overflow-hidden">
+                        <div className="bg-blue-600 h-2.5 rounded-full transition-all duration-300" style={{ width: `${Math.max(5, (progress.processed / progress.total) * 100)}%` }}></div>
+                    </div>
+                )}
+                <button onClick={onClose} className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 font-medium disabled:opacity-50" disabled={loading}>Hủy bỏ</button>
                 <button 
                     onClick={handleSave} 
-                    disabled={previewData.length === 0 || previewData.some(r => r._errors?.length)} 
-                    className={`flex items-center gap-2 px-6 py-2 text-white rounded-md disabled:opacity-50 font-medium shadow-sm active:scale-95 hover:opacity-90 ${mode === 'create' ? 'bg-blue-600' : 'bg-orange-600'}`}>
-                    <Save size={18} /> {mode === 'create' ? 'Lưu vào hệ thống' : 'Tiến hành cập nhật'}
+                    disabled={previewData.length === 0 || previewData.some(r => r._errors?.length) || loading} 
+                    className={`flex items-center gap-2 px-6 py-2 text-white rounded-md disabled:opacity-50 font-medium shadow-sm transition-all ${mode === 'create' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-orange-600 hover:bg-orange-700'}`}>
+                    {loading ? (
+                        <>
+                            <Loader2 size={18} className="animate-spin" />
+                            {progress ? `Đang lưu... ${Math.round((progress.processed / progress.total) * 100)}%` : 'Đang xử lý...'}
+                        </>
+                    ) : (
+                        <>
+                            <Save size={18} /> {mode === 'create' ? 'Lưu vào hệ thống' : 'Tiến hành cập nhật'}
+                        </>
+                    )}
                 </button>
             </div>
         </div>

@@ -248,7 +248,7 @@ export const deleteRecordApi = async (id: string): Promise<boolean> => {
     }
 };
 
-export const createRecordsBatchApi = async (records: RecordFile[]): Promise<boolean> => {
+export const createRecordsBatchApi = async (records: RecordFile[], onProgress?: (processed: number, total: number) => void): Promise<boolean> => {
     if (!isConfigured) return true;
     try {
         const payload = [];
@@ -286,6 +286,10 @@ export const createRecordsBatchApi = async (records: RecordFile[]): Promise<bool
             } else if (error) {
                 throw error;
             }
+            
+            if (onProgress) {
+                onProgress(Math.min(i + CHUNK_SIZE, payload.length), payload.length);
+            }
         }
         
         return true;
@@ -295,7 +299,7 @@ export const createRecordsBatchApi = async (records: RecordFile[]): Promise<bool
     }
 };
 
-export const forceUpdateRecordsBatchApi = async (records: RecordFile[]): Promise<{ success: boolean, count: number }> => {
+export const forceUpdateRecordsBatchApi = async (records: RecordFile[], onProgress?: (processed: number, total: number) => void): Promise<{ success: boolean, count: number }> => {
     if (!isConfigured) return { success: true, count: 0 };
     
     const isSupabase = API_BASE_URL.includes('supabase.co');
@@ -317,7 +321,10 @@ export const forceUpdateRecordsBatchApi = async (records: RecordFile[]): Promise
             
             const searchCodes = Array.from(new Set([...chunkCodes, ...normalizedChunkCodes]));
 
-            if (searchCodes.length === 0) continue;
+            if (searchCodes.length === 0) {
+                if (onProgress) onProgress(Math.min(i + CHUNK_SIZE, records.length), records.length);
+                continue;
+            }
 
             const { data: existingData, error: fetchError } = await supabase
                 .from('land_records')
@@ -379,6 +386,10 @@ export const forceUpdateRecordsBatchApi = async (records: RecordFile[]): Promise
                 } else if (upsertError) {
                     throw upsertError;
                 }
+            }
+            
+            if (onProgress) {
+                onProgress(Math.min(i + CHUNK_SIZE, records.length), records.length);
             }
         }
 

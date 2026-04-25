@@ -256,9 +256,9 @@ function App() {
       finally { setIsGeneratingReport(false); }
   };
 
-  const onImportRecords = async (data: RecordFile[], mode: 'create' | 'update') => {
+  const onImportRecords = async (data: RecordFile[], mode: 'create' | 'update', onProgress?: (processed: number, total: number) => void) => {
       if (mode === 'create') {
-          const result = await handleImportRecords(data);
+          const result = await handleImportRecords(data, onProgress);
           if (result) {
               setToast({ type: 'success', message: `Đã nhập thành công ${data.length} hồ sơ mới.` });
               loadData();
@@ -268,7 +268,7 @@ function App() {
               return false;
           }
       } else {
-          const result = await forceUpdateRecordsBatchApi(data);
+          const result = await forceUpdateRecordsBatchApi(data, onProgress);
           if (result.success) {
               setToast({ type: 'success', message: `Đã cập nhật thành công ${result.count} hồ sơ.` });
               loadData();
