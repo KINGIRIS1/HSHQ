@@ -9,6 +9,7 @@ import { fetchArchiveRecords } from '../services/apiArchive';
 import EmployeeStatsView from './report/EmployeeStatsView';
 import WardStatsView from './report/WardStatsView';
 import DailyStatsView from './report/DailyStatsView';
+import OverdueStatsView from './report/OverdueStatsView';
 
 interface ReportSectionProps {
     reportContent: string;
@@ -38,7 +39,7 @@ const ReportSection: React.FC<ReportSectionProps> = ({ reportContent, isGenerati
     // Report Type State
     const [reportType, setReportType] = useState<'week' | 'month' | 'custom'>('custom');
 
-    const [activeTab, setActiveTab] = useState<'list' | 'ward_stats' | 'ai' | 'employee' | 'daily_stats'>('list');
+    const [activeTab, setActiveTab] = useState<'list' | 'ward_stats' | 'ai' | 'employee' | 'daily_stats' | 'overdue'>('list');
     const previewRef = useRef<HTMLDivElement>(null);
 
     const [isKeyModalOpen, setIsKeyModalOpen] = useState(false);
@@ -434,6 +435,12 @@ const ReportSection: React.FC<ReportSectionProps> = ({ reportContent, isGenerati
                     <CalendarDays size={16}/> Thống kê theo ngày
                 </button>
                 <button 
+                    onClick={() => setActiveTab('overdue')}
+                    className={`px-6 py-3 text-sm font-bold border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'overdue' ? 'border-red-600 text-red-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                >
+                    <AlertTriangle size={16}/> Thống kê hồ sơ trễ
+                </button>
+                <button 
                     onClick={() => setActiveTab('ai')}
                     className={`px-6 py-3 text-sm font-bold border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'ai' ? 'border-purple-600 text-purple-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
                 >
@@ -606,6 +613,13 @@ const ReportSection: React.FC<ReportSectionProps> = ({ reportContent, isGenerati
                         employees={employees} 
                         wards={wards} 
                         onFilteredRecordsChange={setDailyStatsRecords}
+                    />
+                )}
+
+                {activeTab === 'overdue' && (
+                    <OverdueStatsView 
+                        records={filteredData}
+                        employees={employees}
                     />
                 )}
 

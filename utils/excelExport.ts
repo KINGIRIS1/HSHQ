@@ -567,3 +567,126 @@ export const exportReturnedListToExcel = (records: RecordFile[], fromDateStr?: s
     
     XLSX.writeFile(wb, fileName);
 };
+
+export const exportOverdueStatsToExcel = (records: any[], employees: Employee[], filterType: string) => {
+    if (records.length === 0) {
+        alert("Không có hồ sơ nào để xuất.");
+        return;
+    }
+
+    const formatDate = (dStr: string | null | undefined) => {
+        if (!dStr) return '';
+        const date = new Date(dStr);
+        if (isNaN(date.getTime())) return '';
+        return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;
+    };
+
+    const wb = XLSX.utils.book_new();
+
+    const tableHeader = [
+        "STT", 
+        "Mã Hồ Sơ", 
+        "Chủ Sử Dụng", 
+        "Xã/Phường", 
+        "Loại Trễ", 
+        "Ngày Nhận", 
+        "Ngày Hẹn Trả", 
+        "Hoàn Thành",
+        "NV Xử Lý", 
+        "Trạng Thái"
+    ];
+
+    const dataRows = records.map((r, i) => {
+        const emp = employees.find(e => e.id === r.assignedTo);
+        const isPendingOverdue = r._overdueType === 'pending';
+        return [
+            i + 1,
+            r.code,
+            r.customerName,
+            getNormalizedWard(r.ward || undefined),
+            isPendingOverdue ? 'Chưa có kết quả' : 'Đã có kết quả',
+            formatDate(r.receivedDate),
+            formatDate(r.deadline),
+            formatDate(r.completedDate),
+            emp ? emp.name : '',
+            STATUS_LABELS[r.status as RecordStatus] || r.status
+        ];
+    });
+
+    let subtitle = "THỐNG KÊ HỒ SƠ TRỄ HẠN";
+    if (filterType === 'pending') subtitle += " (Chưa có kết quả)";
+    if (filterType === 'completed') subtitle += " (Đã có kết quả)";
+
+    const wsData = [
+        ["CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM"],
+        ["Độc lập - Tự do - Hạnh phúc"],
+        [],
+        ["DANH SÁCH HỒ SƠ THỐNG KÊ"],
+        [subtitle],
+        [],
+        tableHeader,
+        ...dataRows
+    ];
+
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+    const totalCols = tableHeader.length - 1;
+    ws['!merges'] = [
+        { s: { r: 0, c: 0 }, e: { r: 0, c: totalCols } },
+        { s: { r: 1, c: 0 }, e: { r: 1, c: totalCols } },
+        { s: { r: 3, c: 0 }, e: { r: 3, c: totalCols } },
+        { s: { r: 4, c: 0 }, e: { r: 4, c: totalCols } }
+    ];
+
+    if(ws['A1']) ws['A1'].s = { font: { name: "Times New Roman", sz: 14, bold: true }, alignment: { horizontal: "center" } };
+    if(ws['A2']) ws['A2'].s = { font: { name: "Times New Roman", sz: 12, bold: true, underline: true }, alignment: { horizontal: "center" } };
+    if(ws['A4']) ws['A4'].s = { font: { name: "Times New Roman", sz: 16, bold: true, color: { rgb: "0000FF" } }, alignment: { horizontal: "center" } };
+    if(ws['A5']) ws['A5'].s = { font: { name: "Times New Roman", sz: 12, italic: true }, alignment: { horizontal: "center", wrapText: true } };
+
+    const headerStyle = { 
+        font: { name: "Times New Roman", sz: 11, bold: true }, 
+        border: { top: { style: "thin" }, bottom: { style: "thin" }, left: { style: "thin" }, right: { style: "thin" } }, 
+        fill: { fgColor: { rgb: "E0E0E0" } }, 
+        alignment: { horizontal: "center", vertical: "center", wrapText: true } 
+    };
+    const cellStyle = { 
+        font: { name: "Times New Roman", sz: 11 }, 
+        border: { top: { style: "thin" }, bottom: { style: "thin" }, left: { style: "thin" }, right: { style: "thin" } },
+        alignment: { vertical: "center", wrapText: true }
+    };
+    const centerStyle = { ...cellStyle, alignment: { horizontal: "center", vertical: "center" } };
+
+    const headerRowIdx = 6;
+    const dataStartIdx = 7;
+
+    for (let c = 0; c <= totalCols; c++) {
+        const headerRef = XLSX.utils.encode_cell({ r: headerRowIdx, c });
+        if (!ws[headerRef]) ws[headerRef] = { v: "", t: "s" };
+        ws[headerRef].s = headerStyle;
+
+        for (let r = dataStartIdx; r < dataStartIdx + dataRows.length; r++) {
+            const cellRef = XLSX.utils.encode_cell({ r, c });
+            if (!ws[cellRef]) ws[cellRef] = { v: "", t: "s" };
+            
+            if ([0, 4, 5, 6, 7, 9].includes(c)) ws[cellRef].s = centerStyle;
+            else ws[cellRef].s = cellStyle;
+        }
+    }
+
+    ws['!cols'] = [
+        { wch: 5 },  // STT
+        { wch: 15 }, // Mã HS
+        { wch: 30 }, // Chủ sử dụng
+        { wch: 20 }, // Xã
+        { wch: 15 }, // Loại trễ
+        { wch: 12 }, // Ngày nhận
+        { wch: 12 }, // Ngày hẹn
+        { wch: 12 }, // Ngày Xong
+        { wch: 20 }, // NV Xử lý
+        { wch: 15 }  // Trạng thái
+    ];
+
+    XLSX.utils.book_append_sheet(wb, ws, "HoSoTreHan");
+    const fileName = `Danh_Sach_Tre_Han_${filterType}_${new Date().getTime()}.xlsx`;
+    XLSX.writeFile(wb, fileName);
+};
