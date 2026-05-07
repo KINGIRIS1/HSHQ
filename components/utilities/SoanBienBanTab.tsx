@@ -30,7 +30,7 @@ const DEFAULT_BDDC_CAUSE = "Khi đo đạc lập bản đồ địa chính khôn
 
 const DEFAULT_ISSUING_AUTHORITIES = [
     "Sở Tài nguyên và Môi trường tỉnh Bình Phước",
-    "Văn phòng Đăng ký Đất đai tỉnh Đồng Nai - Chi nhánh Hớn Quản",
+    "Văn phòng Đăng ký Đất đai thành phố Đồng Nai - Chi nhánh Hớn Quản",
     "Chi nhánh Văn phòng Đăng ký Đất đai huyện Hớn Quản",
     "UBND huyện Hớn Quản",
     "UBND huyện Bình Long (cũ)"
@@ -486,7 +486,7 @@ const SoanBienBanTab: React.FC<SoanBienBanTabProps> = ({ currentUser, isActive, 
         <p style="${indentStyle} margin-bottom: 5px;"><b>Nguyên nhân:</b></p>
         <p style="${indentStyle} margin-bottom: 5px;">${bddcCauseText}.</p>
         <p style="${indentStyle} margin-bottom: 5px;">Nay chủ sử dụng đất và các chủ sử dụng đất giáp ranh tiến hành cắm mốc xác định lại ranh giới theo hiện trạng, cam kết không tranh chấp.</p>
-        <p style="${indentStyle} margin-bottom: 12px;">Do đó, Kiến nghị Văn phòng Đăng ký đất đai tỉnh Đồng Nai – Chi nhánh Hớn Quản cấp đổi GCNQSDĐ cho ${daiTuNhanXung}, đồng thời chỉnh lý bản đồ địa chính năm 2024 theo hiện trạng sử dụng đất thực tế.</p>
+        <p style="${indentStyle} margin-bottom: 12px;">Do đó, Kiến nghị Văn phòng Đăng ký đất đai thành phố Đồng Nai – Chi nhánh Hớn Quản cấp đổi GCNQSDĐ cho ${daiTuNhanXung}, đồng thời chỉnh lý bản đồ địa chính năm 2024 theo hiện trạng sử dụng đất thực tế.</p>
         `
         : "";
 
@@ -639,7 +639,7 @@ const SoanBienBanTab: React.FC<SoanBienBanTabProps> = ({ currentUser, isActive, 
     const textDienTich = `, diện tích: <b>${dienTichHienThi} m²</b>`;
 
     const textMap2024 = `Theo bản đồ địa chính mới được Sở Tài nguyên và Môi trường ký duyệt ngày 10/10/2024 thuộc thửa đất số <b>${formData.SO_THUA_MOI || '...'}</b>, tờ bản đồ số <b>${formData.SO_TO_MOI || '...'}</b>${textDienTich}.`;
-    const textCV106 = `Theo Công văn số 106/VPĐK-KTĐC ngày 08/07/2025 của Văn phòng Đăng ký Đất đai tỉnh Đồng Nai thuộc thửa đất số <b>${formData.SO_THUA_MOI || '...'}</b>, tờ bản đồ số <b>${formData.SO_TO_106}</b>${textDienTich}.`;
+    const textCV106 = `Theo Công văn số 106/VPĐK-KTĐC ngày 08/07/2025 của Văn phòng Đăng ký Đất đai thành phố Đồng Nai thuộc thửa đất số <b>${formData.SO_THUA_MOI || '...'}</b>, tờ bản đồ số <b>${formData.SO_TO_106}</b>${textDienTich}.`;
 
     let canCuBanDoHtml = `<p style="${indentStyle} margin-bottom: 8px;">${textMap2024}</p>`;
     
@@ -668,7 +668,7 @@ const SoanBienBanTab: React.FC<SoanBienBanTabProps> = ({ currentUser, isActive, 
         ${ownersHtmlFull}
         
         <p style="margin-bottom: 5px;"><b>A. THÀNH PHẦN GỒM:</b></p>
-        <p style="margin-bottom: 5px;"><b>I. Đại diện Văn phòng Đăng ký đất đai tỉnh Đồng Nai – Chi nhánh Hớn Quản:</b></p>
+        <p style="margin-bottom: 5px;"><b>I. Đại diện Văn phòng Đăng ký đất đai thành phố Đồng Nai – Chi nhánh Hớn Quản:</b></p>
         <p style="margin-bottom: 5px;">1. ........................................................... - Chức vụ: ...........................................</p>
         <p style="margin-bottom: 10px;">2. Ông: <b>${toTitleCase(currentUser.name)}</b> - Chức vụ: Nhân viên</p>
 

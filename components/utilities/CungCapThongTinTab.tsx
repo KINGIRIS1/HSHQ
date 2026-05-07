@@ -422,7 +422,7 @@ const CungCapThongTinTab: React.FC<CungCapThongTinTabProps> = ({ currentUser, no
                 <table style="width: 100%; text-align: center; font-weight: bold; border-collapse: collapse; margin-bottom: 0px; font-size: 11pt; border: none;">
                     <tr style="vertical-align: top;">
                         <td style="width: 45%; padding: 0;">
-                            <p style="margin: 0;">VĂN PHÒNG ĐKĐĐ TỈNH ĐỒNG NAI</p>
+                            <p style="margin: 0;">VĂN PHÒNG ĐKĐĐ THÀNH PHỐ ĐỒNG NAI</p>
                             <p style="margin: 0;">CHI NHÁNH HỚN QUẢN</p>
                             ${lineLeftHtml}
                         </td>
@@ -466,7 +466,7 @@ const CungCapThongTinTab: React.FC<CungCapThongTinTabProps> = ({ currentUser, no
                     Nội dung yêu cầu cung cấp thông tin quy hoạch thửa đất số <b>${formData.Thua_Cu}</b>, tờ bản đồ số <b>${formData.To_Cu}</b>, diện tích <b>${formData.DT_Cu}m²</b> ${previewData.Loai_Dat_Fmt} tọa lạc tại ${formData.Dia_Chi_Thua_Dat}, ${formData.Phuong}, tỉnh Bình Phước của ông (bà) <b>${formData.Ten_CSD}</b>.
                 </p>
                 <p style="text-indent: 30px; margin-bottom: 5px;">
-                    Căn cứ chức năng, nhiệm vụ Văn phòng Đăng ký Đất đai tỉnh Đồng Nai – Chi nhánh Hớn Quản cung cấp thông tin cho ông (bà) ${formData.Ten_Nguoi_Yeu_Cau} với các nội dung như sau:
+                    Căn cứ chức năng, nhiệm vụ Văn phòng Đăng ký Đất đai thành phố Đồng Nai – Chi nhánh Hớn Quản cung cấp thông tin cho ông (bà) ${formData.Ten_Nguoi_Yeu_Cau} với các nội dung như sau:
                 </p>
 
                 <div style="margin-top: 10px; font-weight: bold; font-style: italic;">* Thông tin về thửa đất:</div>
@@ -485,7 +485,7 @@ const CungCapThongTinTab: React.FC<CungCapThongTinTabProps> = ({ currentUser, no
                 </div>
 
                 <p style="text-indent: 30px; margin-top: 15px;">
-                    Vậy Văn phòng Đăng ký Đất đai tỉnh Đồng Nai – Chi nhánh Hớn Quản cung cấp thông tin cho ông (bà) được biết.
+                    Vậy Văn phòng Đăng ký Đất đai thành phố Đồng Nai – Chi nhánh Hớn Quản cung cấp thông tin cho ông (bà) được biết.
                 </p>
 
                 <table style="width: 100%; margin-top: 30px; text-align: center; border-collapse: collapse;">
