@@ -593,11 +593,63 @@ const SaoLucView: React.FC<SaoLucViewProps> = ({ currentUser, wards = ['Tân Qua
 
     return (
         <div className="flex flex-col h-full bg-white">
+            {/* SUB-HEADER TABS */}
+            <div className="flex border-b border-gray-200 bg-gray-50 px-4 overflow-x-auto shrink-0">
+                <button 
+                    onClick={() => setSubTab('all')} 
+                    className={`px-4 py-3 text-sm font-bold flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap ${subTab === 'all' ? 'border-blue-600 text-blue-700 bg-white' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                >
+                    <LayoutGrid size={16}/> Tất cả hồ sơ
+                </button>
+                <button 
+                    onClick={() => setSubTab('draft')} 
+                    className={`px-4 py-3 text-sm font-bold flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap ${subTab === 'draft' ? 'border-blue-600 text-blue-700 bg-white' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                >
+                    <ListChecks size={16}/> Chưa giao
+                </button>
+                <button 
+                    onClick={() => setSubTab('assigned')} 
+                    className={`px-4 py-3 text-sm font-bold flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap ${subTab === 'assigned' ? 'border-blue-600 text-blue-700 bg-white' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                >
+                    <Users size={16}/> Đang thực hiện
+                </button>
+                <button 
+                    onClick={() => setSubTab('executed')} 
+                    className={`px-4 py-3 text-sm font-bold flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap ${subTab === 'executed' ? 'border-blue-600 text-blue-700 bg-white' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                >
+                    <CheckCircle2 size={16}/> Đã thực hiện
+                </button>
+                <button 
+                    onClick={() => setSubTab('sign')} 
+                    className={`px-4 py-3 text-sm font-bold flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap ${subTab === 'sign' ? 'border-purple-600 text-purple-700 bg-white' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                >
+                    <Send size={16}/> Trình ký
+                </button>
+                <button 
+                    onClick={() => setSubTab('signed')} 
+                    className={`px-4 py-3 text-sm font-bold flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap ${subTab === 'signed' ? 'border-teal-600 text-teal-700 bg-white' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                >
+                    <PenTool size={16}/> Ký duyệt
+                </button>
+                <button 
+                    onClick={() => setSubTab('result')} 
+                    className={`px-4 py-3 text-sm font-bold flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap ${subTab === 'result' ? 'border-green-600 text-green-700 bg-white' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                >
+                    <FileCheck size={16}/> Giao 1 cửa
+                </button>
+            </div>
+
             {/* Header */}
             <div className="p-4 border-b border-gray-100 flex flex-col gap-4">
                 <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
                     <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-                        Sao lục hồ sơ
+                        {subTab === 'all' && 'Tất cả hồ sơ sao lục'}
+                        {subTab === 'draft' && 'Hồ sơ chưa giao'}
+                        {subTab === 'assigned' && 'Hồ sơ đang thực hiện'}
+                        {subTab === 'executed' && 'Hồ sơ đã thực hiện'}
+                        {subTab === 'sign' && 'Danh sách Trình ký'}
+                        {subTab === 'signed' && 'Danh sách Ký duyệt'}
+                        {subTab === 'result' && 'Danh sách Đã giao 1 cửa'}
                     </h2>
                     <div className="relative flex-1 sm:w-64 max-w-md">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
@@ -610,13 +662,14 @@ const SaoLucView: React.FC<SaoLucViewProps> = ({ currentUser, wards = ['Tân Qua
                     </div>
                 </div>
 
-                {/* Filters */}
-                <div className="flex flex-wrap gap-3 items-center bg-gray-50 p-2 rounded-lg border border-gray-100">
+                {/* Filters & Actions */}
+                <div className="flex flex-wrap gap-3 items-center bg-gray-50 p-2 rounded-lg border border-gray-100 relative">
                     <div className="flex items-center gap-2 bg-white px-2 py-1.5 rounded-md border border-gray-200 shadow-sm">
                         <Calendar size={16} className="text-gray-500"/>
                         <input type="date" className="text-sm outline-none bg-transparent text-gray-700 w-28" value={fromDate} onChange={e => setFromDate(e.target.value)} placeholder="Từ ngày" />
                         <span className="text-gray-400">-</span>
                         <input type="date" className="text-sm outline-none bg-transparent text-gray-700 w-28" value={toDate} onChange={e => setToDate(e.target.value)} placeholder="Đến ngày" />
+                        {(fromDate || toDate) && (<button onClick={() => { setFromDate(''); setToDate(''); }} className="text-gray-400 hover:text-red-500"><X size={14} /></button>)}
                     </div>
 
                     <div className="flex items-center gap-2 bg-white px-2 py-1.5 rounded-md border border-gray-200 shadow-sm">
@@ -636,93 +689,46 @@ const SaoLucView: React.FC<SaoLucViewProps> = ({ currentUser, wards = ['Tân Qua
                     </div>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-3 bg-gray-50 p-2 rounded-lg relative">
-                    <div className="flex bg-white rounded-md border border-gray-200 p-1 mr-2 shadow-sm">
-                        <button 
-                            onClick={() => setSubTab('all')} 
-                            className={`flex items-center gap-2 px-3 py-1.5 rounded text-sm font-medium transition-colors ${subTab === 'all' ? 'bg-gray-100 text-gray-800 shadow-sm' : 'text-gray-600 hover:bg-gray-100'}`}
-                        >
-                            <LayoutGrid size={16}/> Tất cả
+                <div className="flex justify-end gap-3 mt-2">
+                    {subTab === 'assigned' && isManager && selectedIds.size > 0 && (
+                        <button onClick={() => handleBatchStatusChange('executed')} className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 font-bold shadow-md transition-all animate-pulse">
+                            <CheckCircle2 size={18}/> Đã thực hiện ({selectedIds.size})
                         </button>
-                        <button 
-                            onClick={() => setSubTab('draft')} 
-                            className={`flex items-center gap-2 px-3 py-1.5 rounded text-sm font-medium transition-colors ${subTab === 'draft' ? 'bg-orange-100 text-orange-700 shadow-sm' : 'text-gray-600 hover:bg-gray-100'}`}
-                        >
-                            <ListChecks size={16}/> Chưa giao việc
+                    )}
+                    {subTab === 'executed' && isManager && selectedIds.size > 0 && (
+                        <button onClick={() => handleBatchStatusChange('pending_sign')} className="flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 font-bold shadow-md transition-all animate-pulse">
+                            <Send size={18}/> Trình ký ({selectedIds.size})
                         </button>
-                        <button 
-                            onClick={() => setSubTab('assigned')} 
-                            className={`flex items-center gap-2 px-3 py-1.5 rounded text-sm font-medium transition-colors ${subTab === 'assigned' ? 'bg-blue-100 text-blue-700 shadow-sm' : 'text-gray-600 hover:bg-gray-100'}`}
-                        >
-                            <Users size={16}/> Đang thực hiện
+                    )}
+                    {subTab === 'sign' && isManager && selectedIds.size > 0 && (
+                        <button onClick={() => handleBatchStatusChange('signed')} className="flex items-center gap-2 bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700 font-bold shadow-md transition-all animate-pulse">
+                            <PenTool size={18}/> Ký duyệt ({selectedIds.size})
                         </button>
-                        <button 
-                            onClick={() => setSubTab('executed')} 
-                            className={`flex items-center gap-2 px-3 py-1.5 rounded text-sm font-medium transition-colors ${subTab === 'executed' ? 'bg-indigo-100 text-indigo-700 shadow-sm' : 'text-gray-600 hover:bg-gray-100'}`}
-                        >
-                            <CheckCircle2 size={16}/> Đã thực hiện
+                    )}
+                    {subTab === 'signed' && isManager && selectedIds.size > 0 && (
+                        <button onClick={() => setShowHandoverModal(true)} className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 font-bold shadow-md transition-all animate-pulse">
+                            <FileCheck size={18}/> Đã giao 1 cửa ({selectedIds.size})
                         </button>
-                        <button 
-                            onClick={() => setSubTab('sign')} 
-                            className={`flex items-center gap-2 px-3 py-1.5 rounded text-sm font-medium transition-colors ${subTab === 'sign' ? 'bg-purple-100 text-purple-700 shadow-sm' : 'text-gray-600 hover:bg-gray-100'}`}
-                        >
-                            <Send size={16}/> Trình ký
-                        </button>
-                        <button 
-                            onClick={() => setSubTab('signed')} 
-                            className={`flex items-center gap-2 px-3 py-1.5 rounded text-sm font-medium transition-colors ${subTab === 'signed' ? 'bg-teal-100 text-teal-700 shadow-sm' : 'text-gray-600 hover:bg-gray-100'}`}
-                        >
-                            <PenTool size={16}/> Ký duyệt
-                        </button>
-                        <button 
-                            onClick={() => setSubTab('result')} 
-                            className={`flex items-center gap-2 px-3 py-1.5 rounded text-sm font-medium transition-colors ${subTab === 'result' ? 'bg-green-100 text-green-700 shadow-sm' : 'text-gray-600 hover:bg-gray-100'}`}
-                        >
-                            <FileCheck size={16}/> Đã giao 1 cửa
-                        </button>
-                    </div>
-
-                    <div className="ml-auto flex gap-2">
-                        {subTab === 'assigned' && isManager && selectedIds.size > 0 && (
-                            <button onClick={() => handleBatchStatusChange('executed')} className="flex items-center gap-2 bg-indigo-600 text-white px-3 py-1.5 rounded-md font-bold text-sm hover:bg-indigo-700 shadow-sm animate-pulse">
-                                <CheckCircle2 size={16}/> Đã thực hiện ({selectedIds.size})
-                            </button>
-                        )}
-                        {subTab === 'executed' && isManager && selectedIds.size > 0 && (
-                            <button onClick={() => handleBatchStatusChange('pending_sign')} className="flex items-center gap-2 bg-purple-600 text-white px-3 py-1.5 rounded-md font-bold text-sm hover:bg-purple-700 shadow-sm animate-pulse">
-                                <Send size={16}/> Trình ký ({selectedIds.size})
-                            </button>
-                        )}
-                        {subTab === 'sign' && isManager && selectedIds.size > 0 && (
-                            <button onClick={() => handleBatchStatusChange('signed')} className="flex items-center gap-2 bg-teal-600 text-white px-3 py-1.5 rounded-md font-bold text-sm hover:bg-teal-700 shadow-sm animate-pulse">
-                                <PenTool size={16}/> Ký duyệt ({selectedIds.size})
-                            </button>
-                        )}
-                        {subTab === 'signed' && isManager && selectedIds.size > 0 && (
-                            <button onClick={() => setShowHandoverModal(true)} className="flex items-center gap-2 bg-green-600 text-white px-3 py-1.5 rounded-md font-bold text-sm hover:bg-green-700 shadow-sm animate-pulse">
-                                <FileCheck size={16}/> Đã giao 1 cửa ({selectedIds.size})
-                            </button>
-                        )}
-                        {(subTab === 'draft' || subTab === 'all') && isManager && (
-                            <>
-                                {selectedIds.size > 0 && (
-                                    <button onClick={handleAssign} className="flex items-center gap-2 bg-indigo-600 text-white px-3 py-1.5 rounded-md font-bold text-sm hover:bg-indigo-700 shadow-sm animate-pulse">
-                                        <Users size={16}/> Giao việc ({selectedIds.size})
-                                    </button>
-                                )}
-                                <label className="flex items-center gap-2 bg-green-600 text-white px-3 py-1.5 rounded-md font-bold text-sm hover:bg-green-700 shadow-sm cursor-pointer">
-                                    <FileSpreadsheet size={16}/> Import Excel
-                                    <input type="file" className="hidden" accept=".xlsx, .xls" onChange={handleImportExcel} />
-                                </label>
-                                <button onClick={handleAddNew} className="flex items-center gap-2 bg-blue-600 text-white px-3 py-1.5 rounded-md font-bold text-sm hover:bg-blue-700 shadow-sm">
-                                    <Plus size={16}/> Thêm mới
+                    )}
+                    {(subTab === 'draft' || subTab === 'all') && isManager && (
+                        <>
+                            {selectedIds.size > 0 && (
+                                <button onClick={handleAssign} className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 font-bold shadow-md transition-all animate-pulse">
+                                    <Users size={18}/> Giao việc ({selectedIds.size})
                                 </button>
-                            </>
-                        )}
-                        <button onClick={() => setShowExportModal(true)} className="flex items-center gap-2 bg-green-600 text-white px-3 py-1.5 rounded-md font-bold text-sm hover:bg-green-700 shadow-sm">
-                            <FileDown size={16}/> Xuất Bàn Giao
-                        </button>
-                    </div>
+                            )}
+                            <label className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 font-bold shadow-md transition-all cursor-pointer">
+                                <FileSpreadsheet size={18}/> Import Excel
+                                <input type="file" className="hidden" accept=".xlsx, .xls" onChange={handleImportExcel} />
+                            </label>
+                            <button onClick={handleAddNew} className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 font-bold shadow-md transition-all">
+                                <Plus size={18}/> Thêm mới
+                            </button>
+                        </>
+                    )}
+                    <button onClick={() => setShowExportModal(true)} className="flex items-center gap-2 bg-white text-gray-700 border border-gray-300 px-4 py-2 rounded-lg hover:bg-gray-50 font-medium shadow-sm transition-all">
+                        <FileDown size={18}/> Xuất Bàn Giao
+                    </button>
                 </div>
             </div>
 

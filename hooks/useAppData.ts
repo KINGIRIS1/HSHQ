@@ -133,8 +133,12 @@ export const useAppData = (currentUser: User | null) => {
     // --- Record Handlers ---
     const handleAddOrUpdateRecord = async (recordData: any): Promise<RecordFile | null> => {
         if (recordData.recordType === 'Cung cấp tài liệu đất đai') {
-            const { saveArchiveRecord } = await import('../services/apiArchive');
+            const { saveArchiveRecord, fetchArchiveRecords } = await import('../services/apiArchive');
+            const archives = await fetchArchiveRecords('saoluc');
+            const isArchiveEdit = recordData.id && archives.find(a => a.id === recordData.id);
+            
             const archiveData = {
+                id: isArchiveEdit ? recordData.id : undefined,
                 type: 'saoluc' as const,
                 so_hieu: recordData.code || '',
                 trich_yeu: recordData.content || recordData.recordType || '',

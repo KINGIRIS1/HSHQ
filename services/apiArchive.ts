@@ -146,18 +146,18 @@ export const saveArchiveRecord = async (record: Partial<ArchiveRecord>): Promise
                 ngay_thang: payload.ngay_thang,
                 noi_nhan_gui: payload.noi_nhan_gui,
                 data: payload.data
-            }).eq('id', record.id).select().single();
+            }).eq('id', record.id).select();
             
             if (error) throw error;
-            return data as ArchiveRecord;
+            return data && data.length > 0 ? (data[0] as ArchiveRecord) : null;
         } else {
             if (!payload.id) {
                 payload.id = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substr(2, 9);
             }
             
-            const { data, error } = await supabase.from('archive_records').insert([payload]).select().single();
+            const { data, error } = await supabase.from('archive_records').insert([payload]).select();
             if (error) throw error;
-            return data as ArchiveRecord;
+            return data && data.length > 0 ? (data[0] as ArchiveRecord) : null;
         }
     } catch (error: any) {
         // Xử lý thông báo lỗi cụ thể cho 22P02 (Sai kiểu dữ liệu, ví dụ text vào trường UUID hoặc Date sai format)

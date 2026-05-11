@@ -1,11 +1,12 @@
 
-import React, { useState, useEffect } from 'react';
-import { RecordFile, Employee, User, Holiday } from '../types';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { RecordFile, Employee, User, Holiday, RecordStatus } from '../types';
 import { getNormalizedWard } from '../constants';
 import { PlusCircle, FileSpreadsheet, LayoutList, Settings, RotateCcw } from 'lucide-react';
 import { generateDocxBlobAsync, hasTemplate, STORAGE_KEYS } from '../services/docxService';
 import * as XLSX from 'xlsx-js-style';
 import { confirmAction } from '../utils/appHelpers';
+import { fetchArchiveRecords, ArchiveRecord, deleteArchiveRecord } from '../services/apiArchive';
 
 // Components
 import RecordForm from './receive-record/RecordForm';
@@ -79,6 +80,39 @@ const ReceiveRecord: React.FC<ReceiveRecordProps> = ({ onSave, onDelete, wards, 
 
   const [systemReceiptData, setSystemReceiptData] = useState<Partial<RecordFile> | null>(null);
 
+  const [archiveRecords, setArchiveRecords] = useState<ArchiveRecord[]>([]);
+  useEffect(() => {
+      fetchArchiveRecords('saoluc').then(setArchiveRecords);
+  }, []);
+
+  const combinedRecords = useMemo(() => {
+      const mappedArchive: RecordFile[] = archiveRecords.map(a => ({
+          id: a.id,
+          code: a.so_hieu,
+          recordType: 'Cung cấp tài liệu đất đai',
+          customerName: a.noi_nhan_gui,
+          receivedDate: a.ngay_thang,
+          content: a.trich_yeu,
+          ward: a.data?.xa_phuong || '',
+          mapSheet: a.data?.to_ban_do || '',
+          landPlot: a.data?.thua_dat || '',
+          deadline: a.data?.hen_tra || '',
+          status: 'pending' as RecordStatus,
+          paymentStatus: 'unpaid' as any,
+          price: 0,
+          advancePayment: 0
+      } as RecordFile));
+      return [...records, ...mappedArchive];
+  }, [records, archiveRecords]);
+
+  const handleSaveWrapper = async (data: RecordFile) => {
+      const saved = await onSave(data);
+      if (saved && data.recordType === 'Cung cấp tài liệu đất đai') {
+          fetchArchiveRecords('saoluc').then(setArchiveRecords);
+      }
+      return saved;
+  };
+
   // --- LOGIC TẠO MÃ HỒ SƠ (CẬP NHẬT CHÍNH XÁC THEO ĐỊA BÀN) ---
   const getShortCode = (ward: string) => {
       const normalized = ward.toLowerCase().trim();
@@ -115,41 +149,21 @@ const ReceiveRecord: React.FC<ReceiveRecordProps> = ({ onSave, onDelete, wards, 
     
     let maxSeq = 0;
     
-    records.forEach(r => {
-        if (!r.code) return;
-        const parts = r.code.split('-');
-        if (parts.length === 2) {
-            const [rDate, rSeq] = parts;
-            if (rDate.substring(0, 2) === yy) {
-                const seqNum = parseInt(rSeq, 10);
-                if (!isNaN(seqNum) && seqNum > maxSeq) maxSeq = seqNum;
-            }
-        } else if (parts.length === 3) {
-            const [rPrefix, rDate, rSeq] = parts;
-            if (rDate.substring(0, 2) === yy) {
-                const seqNum = parseInt(rSeq, 10);
-                if (!isNaN(seqNum) && seqNum > maxSeq) maxSeq = seqNum;
-            }
-        }
-    });
-
-    existingCodes.forEach(code => {
+    const checkSeq = (code: string | undefined | null) => {
         if (!code) return;
         const parts = code.split('-');
-        if (parts.length === 2) {
-            const [rDate, rSeq] = parts;
-            if (rDate.substring(0, 2) === yy) {
-                const seqNum = parseInt(rSeq, 10);
-                if (!isNaN(seqNum) && seqNum > maxSeq) maxSeq = seqNum;
-            }
-        } else if (parts.length === 3) {
-            const [rPrefix, rDate, rSeq] = parts;
+        if (parts.length === 2 || parts.length === 3) {
+            const rDate = parts.length === 2 ? parts[0] : parts[1];
+            const rSeq = parts.length === 2 ? parts[1] : parts[2];
             if (rDate.substring(0, 2) === yy) {
                 const seqNum = parseInt(rSeq, 10);
                 if (!isNaN(seqNum) && seqNum > maxSeq) maxSeq = seqNum;
             }
         }
-    });
+    };
+
+    combinedRecords.forEach((r: RecordFile) => checkSeq(r.code));
+    existingCodes.forEach(checkSeq);
 
     const nextSeq = (maxSeq + 1).toString().padStart(4, '0');
     return `${datePrefix}-${nextSeq}`;
@@ -367,7 +381,14 @@ const ReceiveRecord: React.FC<ReceiveRecordProps> = ({ onSave, onDelete, wards, 
 
   const handleDeleteFromList = async (record: RecordFile) => {
       if (await confirmAction(`Bạn có chắc muốn xóa hồ sơ ${record.code}?`)) {
-          await onDelete(record.id);
+          if (record.recordType === 'Cung cấp tài liệu đất đai') {
+              const success = await deleteArchiveRecord(record.id);
+              if (success) {
+                  setArchiveRecords(prev => prev.filter(r => r.id !== record.id));
+              }
+          } else {
+              await onDelete(record.id);
+          }
       }
   };
 
@@ -402,9 +423,9 @@ const ReceiveRecord: React.FC<ReceiveRecordProps> = ({ onSave, onDelete, wards, 
         {viewMode === 'create' && (
             <RecordForm 
                 initialData={editingRecord}
-                onSave={onSave}
+                onSave={handleSaveWrapper}
                 wards={wards}
-                records={records}
+                records={combinedRecords}
                 holidays={holidays}
                 calculateDeadline={calculateDeadline}
                 generateCode={calculateNextCode} 
@@ -417,7 +438,7 @@ const ReceiveRecord: React.FC<ReceiveRecordProps> = ({ onSave, onDelete, wards, 
 
         {viewMode === 'bulk' && (
             <BulkImport 
-                onSave={onSave}
+                onSave={handleSaveWrapper}
                 calculateDeadline={calculateDeadline}
                 calculateNextCode={(w, d, exist) => calculateNextCode(w, d, exist)}
                 onPreview={handlePreviewDocx}
@@ -427,7 +448,7 @@ const ReceiveRecord: React.FC<ReceiveRecordProps> = ({ onSave, onDelete, wards, 
 
         {viewMode === 'list' && (
             <DailyList 
-                records={records}
+                records={combinedRecords}
                 wards={wards}
                 currentUser={currentUser}
                 employees={employees}
