@@ -24,51 +24,63 @@ const CACHE_KEY_ARCHIVE = 'offline_archive_records';
 // --- API ---
 
 export const migrateCungCapTaiLieu = async () => {
+    // Reverse migration: move 'Cung cấp tài liệu đất đai' from archive_records to land_records
     if (!isConfigured) return;
     try {
-        const { data: landRecords, error: fetchError } = await supabase
-            .from('land_records')
+        const { data: archiveData, error: fetchError } = await supabase
+            .from('archive_records')
             .select('*')
-            .eq('recordType', 'Cung cấp tài liệu đất đai');
+            .eq('type', 'saoluc');
             
         if (fetchError) throw fetchError;
-        if (!landRecords || landRecords.length === 0) return;
+        if (!archiveData || archiveData.length === 0) return;
 
-        console.log(`Found ${landRecords.length} records to migrate.`);
+        const cungCapRecords = archiveData.filter(r => r.data && r.data.recordType === 'Cung cấp tài liệu đất đai');
+        if (cungCapRecords.length === 0) return;
 
-        const archiveRecords = landRecords.map(r => ({
-            type: 'saoluc',
-            so_hieu: r.code || '',
-            trich_yeu: r.content || r.recordType || '',
-            ngay_thang: r.receivedDate || '',
-            noi_nhan_gui: r.customerName || '',
-            status: 'draft',
-            data: {
-                ...r,
-                xa_phuong: r.ward || '',
-                to_ban_do: r.mapSheet || '',
-                thua_dat: r.landPlot || '',
-                hen_tra: r.deadline || ''
+        console.log(`Found ${cungCapRecords.length} records to reverse migrate.`);
+
+        const landRecordsToInsert = cungCapRecords.map(r => {
+            const { xa_phuong, to_ban_do, thua_dat, hen_tra, ...originalData } = r.data;
+            // Remove snake_case or invalid columns that might have slipped into originalData
+            const safeData: any = {};
+            const validCols = [
+                'id', 'code', 'customerName', 'phoneNumber', 'cccd', 'customerAddress', 'ward', 'landPlot', 'mapSheet', 
+                'area', 'address', 'group', 'content', 'recordType', 'receivedDate', 'receivedBy', 'deadline', 
+                'assignedDate', 'submissionDate', 'approvalDate', 'completedDate', 'status', 'assignedTo', 'submittedTo', 'checkedBy',
+                'pendingCheckDate', 'checkedDate', 'completedWorkDate',
+                'notes', 'privateNotes', 'personalNotes', 
+                'authorizedBy', 'authDocType', 'otherDocs', 'exportBatch', 'exportDate', 'handoverWard',
+                'measurementNumber', 'excerptNumber',
+                'reminderDate', 'lastRemindedAt',
+                'receiptNumber', 'resultReturnedDate', 'receiverName',
+                'needsMapCorrection',
+                'issueNumber', 'entryNumber', 'issueDate', 'residentialArea'
+            ];
+            for (const key of Object.keys(originalData)) {
+                if (validCols.includes(key)) safeData[key] = originalData[key];
             }
-        }));
+            return safeData;
+        });
 
+        // Insert into land_records using upsert to avoid conflicts on duplicate IDs
         const { error: insertError } = await supabase
-            .from('archive_records')
-            .insert(archiveRecords);
+            .from('land_records')
+            .upsert(landRecordsToInsert);
             
         if (insertError) throw insertError;
 
-        const idsToDelete = landRecords.map(r => r.id);
+        const idsToDelete = cungCapRecords.map(r => r.id);
         const { error: deleteError } = await supabase
-            .from('land_records')
+            .from('archive_records')
             .delete()
             .in('id', idsToDelete);
             
         if (deleteError) throw deleteError;
 
-        console.log('Migration completed successfully.');
+        console.log('Reverse migration completed successfully.');
     } catch (error) {
-        console.error('Migration failed:', error);
+        console.error('Reverse migration failed:', error);
     }
 };
 

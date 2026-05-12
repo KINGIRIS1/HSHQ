@@ -84,21 +84,21 @@ export const useRecordFilter = (
         let result = Array.from(uniqueMap.values()) as RecordFile[];
 
         // View-based filtering
-        if (currentView === 'check_list' || currentView === 'other_check_list') {
+        if (currentView === 'check_list' || currentView === 'other_check_list' || currentView === 'archive_check_list') {
             if (isDirector) {
                 // Giám đốc chỉ thấy hồ sơ trình cho mình
                 result = result.filter(r => r.status === RecordStatus.PENDING_SIGN && r.submittedTo === currentUser?.employeeId);
             } else {
                 result = result.filter(r => r.status === RecordStatus.PENDING_SIGN);
             }
-        } else if (currentView === 'pending_check_list') {
+        } else if (currentView === 'pending_check_list' || currentView === 'archive_pending_check_list') {
             // Tab Kiểm tra: Hiển thị hồ sơ Chờ kiểm tra và Đã kiểm tra
             result = result.filter(r => r.status === RecordStatus.PENDING_CHECK || r.status === RecordStatus.CHECKED);
-        } else if (currentView === 'completed_list') {
+        } else if (currentView === 'completed_list' || currentView === 'archive_completed_list') {
             result = result.filter(r => r.status === RecordStatus.COMPLETED_WORK);
-        } else if (currentView === 'director_completed' || currentView === 'other_director_completed') {
+        } else if (currentView === 'director_completed' || currentView === 'other_director_completed' || currentView === 'archive_director_completed') {
             result = result.filter(r => r.submittedTo === currentUser?.employeeId && r.status !== RecordStatus.PENDING_SIGN && r.status !== RecordStatus.RECEIVED && r.status !== RecordStatus.ASSIGNED && r.status !== RecordStatus.IN_PROGRESS && r.status !== RecordStatus.COMPLETED_WORK);
-        } else if (currentView === 'handover_list' || currentView === 'other_handover_list') {
+        } else if (currentView === 'handover_list' || currentView === 'other_handover_list' || currentView === 'archive_handover_list') {
             if (handoverTab === 'today') {
                 // Tab chờ giao: Bao gồm Đã ký HOẶC (Đã rút VÀ chưa có đợt xuất) HOẶC Hồ sơ trả (REJECTED)
                 result = result.filter(r => 
@@ -134,18 +134,21 @@ export const useRecordFilter = (
                     });
                 }
             }
-        } else if (currentView === 'assign_tasks' || currentView === 'other_assign_tasks') {
+        } else if (currentView === 'assign_tasks' || currentView === 'other_assign_tasks' || currentView === 'archive_assign_tasks') {
             result = result.filter(r => r.status === RecordStatus.RECEIVED);
         }
 
         // Filter by recordType based on view group
         const isOtherView = ['other_records', 'other_assign_tasks', 'other_check_list', 'other_handover_list', 'other_director_completed'].includes(currentView);
+        const isArchiveMeasurementView = ['archive_records', 'archive_assign_tasks', 'archive_completed_list', 'archive_pending_check_list', 'archive_check_list', 'archive_handover_list', 'archive_director_completed'].includes(currentView);
         const isMeasurementView = ['all_records', 'assign_tasks', 'completed_list', 'pending_check_list', 'check_list', 'handover_list', 'director_completed'].includes(currentView);
         
-        if (isOtherView) {
+        if (isArchiveMeasurementView) {
+            result = result.filter(r => r.recordType === 'Cung cấp tài liệu đất đai');
+        } else if (isOtherView) {
             result = result.filter(r => ['CMD', 'Tòa án', 'Thi hành án'].includes(r.recordType || ''));
         } else if (isMeasurementView) {
-            result = result.filter(r => !['CMD', 'Tòa án', 'Thi hành án'].includes(r.recordType || ''));
+            result = result.filter(r => !['CMD', 'Tòa án', 'Thi hành án', 'Cung cấp tài liệu đất đai'].includes(r.recordType || ''));
         }
 
         // Search Term (Sử dụng searchTerm đã được tách theo view)
@@ -232,15 +235,17 @@ export const useRecordFilter = (
         let approaching = 0;
         if (records.length > 0 && currentUser) {
             const isOtherView = ['other_records', 'other_assign_tasks', 'other_check_list', 'other_handover_list', 'other_director_completed'].includes(currentView);
-            const isMeasurementView = ['all_records', 'assign_tasks', 'completed_list', 'check_list', 'handover_list', 'director_completed'].includes(currentView);
+            const isArchiveMeasurementView = ['archive_records', 'archive_assign_tasks', 'archive_completed_list', 'archive_pending_check_list', 'archive_check_list', 'archive_handover_list', 'archive_director_completed'].includes(currentView);
+            const isMeasurementView = ['all_records', 'assign_tasks', 'completed_list', 'pending_check_list', 'check_list', 'handover_list', 'director_completed'].includes(currentView);
 
             records.forEach(r => {
                 if (r.status === RecordStatus.HANDOVER || r.status === RecordStatus.WITHDRAWN) return; 
                 if (!checkWarningPermission(r)) return; 
                 
                 // Filter by recordType based on view group
+                if (isArchiveMeasurementView && r.recordType !== 'Cung cấp tài liệu đất đai') return;
                 if (isOtherView && !['CMD', 'Tòa án', 'Thi hành án'].includes(r.recordType || '')) return;
-                if (isMeasurementView && ['CMD', 'Tòa án', 'Thi hành án'].includes(r.recordType || '')) return;
+                if (isMeasurementView && ['CMD', 'Tòa án', 'Thi hành án', 'Cung cấp tài liệu đất đai'].includes(r.recordType || '')) return;
 
                 if (isRecordOverdue(r)) overdue++;
                 else if (isRecordApproaching(r)) approaching++;

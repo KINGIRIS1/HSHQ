@@ -132,35 +132,6 @@ export const useAppData = (currentUser: User | null) => {
 
     // --- Record Handlers ---
     const handleAddOrUpdateRecord = async (recordData: any): Promise<RecordFile | null> => {
-        if (recordData.recordType === 'Cung cấp tài liệu đất đai') {
-            const { saveArchiveRecord, fetchArchiveRecords } = await import('../services/apiArchive');
-            const archives = await fetchArchiveRecords('saoluc');
-            const isArchiveEdit = recordData.id && archives.find(a => a.id === recordData.id);
-            
-            const archiveData = {
-                id: isArchiveEdit ? recordData.id : undefined,
-                type: 'saoluc' as const,
-                so_hieu: recordData.code || '',
-                trich_yeu: recordData.content || recordData.recordType || '',
-                ngay_thang: recordData.receivedDate || '',
-                noi_nhan_gui: recordData.customerName || '',
-                status: 'draft' as const,
-                data: {
-                    ...recordData,
-                    xa_phuong: recordData.ward || '',
-                    to_ban_do: recordData.mapSheet || '',
-                    thua_dat: recordData.landPlot || '',
-                    hen_tra: recordData.deadline || ''
-                }
-            };
-            const savedArchive = await saveArchiveRecord(archiveData);
-            if (savedArchive) {
-                // Return a fake RecordFile so the UI can print it, but don't add to land_records state
-                return { ...recordData, id: savedArchive.id } as RecordFile;
-            }
-            return null;
-        }
-
         const isEdit = recordData.id && records.find(r => r.id === recordData.id);
         if (isEdit) {
             const updated = await updateRecordApi(recordData);
@@ -187,36 +158,11 @@ export const useAppData = (currentUser: User | null) => {
     };
 
     const handleImportRecords = async (newRecords: RecordFile[], onProgress?: (processed: number, total: number) => void) => {
-        const landRecordsToImport = newRecords.filter(r => r.recordType !== 'Cung cấp tài liệu đất đai');
-        const archiveRecordsToImport = newRecords.filter(r => r.recordType === 'Cung cấp tài liệu đất đai');
-
         let success = true;
 
-        if (landRecordsToImport.length > 0) {
-            const landSuccess = await createRecordsBatchApi(landRecordsToImport, onProgress);
+        if (newRecords.length > 0) {
+            const landSuccess = await createRecordsBatchApi(newRecords, onProgress);
             if (!landSuccess) success = false;
-        }
-
-        if (archiveRecordsToImport.length > 0) {
-            const { importArchiveRecords } = await import('../services/apiArchive');
-            const archiveData = archiveRecordsToImport.map(r => ({
-                type: 'saoluc' as const,
-                so_hieu: r.code || '',
-                trich_yeu: r.content || r.recordType || '',
-                ngay_thang: r.receivedDate || '',
-                noi_nhan_gui: r.customerName || '',
-                status: 'draft' as const,
-                data: {
-                    ...r,
-                    xa_phuong: r.ward || '',
-                    to_ban_do: r.mapSheet || '',
-                    thua_dat: r.landPlot || '',
-                    hen_tra: r.deadline || ''
-                }
-            }));
-            const archiveSuccess = await importArchiveRecords(archiveData);
-            if (!archiveSuccess) success = false;
-            // Note: Didn't wire onProgress for archive mode yet, but usually it's small or we can add it later
         }
 
         if (success) {

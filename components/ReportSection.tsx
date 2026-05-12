@@ -95,7 +95,10 @@ const ReportSection: React.FC<ReportSectionProps> = ({ reportContent, isGenerati
                         phoneNumber: '',
                         content: r.trich_yeu
                     } as RecordFile));
-                    setArchiveRecords(mapped);
+                    
+                    const cungCapRecordsFromMain = records.filter(r => r.recordType === 'Cung cấp tài liệu đất đai');
+
+                    setArchiveRecords([...mapped, ...cungCapRecordsFromMain]);
                 } catch (e) {
                     console.error("Error loading archive records for report", e);
                 }
@@ -104,7 +107,9 @@ const ReportSection: React.FC<ReportSectionProps> = ({ reportContent, isGenerati
         }
     }, [mainTab]);
 
-    const activeRecords = mainTab === 'measurement' ? records : archiveRecords;
+    const activeRecords = mainTab === 'measurement' 
+        ? records.filter(r => r.recordType !== 'Cung cấp tài liệu đất đai') 
+        : archiveRecords;
 
     const activeEmployees = useMemo(() => {
         if (mainTab === 'measurement') {

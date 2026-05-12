@@ -6,7 +6,6 @@ import { PlusCircle, FileSpreadsheet, LayoutList, Settings, RotateCcw } from 'lu
 import { generateDocxBlobAsync, hasTemplate, STORAGE_KEYS } from '../services/docxService';
 import * as XLSX from 'xlsx-js-style';
 import { confirmAction } from '../utils/appHelpers';
-import { fetchArchiveRecords, ArchiveRecord, deleteArchiveRecord } from '../services/apiArchive';
 
 // Components
 import RecordForm from './receive-record/RecordForm';
@@ -80,38 +79,9 @@ const ReceiveRecord: React.FC<ReceiveRecordProps> = ({ onSave, onDelete, wards, 
 
   const [systemReceiptData, setSystemReceiptData] = useState<Partial<RecordFile> | null>(null);
 
-  const [archiveRecords, setArchiveRecords] = useState<ArchiveRecord[]>([]);
-  useEffect(() => {
-      fetchArchiveRecords('saoluc').then(setArchiveRecords);
-  }, []);
-
   const combinedRecords = useMemo(() => {
-      const mappedArchive: RecordFile[] = archiveRecords.map(a => ({
-          id: a.id,
-          code: a.so_hieu,
-          recordType: 'Cung cấp tài liệu đất đai',
-          customerName: a.noi_nhan_gui,
-          receivedDate: a.ngay_thang,
-          content: a.trich_yeu,
-          ward: a.data?.xa_phuong || '',
-          mapSheet: a.data?.to_ban_do || '',
-          landPlot: a.data?.thua_dat || '',
-          deadline: a.data?.hen_tra || '',
-          status: 'pending' as RecordStatus,
-          paymentStatus: 'unpaid' as any,
-          price: 0,
-          advancePayment: 0
-      } as RecordFile));
-      return [...records, ...mappedArchive];
-  }, [records, archiveRecords]);
-
-  const handleSaveWrapper = async (data: RecordFile) => {
-      const saved = await onSave(data);
-      if (saved && data.recordType === 'Cung cấp tài liệu đất đai') {
-          fetchArchiveRecords('saoluc').then(setArchiveRecords);
-      }
-      return saved;
-  };
+      return [...records];
+  }, [records]);
 
   // --- LOGIC TẠO MÃ HỒ SƠ (CẬP NHẬT CHÍNH XÁC THEO ĐỊA BÀN) ---
   const getShortCode = (ward: string) => {
@@ -381,14 +351,7 @@ const ReceiveRecord: React.FC<ReceiveRecordProps> = ({ onSave, onDelete, wards, 
 
   const handleDeleteFromList = async (record: RecordFile) => {
       if (await confirmAction(`Bạn có chắc muốn xóa hồ sơ ${record.code}?`)) {
-          if (record.recordType === 'Cung cấp tài liệu đất đai') {
-              const success = await deleteArchiveRecord(record.id);
-              if (success) {
-                  setArchiveRecords(prev => prev.filter(r => r.id !== record.id));
-              }
-          } else {
-              await onDelete(record.id);
-          }
+          await onDelete(record.id);
       }
   };
 
@@ -423,7 +386,7 @@ const ReceiveRecord: React.FC<ReceiveRecordProps> = ({ onSave, onDelete, wards, 
         {viewMode === 'create' && (
             <RecordForm 
                 initialData={editingRecord}
-                onSave={handleSaveWrapper}
+                onSave={onSave}
                 wards={wards}
                 records={combinedRecords}
                 holidays={holidays}
@@ -438,7 +401,7 @@ const ReceiveRecord: React.FC<ReceiveRecordProps> = ({ onSave, onDelete, wards, 
 
         {viewMode === 'bulk' && (
             <BulkImport 
-                onSave={handleSaveWrapper}
+                onSave={onSave}
                 calculateDeadline={calculateDeadline}
                 calculateNextCode={(w, d, exist) => calculateNextCode(w, d, exist)}
                 onPreview={handlePreviewDocx}

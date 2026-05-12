@@ -103,12 +103,22 @@ const AssignModal: React.FC<AssignModalProps> = ({ isOpen, onClose, onConfirm, e
         e.department.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    // 2. Nếu có filterDepartment, lọc cứng theo phòng ban và trả về hết vào recommended
+    // 2. Nếu có filterDepartment, lọc cứng theo phòng ban
     if (filterDepartment) {
-        const deptKeyword = removeVietnameseTones(filterDepartment).toLowerCase();
-        const rec = filteredEmployees.filter(e => 
-            removeVietnameseTones(e.department).toLowerCase().includes(deptKeyword)
-        );
+        const isArchive = removeVietnameseTones(filterDepartment).toLowerCase().includes('luu tru');
+        const isMeasurement = filterDepartment === 'Đo đạc' || removeVietnameseTones(filterDepartment).toLowerCase().includes('do dac');
+        
+        const rec = filteredEmployees.filter(e => {
+            const d = removeVietnameseTones((e.department || '').toLowerCase());
+            if (isArchive) {
+                return d.includes('luu tru');
+            }
+            if (isMeasurement) {
+                return d.includes('do dac') || d.includes('ky thuat') || d.includes('to do') || d.includes('dia chinh') || d.includes('noi nghiep') || d.includes('ngoai nghiep');
+            }
+            const deptKeyword = removeVietnameseTones(filterDepartment).toLowerCase();
+            return d.includes(deptKeyword);
+        });
         return { recommended: rec, others: [] };
     }
 
