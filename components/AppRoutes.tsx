@@ -359,7 +359,7 @@ const AppRoutes: React.FC<AppRoutesProps> = (props) => {
 
                 <button
                   onClick={() => props.setCurrentView("pending_check_list")}
-                  className={`px-4 py-3 text-sm font-bold flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap ${currentView === "pending_check_list" || currentView === "archive_pending_check_list" ? "border-orange-600 text-orange-700 bg-white" : "border-transparent text-gray-500 hover:text-gray-700"}`}
+                  className={`px-4 py-3 text-sm font-bold flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap ${currentView === "pending_check_list" ? "border-orange-600 text-orange-700 bg-white" : "border-transparent text-gray-500 hover:text-gray-700"}`}
                 >
                   <ClipboardList size={16} /> Kiểm tra
                 </button>
@@ -946,8 +946,7 @@ const AppRoutes: React.FC<AppRoutesProps> = (props) => {
                 </button>
               )}
             {canPerformAction &&
-              (currentView === "completed_list" ||
-                currentView === "archive_completed_list") &&
+              (currentView === "completed_list") &&
               props.selectedRecordIds.size > 0 && (
                 <button
                   onClick={() => {
@@ -960,6 +959,23 @@ const AppRoutes: React.FC<AppRoutesProps> = (props) => {
                   className="flex items-center gap-2 bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 font-bold shadow-md transition-all animate-pulse"
                 >
                   <ClipboardList size={18} /> Trình Kiểm Tra (
+                  {props.selectedRecordIds.size})
+                </button>
+              )}
+            {canPerformAction &&
+              (currentView === "archive_completed_list") &&
+              props.selectedRecordIds.size > 0 && (
+                <button
+                  onClick={() => {
+                    const targets = records.filter((r) =>
+                      props.selectedRecordIds.has(r.id),
+                    );
+                    props.setSubmitTargetRecords(targets);
+                    props.setIsSubmitModalOpen(true);
+                  }}
+                  className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 font-bold shadow-md transition-all animate-pulse"
+                >
+                  <FileSignature size={18} /> Trình Ký Duyệt (
                   {props.selectedRecordIds.size})
                 </button>
               )}
