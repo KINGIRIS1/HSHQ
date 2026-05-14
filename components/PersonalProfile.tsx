@@ -729,7 +729,7 @@ const PersonalProfile: React.FC<PersonalProfileProps> = ({ user, records, isDire
                                             </button>
                                             
                                             {/* Nút Thanh lý */}
-                                            {onCreateLiquidation && (
+                                            {onCreateLiquidation && r.recordType !== 'Cung cấp tài liệu đất đai' && r.recordType !== 'Sao lục' && r.recordType !== 'Công văn' && (
                                                 <button onClick={() => onCreateLiquidation(r)} className="px-2 py-1.5 bg-green-50 text-green-700 border border-green-200 rounded-md hover:bg-green-100 text-xs font-bold flex items-center gap-1 shadow-sm transition-all" title="Thanh lý hợp đồng">
                                                     <FileCheck size={14} /> Thanh lý
                                                 </button>
@@ -741,7 +741,12 @@ const PersonalProfile: React.FC<PersonalProfileProps> = ({ user, records, isDire
                                                     Đã thực hiện <CheckSquare size={14} />
                                                 </button>
                                             )}
-                                            {activeTab === 'completed_work' && (
+                                            {activeTab === 'completed_work' && (r.recordType === 'Cung cấp tài liệu đất đai' || r.recordType === 'Sao lục' || r.recordType === 'Công văn') && (
+                                                <button onClick={() => handleForwardToSign(r)} title="Trình ký duyệt" className="px-3 py-1.5 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 text-xs font-bold flex items-center gap-2 shadow-sm transition-all">
+                                                    <Send size={14} /> Trình ký
+                                                </button>
+                                            )}
+                                            {activeTab === 'completed_work' && !(r.recordType === 'Cung cấp tài liệu đất đai' || r.recordType === 'Sao lục' || r.recordType === 'Công văn') && (
                                                 <button onClick={() => handleForwardToCheck(r)} title="Trình kiểm tra" className="px-3 py-1.5 bg-orange-600 text-white rounded-md hover:bg-orange-700 text-xs font-bold flex items-center gap-2 shadow-sm transition-all">
                                                     <ClipboardList size={14} /> Trình kiểm tra
                                                 </button>

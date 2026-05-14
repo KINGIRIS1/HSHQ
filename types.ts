@@ -145,6 +145,10 @@ export interface RecordFile {
 
   // Tính năng Chỉnh lý bản đồ (Mới)
   needsMapCorrection?: boolean; // True nếu cần lập danh sách chỉnh lý
+
+  // Giá trực tiếp cho hồ sơ
+  price?: number | null;
+  advancePayment?: number | null;
 }
 
 // Interface cho Item tách thửa

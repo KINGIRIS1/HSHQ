@@ -15,7 +15,8 @@ const RECORD_DB_COLUMNS = [
     'reminderDate', 'lastRemindedAt',
     'receiptNumber', 'resultReturnedDate', 'receiverName',
     'needsMapCorrection',
-    'issueNumber', 'entryNumber', 'issueDate', 'residentialArea'
+    'issueNumber', 'entryNumber', 'issueDate', 'residentialArea',
+    'price', 'advancePayment'
 ];
 
 const OPTIONAL_NEW_COLUMNS = [
@@ -23,7 +24,8 @@ const OPTIONAL_NEW_COLUMNS = [
     'needsMapCorrection', 'receiptNumber', 'resultReturnedDate', 'receiverName',
     'reminderDate', 'lastRemindedAt', 'measurementNumber', 'excerptNumber',
     'exportBatch', 'exportDate', 'handoverWard', 'authorizedBy', 'authDocType', 'otherDocs',
-    'privateNotes', 'personalNotes', 'checkedBy', 'pendingCheckDate', 'checkedDate', 'completedWorkDate'
+    'privateNotes', 'personalNotes', 'checkedBy', 'pendingCheckDate', 'checkedDate', 'completedWorkDate',
+    'price', 'advancePayment'
 ];
 
 export const fetchRecords = async (): Promise<RecordFile[]> => {

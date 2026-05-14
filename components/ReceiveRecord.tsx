@@ -316,6 +316,8 @@ const ReceiveRecord: React.FC<ReceiveRecordProps> = ({ onSave, onDelete, wards, 
         LOAI_HS: val(dataToUse.recordType), 
         RECORD_TYPE: val(dataToUse.recordType),
         GIAY_TO_KHAC: val(dataToUse.otherDocs),
+        GIA: dataToUse.price ? dataToUse.price.toLocaleString('vi-VN') + ' đ' : '',
+        PRICE: dataToUse.price ? dataToUse.price.toLocaleString('vi-VN') + ' đ' : '',
         
         NGUOI_UY_QUYEN: val(dataToUse.authorizedBy).toUpperCase(),
         UY_QUYEN: val(dataToUse.authorizedBy).toUpperCase(),

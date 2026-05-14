@@ -427,15 +427,6 @@ const AppRoutes: React.FC<AppRoutesProps> = (props) => {
                 >
                   <CheckSquare size={16} /> Đã thực hiện
                 </button>
-
-                <button
-                  onClick={() =>
-                    props.setCurrentView("archive_pending_check_list")
-                  }
-                  className={`px-4 py-3 text-sm font-bold flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap ${currentView === "archive_pending_check_list" ? "border-orange-600 text-orange-700 bg-white" : "border-transparent text-gray-500 hover:text-gray-700"}`}
-                >
-                  <ClipboardList size={16} /> Kiểm tra
-                </button>
               </>
             )}
 

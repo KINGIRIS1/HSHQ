@@ -275,6 +275,10 @@ const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImport, em
                 record.deadline = calculateDeadline(record.recordType, record.receivedDate);
             }
 
+            if (record.recordType === 'Cung cấp tài liệu đất đai') {
+                record.price = 310000;
+            }
+
             // 4. THÔNG TIN XUẤT (QUAN TRỌNG CHO VIỆC TỰ ĐỘNG HANDOVER)
             const exportBatchRaw = getVal(['ĐỢT', 'BATCH', 'exportbatch', 'export_batch', 'exportBatch']);
             if (exportBatchRaw !== undefined) {

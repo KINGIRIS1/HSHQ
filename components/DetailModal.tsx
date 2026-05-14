@@ -606,9 +606,13 @@ export const DetailModal: React.FC<DetailModalProps> = ({ isOpen, onClose, recor
                             <div className="bg-green-50 p-3 rounded-lg border border-green-100 flex items-center gap-3">
                                 <div className="bg-green-200 p-1.5 rounded text-green-700"><DollarSign size={16}/></div>
                                 <div>
-                                    <label className="text-[10px] text-green-500 uppercase font-bold block">Giá trị hợp đồng</label>
+                                    <label className="text-[10px] text-green-500 uppercase font-bold block">
+                                        {record.recordType === 'Cung cấp tài liệu đất đai' ? 'Giá trị hồ sơ' : 'Giá trị hợp đồng'}
+                                    </label>
                                     <p className="text-sm font-bold text-green-800">
-                                        {contractPrice !== null && contractPrice !== undefined ? contractPrice.toLocaleString('vi-VN') + ' đ' : '---'}
+                                        {record.recordType === 'Cung cấp tài liệu đất đai' 
+                                            ? '310.000 đ' 
+                                            : (contractPrice !== null && contractPrice !== undefined ? contractPrice.toLocaleString('vi-VN') + ' đ' : '---')}
                                     </p>
                                 </div>
                             </div>
@@ -709,26 +713,30 @@ export const DetailModal: React.FC<DetailModalProps> = ({ isOpen, onClose, recor
                                 colorClass={{text: 'text-cyan-700', border: 'border-cyan-600', bg: 'bg-cyan-600'}}
                             />
 
-                            <TimelineItem 
-                                date={record.pendingCheckDate} 
-                                forceActive={record.status === RecordStatus.PENDING_CHECK || record.status === RecordStatus.CHECKED || record.status === RecordStatus.PENDING_SIGN || record.status === RecordStatus.SIGNED || record.status === RecordStatus.HANDOVER || record.status === RecordStatus.RETURNED}
-                                label="TRÌNH KIỂM TRA" 
-                                icon={Send}
-                                colorClass={{text: 'text-orange-700', border: 'border-orange-600', bg: 'bg-orange-600'}}
-                                subText={record.checkedBy ? (() => {
-                                    const checker = employees.find(e => e.id === record.checkedBy);
-                                    if (!checker) return undefined;
-                                    return `${checker.name} (${checker?.position || 'Người kiểm tra'})`;
-                                })() : undefined}
-                            />
+                            {!(record.recordType === 'Cung cấp tài liệu đất đai' || record.recordType === 'Sao lục' || record.recordType === 'Công văn') && (
+                                <>
+                                    <TimelineItem 
+                                        date={record.pendingCheckDate} 
+                                        forceActive={record.status === RecordStatus.PENDING_CHECK || record.status === RecordStatus.CHECKED || record.status === RecordStatus.PENDING_SIGN || record.status === RecordStatus.SIGNED || record.status === RecordStatus.HANDOVER || record.status === RecordStatus.RETURNED}
+                                        label="TRÌNH KIỂM TRA" 
+                                        icon={Send}
+                                        colorClass={{text: 'text-orange-700', border: 'border-orange-600', bg: 'bg-orange-600'}}
+                                        subText={record.checkedBy ? (() => {
+                                            const checker = employees.find(e => e.id === record.checkedBy);
+                                            if (!checker) return undefined;
+                                            return `${checker.name} (${checker?.position || 'Người kiểm tra'})`;
+                                        })() : undefined}
+                                    />
 
-                            <TimelineItem 
-                                date={record.checkedDate} 
-                                forceActive={record.status === RecordStatus.CHECKED || record.status === RecordStatus.PENDING_SIGN || record.status === RecordStatus.SIGNED || record.status === RecordStatus.HANDOVER || record.status === RecordStatus.RETURNED}
-                                label="ĐÃ KIỂM TRA" 
-                                icon={CheckSquare}
-                                colorClass={{text: 'text-orange-700', border: 'border-orange-600', bg: 'bg-orange-600'}}
-                            />
+                                    <TimelineItem 
+                                        date={record.checkedDate} 
+                                        forceActive={record.status === RecordStatus.CHECKED || record.status === RecordStatus.PENDING_SIGN || record.status === RecordStatus.SIGNED || record.status === RecordStatus.HANDOVER || record.status === RecordStatus.RETURNED}
+                                        label="ĐÃ KIỂM TRA" 
+                                        icon={CheckSquare}
+                                        colorClass={{text: 'text-orange-700', border: 'border-orange-600', bg: 'bg-orange-600'}}
+                                    />
+                                </>
+                            )}
 
                             <TimelineItem 
                                 date={record.submissionDate} 
