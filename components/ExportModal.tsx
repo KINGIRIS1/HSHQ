@@ -23,15 +23,24 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose, records, war
 
     records.forEach(r => {
       if (type === 'handover') {
-          // Logic cho Giao 1 cửa: Dựa vào exportBatch
-          // Bao gồm cả HANDOVER, SIGNED, WITHDRAWN và REJECTED (nếu đã có batch)
-          if ((r.status === RecordStatus.HANDOVER || r.status === RecordStatus.SIGNED || r.status === RecordStatus.WITHDRAWN || r.status === RecordStatus.REJECTED) && r.exportBatch && r.exportDate) {
-            const dateStr = r.exportDate.split('T')[0];
-            const key = `${dateStr}_${r.exportBatch}`;
-            if (!batches[key]) {
-              batches[key] = { date: dateStr, batch: r.exportBatch, count: 0 };
-            }
-            batches[key].count++;
+          // Logic cho Giao 1 cửa
+          if (r.status === RecordStatus.HANDOVER || r.status === RecordStatus.SIGNED || r.status === RecordStatus.WITHDRAWN || r.status === RecordStatus.REJECTED) {
+              if (r.exportBatch && r.exportDate) {
+                  const dateStr = r.exportDate.split('T')[0];
+                  const key = `${dateStr}_${r.exportBatch}`;
+                  if (!batches[key]) {
+                      batches[key] = { date: dateStr, batch: r.exportBatch, count: 0 };
+                  }
+                  batches[key].count++;
+              } else if (r.status === RecordStatus.HANDOVER) {
+                  // Fallback cho những hồ sơ thiếu exportBatch (Chưa chốt đợt hoặc nhập từ Excel)
+                  const dateStr = (r.completedDate || r.receivedDate || new Date().toISOString()).split('T')[0];
+                  const key = `${dateStr}_NOT_BATCHED`;
+                  if (!batches[key]) {
+                      batches[key] = { date: dateStr, batch: 'Lẻ (Chưa tạo đợt)', count: 0 };
+                  }
+                  batches[key].count++;
+              }
           }
       } else if (type === 'check_list') {
           // Logic cho Trình Ký: Dựa vào ngày tiếp nhận (receivedDate) để gom nhóm
@@ -96,20 +105,28 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose, records, war
     const wardTitle = selectedWard === 'all' ? "" : ` - ${selectedWard.toUpperCase()}`;
 
     if (type === 'handover') {
-        const [dateStr, batchStr] = selectedBatchKey.split('_');
-        const batchNum = parseInt(batchStr);
+        const parts = selectedBatchKey.split('_');
+        const dateStr = parts[0];
+        const batchStr = parts.slice(1).join('_');
         
         recordsToExport = records.filter(r => {
-            const matchBatch = r.exportDate?.startsWith(dateStr) && r.exportBatch === batchNum;
             const targetWard = r.handoverWard || r.ward;
             const matchWard = selectedWard === 'all' || targetWard === selectedWard;
-            return matchBatch && matchWard;
+            
+            if (batchStr === 'NOT_BATCHED') {
+                const rDateObj = (r.completedDate || r.receivedDate || new Date().toISOString()).split('T')[0];
+                return r.status === RecordStatus.HANDOVER && !r.exportBatch && rDateObj === dateStr && matchWard;
+            } else {
+                const batchNum = parseInt(batchStr);
+                return r.exportDate?.startsWith(dateStr) && r.exportBatch === batchNum && matchWard;
+            }
         });
 
         title = `DANH SÁCH BÀN GIAO HỒ SƠ 1 CỬA${wardTitle}`;
-        subTitle = `ĐỢT: ${batchNum}  -  TỔNG SỐ HỒ SƠ: ${recordsToExport.length}`;
+        const displayBatch = batchStr === 'NOT_BATCHED' ? 'CHƯA TẠO ĐỢT' : `ĐỢT ${batchStr}`;
+        subTitle = `${displayBatch}  -  TỔNG SỐ HỒ SƠ: ${recordsToExport.length}`;
         const safeDate = dateStr.replace(/-/g, '');
-        fileName = `Giao_1_Cua_Dot_${batchNum}_${safeDate}`;
+        fileName = `Giao_1_Cua_${batchStr === 'NOT_BATCHED' ? 'Le' : `Dot_${batchStr}`}_${safeDate}`;
 
     } else {
         // Check List
@@ -429,7 +446,9 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose, records, war
                             {batchOptions.map(opt => (
                                 <option key={opt.key} value={opt.key}>
                                     {type === 'handover' 
-                                      ? `Đợt ${opt.batch} - Ngày ${formatDate(opt.date)} (${opt.count} HS)`
+                                      ? (opt.batch === 'Lẻ (Chưa tạo đợt)' 
+                                          ? `Lẻ (Chưa tạo đợt) - Ngày ${formatDate(opt.date)} (${opt.count} HS)`
+                                          : `Đợt ${opt.batch} - Ngày ${formatDate(opt.date)} (${opt.count} HS)`)
                                       : `Ngày tiếp nhận: ${formatDate(opt.date)} (${opt.count} HS)`
                                     }
                                 </option>
