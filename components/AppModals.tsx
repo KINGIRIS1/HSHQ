@@ -164,7 +164,7 @@ const AppModals: React.FC<AppModalsProps> = (props) => {
             <ExportModal 
                 isOpen={props.isExportModalOpen} 
                 onClose={() => props.setIsExportModalOpen(false)} 
-                records={props.filteredRecords} 
+                records={props.records} 
                 wards={props.wards} 
                 type={props.exportModalType}
                 onPreview={props.handleExcelPreview}
