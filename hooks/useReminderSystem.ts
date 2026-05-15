@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { RecordFile, RecordStatus } from '../types';
 import { updateRecordApi } from '../services/api';
 
@@ -23,12 +23,22 @@ export const useReminderSystem = (records: RecordFile[], onUpdateRecord: (r: Rec
         setActiveRemindersCount(count);
     }, [records]);
 
+    // Dùng ref để tránh việc effect chạy lại mỗi khi records thay đổi
+    const recordsRef = useRef(records);
+    useEffect(() => {
+        recordsRef.current = records;
+    }, [records]);
+
     // Logic Polling để bắn thông báo
     useEffect(() => {
+        let isCancelled = false;
+
         const checkReminders = async () => {
+            if (isCancelled) return;
             const now = Date.now();
             
-            for (const r of records) {
+            for (const r of recordsRef.current) {
+                if (isCancelled) break;
                 if (!r.reminderDate) continue;
                 
                 // Bỏ qua nếu hồ sơ đã xong
@@ -68,8 +78,15 @@ export const useReminderSystem = (records: RecordFile[], onUpdateRecord: (r: Rec
                     const updatedRecord = { ...r, lastRemindedAt: new Date().toISOString() };
                     // Gọi update local trước
                     onUpdateRecord(updatedRecord);
+                    // Cập nhật recordsRef ngay để tránh vòng lặp
+                    recordsRef.current = recordsRef.current.map(rec => rec.id === updatedRecord.id ? updatedRecord : rec);
+                    
                     // Gọi API update DB
-                    await updateRecordApi(updatedRecord);
+                    try {
+                        await updateRecordApi(updatedRecord);
+                    } catch (err) {
+                        console.error('Failed to update reminder state', err);
+                    }
                 }
             }
         };
@@ -79,8 +96,11 @@ export const useReminderSystem = (records: RecordFile[], onUpdateRecord: (r: Rec
         // Chạy ngay lần đầu
         checkReminders();
 
-        return () => clearInterval(intervalId);
-    }, [records, onUpdateRecord]);
+        return () => {
+            isCancelled = true;
+            clearInterval(intervalId);
+        };
+    }, [onUpdateRecord]);
 
     return { activeRemindersCount };
 };

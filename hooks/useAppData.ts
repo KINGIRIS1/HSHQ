@@ -78,14 +78,18 @@ export const useAppData = (currentUser: User | null) => {
         } catch (error) {
             console.error("Lỗi tải dữ liệu hoặc Timeout:", error);
             // Quan trọng: Khi lỗi, chuyển sang OFFLINE nhưng vẫn cho phép App hoạt động
-            // Dữ liệu sẽ được lấy từ Cache (đã xử lý trong apiCore)
             setConnectionStatus('offline');
             
-            // Nếu cache cũng rỗng (lần đầu chạy), khởi tạo mảng rỗng để không crash UI
-            setRecords((prev) => prev.length > 0 ? prev : []);
-            setEmployees((prev) => prev.length > 0 ? prev : []);
-            setUsers((prev) => prev.length > 0 ? prev : []);
-            // Holidays sẽ tự lấy từ cache trong apiSystem nếu lỗi
+            // Nếu cache cũng rỗng (lần đầu chạy) hoặc bị timeout nên không nhận được data, 
+            // ta sẽ chủ động đọc lại từ Cache để người dùng có thể Đăng nhập và làm việc.
+            import('../services/apiCore').then(({ getFromCache, CACHE_KEYS }) => {
+                import('../constants').then(({ MOCK_EMPLOYEES, MOCK_USERS }) => {
+                    setRecords((prev) => prev.length > 0 ? prev : getFromCache(CACHE_KEYS.RECORDS, []));
+                    setEmployees((prev) => prev.length > 0 ? prev : getFromCache(CACHE_KEYS.EMPLOYEES, MOCK_EMPLOYEES));
+                    setUsers((prev) => prev.length > 0 ? prev : getFromCache(CACHE_KEYS.USERS, MOCK_USERS));
+                    setHolidays((prev) => prev.length > 0 ? prev : getFromCache(CACHE_KEYS.HOLIDAYS, []));
+                });
+            });
         }
     }, []);
 
