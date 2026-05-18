@@ -469,7 +469,11 @@ function App() {
       }
       if (record.status === RecordStatus.COMPLETED_WORK) {
           setSubmitTargetRecords([record]);
-          setIsSubmitCheckModalOpen(true);
+          if (record.recordType === 'Cung cấp tài liệu đất đai' || record.recordType === 'Sao lục' || record.recordType === 'Công văn') {
+              setIsSubmitModalOpen(true);
+          } else {
+              setIsSubmitCheckModalOpen(true);
+          }
           return;
       }
       if (record.status === RecordStatus.CHECKED) {
