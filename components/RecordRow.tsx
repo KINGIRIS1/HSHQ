@@ -45,6 +45,12 @@ const RecordRow: React.FC<RecordRowProps> = ({
   onReturnResult,
   onMapCorrection
 }) => {
+  const [localMsr, setLocalMsr] = React.useState(record.measurementNumber || "");
+  const [localExc, setLocalExc] = React.useState(record.excerptNumber || "");
+  const [localRec, setLocalRec] = React.useState(record.receiptNumber || "");
+  React.useEffect(() => { setLocalMsr(record.measurementNumber || ""); }, [record.measurementNumber]);
+  React.useEffect(() => { setLocalExc(record.excerptNumber || ""); }, [record.excerptNumber]);
+  React.useEffect(() => { setLocalRec(record.receiptNumber || ""); }, [record.receiptNumber]);
   const employee = employees.find(e => e.id === record.assignedTo);
   const isOverdue = isRecordOverdue(record);
   const isApproaching = isRecordApproaching(record);
@@ -196,8 +202,8 @@ const RecordRow: React.FC<RecordRowProps> = ({
           <div className="flex flex-col gap-1.5 items-center">
             {canPerformAction ? (
                 <>
-                    <input type="text" className="w-full text-sm border border-gray-200 rounded px-1 py-1 focus:border-blue-500 outline-none bg-white/50 text-center" value={record.measurementNumber || ''} onChange={(e) => onQuickUpdate(record.id, 'measurementNumber', e.target.value)} onClick={(e) => e.stopPropagation()} placeholder="TĐ" />
-                    <input type="text" className="w-full text-sm border border-gray-200 rounded px-1 py-1 focus:border-blue-500 outline-none bg-white/50 text-center" value={record.excerptNumber || ''} onChange={(e) => onQuickUpdate(record.id, 'excerptNumber', e.target.value)} onClick={(e) => e.stopPropagation()} placeholder="TL" />
+                    <input type="text" className="w-full text-sm border border-gray-200 rounded px-1 py-1 focus:border-blue-500 outline-none bg-white/50 text-center" value={localMsr} onChange={(e) => setLocalMsr(e.target.value)} onBlur={() => localMsr !== (record.measurementNumber || '') && onQuickUpdate(record.id, 'measurementNumber', localMsr)} placeholder="TĐ" />
+                    <input type="text" className="w-full text-sm border border-gray-200 rounded px-1 py-1 focus:border-blue-500 outline-none bg-white/50 text-center" value={localExc} onChange={(e) => setLocalExc(e.target.value)} onBlur={() => localExc !== (record.excerptNumber || '') && onQuickUpdate(record.id, 'excerptNumber', localExc)} placeholder="TL" />
                 </>
             ) : (
                 <>
@@ -215,8 +221,9 @@ const RecordRow: React.FC<RecordRowProps> = ({
                 <input 
                     type="text" 
                     className="w-full text-sm border border-gray-200 rounded px-1 py-1.5 focus:border-purple-500 outline-none bg-white/50 text-center font-bold text-purple-700 placeholder-gray-300" 
-                    value={record.receiptNumber || ''} 
-                    onChange={(e) => onQuickUpdate(record.id, 'receiptNumber', e.target.value)} 
+                    value={localRec} 
+                    onChange={(e) => setLocalRec(e.target.value)}
+                    onBlur={() => localRec !== (record.receiptNumber || '') && onQuickUpdate(record.id, 'receiptNumber', localRec)} 
                     onClick={(e) => e.stopPropagation()} 
                     placeholder="BL" 
                 />

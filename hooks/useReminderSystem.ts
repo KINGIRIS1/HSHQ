@@ -29,6 +29,15 @@ export const useReminderSystem = (records: RecordFile[], onUpdateRecord: (r: Rec
         recordsRef.current = records;
     }, [records]);
 
+    // Cập nhật ref cho onUpdateRecord để tránh khởi động lại useEffect liên tục
+    const onUpdateRef = useRef(onUpdateRecord);
+    useEffect(() => {
+        onUpdateRef.current = onUpdateRecord;
+    }, [onUpdateRecord]);
+
+    // Set lưu trữ các id đã nhắc nhở trong phiên này để tránh phụ thuộc hoàn toàn vào DB (đề phòng thiếu cột)
+    const remindedIds = useRef<Set<string>>(new Set());
+
     // Logic Polling để bắn thông báo
     useEffect(() => {
         let isCancelled = false;
@@ -52,16 +61,21 @@ export const useReminderSystem = (records: RecordFile[], onUpdateRecord: (r: Rec
                 // Kiểm tra điều kiện nhắc lại (2 tiếng)
                 let shouldNotify = false;
                 if (!r.lastRemindedAt) {
-                    shouldNotify = true;
+                    // Nếu chưa nhắc trong DB, kiểm tra xem phiên này đã nhắc chưa
+                    if (!remindedIds.current.has(r.id)) {
+                        shouldNotify = true;
+                    }
                 } else {
                     const lastRemindedTime = new Date(r.lastRemindedAt).getTime();
                     const hoursDiff = (now - lastRemindedTime) / (1000 * 60 * 60);
-                    if (hoursDiff >= REPEAT_HOURS) {
+                    if (hoursDiff >= REPEAT_HOURS && !remindedIds.current.has(r.id)) {
                         shouldNotify = true;
                     }
                 }
 
                 if (shouldNotify) {
+                    remindedIds.current.add(r.id);
+                    
                     // Trigger Notification
                     if (window.electronAPI && window.electronAPI.showNotification) {
                         window.electronAPI.showNotification(
@@ -76,8 +90,8 @@ export const useReminderSystem = (records: RecordFile[], onUpdateRecord: (r: Rec
 
                     // Cập nhật lastRemindedAt để không spam
                     const updatedRecord = { ...r, lastRemindedAt: new Date().toISOString() };
-                    // Gọi update local trước
-                    onUpdateRecord(updatedRecord);
+                    // Gọi update local trước thông qua ref để luôn lấy hàm mới nhất
+                    onUpdateRef.current(updatedRecord);
                     // Cập nhật recordsRef ngay để tránh vòng lặp
                     recordsRef.current = recordsRef.current.map(rec => rec.id === updatedRecord.id ? updatedRecord : rec);
                     
@@ -87,20 +101,22 @@ export const useReminderSystem = (records: RecordFile[], onUpdateRecord: (r: Rec
                     } catch (err) {
                         console.error('Failed to update reminder state', err);
                     }
+                    
+                    // Xóa id khỏi set sau 2 tiếng để cho phép nhắc lại (nếu DB thực sự không lưu được)
+                    setTimeout(() => {
+                        remindedIds.current.delete(r.id);
+                    }, REPEAT_HOURS * 60 * 60 * 1000);
                 }
             }
         };
 
         const intervalId = setInterval(checkReminders, REMINDER_INTERVAL);
-        
-        // Chạy ngay lần đầu
-        checkReminders();
 
         return () => {
             isCancelled = true;
             clearInterval(intervalId);
         };
-    }, [onUpdateRecord]);
+    }, []); // Xóa onUpdateRecord khỏi dependency để không bị loop vô tận
 
     return { activeRemindersCount };
 };

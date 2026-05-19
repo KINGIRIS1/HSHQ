@@ -87,6 +87,10 @@ export const logError = (context: string, error: any) => {
          return; 
     }
 
+    if (code === 'PGRST204' || msg.includes('column') || details.includes('column') || msg.includes('PGRST204') || details.includes('PGRST204') || code === '42703' || String(error?.code) === '42703') {
+        alert("⚠️ [QUAN TRỌNG] Bảng dữ liệu Supabase của bạn đang thiếu cột. Vui lòng vào cửa sổ SQL Editor trong Supabase và chạy lệnh trong file 'sql_scripts/add_missing_columns.sql' để tính năng giao 1 cửa hoạt động bình thường!");
+    }
+
     if (msg.includes('Failed to fetch') || msg.includes('NetworkError') || msg.includes('configuration') || msg.includes('Load failed')) {
         console.warn(`⚠️ [Offline Mode] ${context}: Không thể kết nối Cloud. Sử dụng dữ liệu Cache/Offline.`);
     } else if (code === '42P01') {

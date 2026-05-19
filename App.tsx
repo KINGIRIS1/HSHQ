@@ -468,12 +468,15 @@ function App() {
           return; 
       }
       if (record.status === RecordStatus.COMPLETED_WORK) {
-          setSubmitTargetRecords([record]);
           if (record.recordType === 'Cung cấp tài liệu đất đai' || record.recordType === 'Sao lục' || record.recordType === 'Công văn') {
-              setIsSubmitModalOpen(true);
-          } else {
-              setIsSubmitCheckModalOpen(true);
+              // Đi thẳng sang Giao 1 cửa (Bỏ qua trình kiểm tra và ký kiểm tra)
+              const updates = getUpdatesForStatusChange(RecordStatus.HANDOVER);
+              setRecords(prev => prev.map(r => r.id === record.id ? { ...r, ...updates } : r));
+              await updateRecordApi({ ...record, ...updates });
+              return;
           }
+          setSubmitTargetRecords([record]);
+          setIsSubmitCheckModalOpen(true);
           return;
       }
       if (record.status === RecordStatus.CHECKED) {
@@ -505,7 +508,11 @@ function App() {
           const updated = updatesToApply.find(u => u.id === r.id);
           return updated ? updated : r;
       }));
-      await Promise.all(updatesToApply.map(r => updateRecordApi(r)));
+      const results = await Promise.all(updatesToApply.map(r => updateRecordApi(r)));
+      if (results.some(res => res === null)) {
+          loadData(); // Revert on failure
+          return;
+      }
       setSelectedRecordIds(new Set()); 
       setToast({ type: 'success', message: `Đã chốt danh sách ĐỢT ${batchNumber} thành công.` });
   };

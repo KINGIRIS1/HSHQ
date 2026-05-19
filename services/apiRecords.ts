@@ -23,7 +23,7 @@ const OPTIONAL_NEW_COLUMNS = [
     'customerAddress', 'issueNumber', 'entryNumber', 'issueDate', 'residentialArea',
     'needsMapCorrection', 'receiptNumber', 'resultReturnedDate', 'receiverName',
     'reminderDate', 'lastRemindedAt', 'measurementNumber', 'excerptNumber',
-    'exportBatch', 'exportDate', 'handoverWard', 'authorizedBy', 'authDocType', 'otherDocs',
+    'authorizedBy', 'authDocType', 'otherDocs',
     'privateNotes', 'personalNotes', 'checkedBy', 'pendingCheckDate', 'checkedDate', 'completedWorkDate',
     'price', 'advancePayment'
 ];
@@ -204,7 +204,7 @@ export const createRecordApi = async (record: RecordFile): Promise<RecordFile | 
             OPTIONAL_NEW_COLUMNS.forEach(col => delete fallbackPayload[col]);
             const { data: fallbackData, error: fallbackError } = await supabase.from('land_records').insert([fallbackPayload]).select();
             if (fallbackError) throw fallbackError;
-            return fallbackData?.[0] as RecordFile;
+            return { ...recordToSave, ...(fallbackData?.[0] || {}) } as RecordFile;
         }
         
         if (error) throw error;
@@ -227,7 +227,7 @@ export const updateRecordApi = async (record: RecordFile): Promise<RecordFile | 
             OPTIONAL_NEW_COLUMNS.forEach(col => delete fallbackPayload[col]);
             const { data: fallbackData, error: fallbackError } = await supabase.from('land_records').update(fallbackPayload).eq('id', record.id).select();
             if (fallbackError) throw fallbackError;
-            return fallbackData?.[0] as RecordFile;
+            return { ...record, ...(fallbackData?.[0] || {}) } as RecordFile;
         }
         
         if (error) throw error;
