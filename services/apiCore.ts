@@ -22,8 +22,21 @@ export const CACHE_KEYS = {
 export const saveToCache = (key: string, data: any) => {
     try {
         localStorage.setItem(key, JSON.stringify(data));
-    } catch (e) {
-        console.warn('LocalStorage full or error:', e);
+    } catch (e: any) {
+        if (e.name === 'QuotaExceededError' || e?.message?.includes('quota')) {
+            console.warn(`LocalStorage full when saving ${key}. Attempting to truncate...`);
+            if (Array.isArray(data) && data.length > 500) {
+                try {
+                    const truncated = data.slice(0, 500);
+                    localStorage.setItem(key, JSON.stringify(truncated));
+                    console.info(`Successfully saved truncated ${key} (500 items) to free space.`);
+                } catch (err) {
+                    console.warn(`Failed to save even truncated ${key}`, err);
+                }
+            }
+        } else {
+            console.warn('LocalStorage full or error:', e);
+        }
     }
 };
 

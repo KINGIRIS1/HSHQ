@@ -26,6 +26,8 @@ const ContractForm: React.FC<ContractFormProps> = ({ initialData, onSave, onPrin
   const [notification, setNotification] = useState<{ type: 'success' | 'error', message: string } | null>(null);
   const topRef = useRef<HTMLDivElement>(null);
 
+  const dateVal = (v: any) => { if (!v) return ''; const str = String(v); return str.includes('T') ? str.split('T')[0] : str; };
+
   // States for Quick Import (Tách thửa)
   const [splitImportText, setSplitImportText] = useState('');
   const [isImportExpanded, setIsImportExpanded] = useState(false);
@@ -505,7 +507,7 @@ const ContractForm: React.FC<ContractFormProps> = ({ initialData, onSave, onPrin
                             <label className={labelClass}>Ngày lập</label>
                             <div className="relative">
                                 <Calendar size={16} className="absolute left-3 top-3 text-slate-400" />
-                                <input type="date" className={`${inputClass} pl-9`} value={formData.createdDate ?? ''} onChange={e => handleChange('createdDate', e.target.value)} />
+                                <input type="date" className={`${inputClass} pl-9`} value={dateVal(formData.createdDate)} onChange={e => handleChange('createdDate', e.target.value)} />
                             </div>
                         </div>
                     </div>

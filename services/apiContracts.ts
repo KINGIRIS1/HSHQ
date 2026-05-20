@@ -8,7 +8,7 @@ import { MOCK_CONTRACTS } from '../constants';
 export const fetchContracts = async (): Promise<Contract[]> => {
     if (!isConfigured) return getFromCache(CACHE_KEYS.CONTRACTS, MOCK_CONTRACTS);
     try {
-        const { data, error } = await supabase.from('contracts').select('*').order('created_date', { ascending: false });
+        const { data, error } = await supabase.from('contracts').select('*').order('createdDate', { ascending: false });
         if (error) throw error;
         const mappedData = data.map(mapContractFromDb);
         saveToCache(CACHE_KEYS.CONTRACTS, mappedData);

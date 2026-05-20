@@ -128,6 +128,8 @@ const RecordForm: React.FC<RecordFormProps> = ({ onSave, wards, records, holiday
   const labelClass = "block text-[11px] font-bold text-slate-500 uppercase tracking-wide mb-1.5 ml-1";
   const iconWrapperClass = "absolute left-3 top-[34px] text-slate-400 pointer-events-none";
 
+  const dateVal = (v: any) => { if (!v) return ''; const str = String(v); return str.includes('T') ? str.split('T')[0] : str; };
+
   return (
     <form onSubmit={handleSubmit} className="w-full space-y-6 animate-fade-in relative pb-10">
         <div ref={topRef} />
@@ -182,7 +184,7 @@ const RecordForm: React.FC<RecordFormProps> = ({ onSave, wards, records, holiday
                             <div className="relative"><label className={labelClass}>Số phát hành</label><input type="text" className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-blue-500 font-medium text-slate-700 bg-white" placeholder="VD: CD 123456" value={formData.issueNumber || ''} onChange={(e) => handleChange('issueNumber', e.target.value)} /></div>
                             <div className="relative"><label className={labelClass}>Số vào sổ</label><input type="text" className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-blue-500 font-medium text-slate-700 bg-white" placeholder="VD: CH 01234" value={formData.entryNumber || ''} onChange={(e) => handleChange('entryNumber', e.target.value)} /></div>
                         </div>
-                        <div className="relative"><label className={labelClass}>Ngày cấp</label><input type="date" className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-blue-500 font-medium text-slate-700 bg-white" value={formData.issueDate || ''} onChange={(e) => handleChange('issueDate', e.target.value)} /></div>
+                        <div className="relative"><label className={labelClass}>Ngày cấp</label><input type="date" className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-blue-500 font-medium text-slate-700 bg-white" value={dateVal(formData.issueDate)} onChange={(e) => handleChange('issueDate', e.target.value)} /></div>
                         
                         <div className="bg-green-50/50 p-4 rounded-xl border border-green-100 grid grid-cols-2 gap-4">
                             <div className="relative"><label className="block text-[10px] font-bold text-green-700 uppercase mb-1 text-center">Tờ bản đồ</label><input type="text" className="w-full border border-green-200 rounded-lg px-2 py-2 text-center font-bold text-green-800 bg-white outline-none" placeholder="0" value={formData.mapSheet || ''} onChange={(e) => handleChange('mapSheet', e.target.value)} /></div>
@@ -229,8 +231,8 @@ const RecordForm: React.FC<RecordFormProps> = ({ onSave, wards, records, holiday
                     <h3 className="text-sm font-bold text-slate-800 uppercase mb-5 flex items-center gap-2"><span className="p-1.5 bg-purple-100 text-purple-600 rounded-lg"><Calendar size={16} /></span> Thời gian & Mã</h3>
                     <div className="space-y-4 flex-1">
                         <div className="grid grid-cols-2 gap-4">
-                            <div className="relative"><label className={labelClass}>Ngày nhận</label><Calendar size={16} className={iconWrapperClass} /><input type="date" required className={inputClass} value={formData.receivedDate || ''} onChange={(e) => handleChange('receivedDate', e.target.value)} /></div>
-                            <div className="relative"><label className={`${labelClass} text-purple-600`}>Hẹn trả <span className="text-red-500">*</span></label><Clock size={16} className={`${iconWrapperClass} text-purple-400`} /><input type="date" required className={`${inputClass} bg-purple-50 border-purple-200 text-purple-700 font-bold`} value={formData.deadline || ''} onChange={(e) => handleChange('deadline', e.target.value)} /></div>
+                            <div className="relative"><label className={labelClass}>Ngày nhận</label><Calendar size={16} className={iconWrapperClass} /><input type="date" required className={inputClass} value={dateVal(formData.receivedDate)} onChange={(e) => handleChange('receivedDate', e.target.value)} /></div>
+                            <div className="relative"><label className={`${labelClass} text-purple-600`}>Hẹn trả <span className="text-red-500">*</span></label><Clock size={16} className={`${iconWrapperClass} text-purple-400`} /><input type="date" required className={`${inputClass} bg-purple-50 border-purple-200 text-purple-700 font-bold`} value={dateVal(formData.deadline)} onChange={(e) => handleChange('deadline', e.target.value)} /></div>
                         </div>
                         <div className="relative"><label className={labelClass}>Mã hồ sơ</label><Hash size={16} className={iconWrapperClass} /><input type="text" readOnly={!initialData} className={`${inputClass} font-mono ${initialData ? 'bg-white font-bold text-blue-700' : 'bg-slate-100 text-slate-500 cursor-not-allowed'}`} value={formData.code || ''} onChange={(e) => initialData && handleChange('code', e.target.value)} /></div>
                     </div>

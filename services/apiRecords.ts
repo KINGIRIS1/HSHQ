@@ -198,7 +198,7 @@ export const createRecordApi = async (record: RecordFile): Promise<RecordFile | 
         const payload = sanitizeData(recordToSave, RECORD_DB_COLUMNS);
         const { data, error } = await supabase.from('land_records').insert([payload]).select();
         
-        if (error && error.code === 'PGRST204') {
+        if (error && (error.code === 'PGRST204' || String(error.code) === '42703' || (error.message && String(error.message).includes('does not exist')))) {
             console.warn("⚠️ [Fallback] Database is missing columns. Retrying without new columns...");
             const fallbackPayload = { ...payload };
             OPTIONAL_NEW_COLUMNS.forEach(col => delete fallbackPayload[col]);
@@ -221,7 +221,7 @@ export const updateRecordApi = async (record: RecordFile): Promise<RecordFile | 
         const payload = sanitizeData(record, RECORD_DB_COLUMNS);
         const { data, error } = await supabase.from('land_records').update(payload).eq('id', record.id).select();
         
-        if (error && error.code === 'PGRST204') {
+        if (error && (error.code === 'PGRST204' || String(error.code) === '42703' || (error.message && String(error.message).includes('does not exist')))) {
             console.warn("⚠️ [Fallback] Database is missing columns. Retrying without new columns...");
             const fallbackPayload = { ...payload };
             OPTIONAL_NEW_COLUMNS.forEach(col => delete fallbackPayload[col]);
@@ -276,7 +276,7 @@ export const createRecordsBatchApi = async (records: RecordFile[], onProgress?: 
             const chunk = payload.slice(i, i + CHUNK_SIZE);
             const { error } = await supabase.from('land_records').insert(chunk);
             
-            if (error && error.code === 'PGRST204') {
+            if (error && (error.code === 'PGRST204' || String(error.code) === '42703' || (error.message && String(error.message).includes('does not exist')))) {
                 console.warn(`⚠️ [Fallback] Database is missing columns. Retrying batch insert chunk ${i} without new columns...`);
                 const fallbackPayload = chunk.map(p => {
                     const fp = { ...p };
@@ -376,7 +376,7 @@ export const forceUpdateRecordsBatchApi = async (records: RecordFile[], onProgre
             if (updatesToPush.length > 0) {
                 const { error: upsertError } = await supabase.from('land_records').upsert(updatesToPush);
                 
-                if (upsertError && upsertError.code === 'PGRST204') {
+                if (upsertError && (upsertError.code === 'PGRST204' || String(upsertError.code) === '42703' || (upsertError.message && String(upsertError.message).includes('does not exist')))) {
                     console.warn(`⚠️ [Fallback] Retrying chunk target upsert without new columns...`);
                     const fallbackPayload = updatesToPush.map(p => {
                         const fp = { ...p };
