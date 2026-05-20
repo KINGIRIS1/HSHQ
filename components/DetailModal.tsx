@@ -383,11 +383,14 @@ export const DetailModal: React.FC<DetailModalProps> = ({ isOpen, onClose, recor
   // LOGIC CHECK NẾU ĐÃ THỰC HIỆN XONG (Để hiển thị bước "Đã thực hiện")
   const isWorkDone = [
       RecordStatus.COMPLETED_WORK,
+      RecordStatus.PENDING_CHECK,
+      RecordStatus.CHECKED,
       RecordStatus.PENDING_SIGN,
       RecordStatus.SIGNED,
       RecordStatus.HANDOVER,
       RecordStatus.RETURNED
-  ].includes(record.status);
+  ].includes(record.status) || ((record.status === RecordStatus.REJECTED || record.status === RecordStatus.WITHDRAWN) && (!!record.pendingCheckDate || !!record.checkedDate || !!record.submissionDate || !!record.approvalDate));
+
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
@@ -717,7 +720,7 @@ export const DetailModal: React.FC<DetailModalProps> = ({ isOpen, onClose, recor
                                 <>
                                     <TimelineItem 
                                         date={record.pendingCheckDate} 
-                                        forceActive={record.status === RecordStatus.PENDING_CHECK || record.status === RecordStatus.CHECKED || record.status === RecordStatus.PENDING_SIGN || record.status === RecordStatus.SIGNED || record.status === RecordStatus.HANDOVER || record.status === RecordStatus.RETURNED}
+                                        forceActive={record.status === RecordStatus.PENDING_CHECK || record.status === RecordStatus.CHECKED || record.status === RecordStatus.PENDING_SIGN || record.status === RecordStatus.SIGNED || record.status === RecordStatus.HANDOVER || record.status === RecordStatus.RETURNED || ((record.status === RecordStatus.REJECTED || record.status === RecordStatus.WITHDRAWN) && (!!record.checkedDate || !!record.submissionDate || !!record.approvalDate))}
                                         label="TRÌNH KIỂM TRA" 
                                         icon={Send}
                                         colorClass={{text: 'text-orange-700', border: 'border-orange-600', bg: 'bg-orange-600'}}
@@ -730,7 +733,7 @@ export const DetailModal: React.FC<DetailModalProps> = ({ isOpen, onClose, recor
 
                                     <TimelineItem 
                                         date={record.checkedDate} 
-                                        forceActive={record.status === RecordStatus.CHECKED || record.status === RecordStatus.PENDING_SIGN || record.status === RecordStatus.SIGNED || record.status === RecordStatus.HANDOVER || record.status === RecordStatus.RETURNED}
+                                        forceActive={record.status === RecordStatus.CHECKED || record.status === RecordStatus.PENDING_SIGN || record.status === RecordStatus.SIGNED || record.status === RecordStatus.HANDOVER || record.status === RecordStatus.RETURNED || ((record.status === RecordStatus.REJECTED || record.status === RecordStatus.WITHDRAWN) && (!!record.submissionDate || !!record.approvalDate))}
                                         label="ĐÃ KIỂM TRA" 
                                         icon={CheckSquare}
                                         colorClass={{text: 'text-orange-700', border: 'border-orange-600', bg: 'bg-orange-600'}}

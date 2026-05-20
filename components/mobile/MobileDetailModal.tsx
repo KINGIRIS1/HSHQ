@@ -273,9 +273,10 @@ export const MobileDetailModal: React.FC<MobileDetailModalProps> = ({
   };
 
   const isWorkDone = [
-    RecordStatus.COMPLETED_WORK, RecordStatus.PENDING_SIGN, RecordStatus.SIGNED, 
+    RecordStatus.COMPLETED_WORK, RecordStatus.PENDING_CHECK, RecordStatus.CHECKED, RecordStatus.PENDING_SIGN, RecordStatus.SIGNED, 
     RecordStatus.HANDOVER, RecordStatus.RETURNED
-  ].includes(record.status);
+  ].includes(record.status) || ((record.status === RecordStatus.REJECTED || record.status === RecordStatus.WITHDRAWN) && (!!record.pendingCheckDate || !!record.checkedDate || !!record.submissionDate || !!record.approvalDate));
+
 
   return (
     <div className="fixed inset-0 bg-white z-[60] flex flex-col animate-slide-in-right">
@@ -492,7 +493,7 @@ export const MobileDetailModal: React.FC<MobileDetailModalProps> = ({
                 />
                 <TimelineItem 
                   date={record.pendingCheckDate} 
-                  forceActive={record.status === RecordStatus.PENDING_CHECK || record.status === RecordStatus.CHECKED || record.status === RecordStatus.PENDING_SIGN || record.status === RecordStatus.SIGNED || record.status === RecordStatus.HANDOVER || record.status === RecordStatus.RETURNED}
+                  forceActive={record.status === RecordStatus.PENDING_CHECK || record.status === RecordStatus.CHECKED || record.status === RecordStatus.PENDING_SIGN || record.status === RecordStatus.SIGNED || record.status === RecordStatus.HANDOVER || record.status === RecordStatus.RETURNED || ((record.status === RecordStatus.REJECTED || record.status === RecordStatus.WITHDRAWN) && (!!record.checkedDate || !!record.submissionDate || !!record.approvalDate))}
                   label="TRÌNH KIỂM TRA" 
                   icon={Send}
                   colorClass={{text: 'text-orange-600', border: 'border-orange-600', bg: 'bg-orange-600'}}
@@ -504,7 +505,7 @@ export const MobileDetailModal: React.FC<MobileDetailModalProps> = ({
                 />
                 <TimelineItem 
                   date={record.checkedDate} 
-                  forceActive={record.status === RecordStatus.CHECKED || record.status === RecordStatus.PENDING_SIGN || record.status === RecordStatus.SIGNED || record.status === RecordStatus.HANDOVER || record.status === RecordStatus.RETURNED}
+                  forceActive={record.status === RecordStatus.CHECKED || record.status === RecordStatus.PENDING_SIGN || record.status === RecordStatus.SIGNED || record.status === RecordStatus.HANDOVER || record.status === RecordStatus.RETURNED || ((record.status === RecordStatus.REJECTED || record.status === RecordStatus.WITHDRAWN) && (!!record.submissionDate || !!record.approvalDate))}
                   label="ĐÃ KIỂM TRA" 
                   icon={CheckSquare}
                   colorClass={{text: 'text-orange-600', border: 'border-orange-600', bg: 'bg-orange-600'}}
