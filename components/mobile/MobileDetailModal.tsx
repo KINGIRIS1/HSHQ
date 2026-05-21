@@ -272,10 +272,12 @@ export const MobileDetailModal: React.FC<MobileDetailModalProps> = ({
     );
   };
 
+  const isRejectedOrWithdrawn = record.status === RecordStatus.REJECTED || record.status === RecordStatus.WITHDRAWN;
+
   const isWorkDone = [
     RecordStatus.COMPLETED_WORK, RecordStatus.PENDING_CHECK, RecordStatus.CHECKED, RecordStatus.PENDING_SIGN, RecordStatus.SIGNED, 
     RecordStatus.HANDOVER, RecordStatus.RETURNED
-  ].includes(record.status) || ((record.status === RecordStatus.REJECTED || record.status === RecordStatus.WITHDRAWN) && (!!record.pendingCheckDate || !!record.checkedDate || !!record.submissionDate || !!record.approvalDate));
+  ].includes(record.status) || (isRejectedOrWithdrawn && (!!record.completedWorkDate || !!record.pendingCheckDate || !!record.checkedDate || !!record.submissionDate || !!record.approvalDate));
 
 
   return (
@@ -530,9 +532,9 @@ export const MobileDetailModal: React.FC<MobileDetailModalProps> = ({
                 />
                 <TimelineItem 
                   date={record.completedDate} 
-                  label="HOÀN THÀNH" 
+                  label={record.status === RecordStatus.REJECTED ? "HỒ SƠ TRẢ" : record.status === RecordStatus.WITHDRAWN ? "RÚT HỒ SƠ" : "HOÀN THÀNH"} 
                   icon={CheckSquare}
-                  colorClass={{text: 'text-green-600', border: 'border-green-600', bg: 'bg-green-600'}}
+                  colorClass={{text: record.status === RecordStatus.REJECTED ? 'text-red-700' : 'text-green-700', border: record.status === RecordStatus.REJECTED ? 'border-red-600' : 'border-green-600', bg: record.status === RecordStatus.REJECTED ? 'bg-red-600' : 'bg-green-600'}}
                 />
                 <TimelineItem 
                   date={record.resultReturnedDate} 

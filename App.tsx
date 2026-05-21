@@ -498,7 +498,7 @@ function App() {
   const executeBatchExport = async (batchNumber: number, batchDate: string, handoverWard?: string) => {
       const nowStr = new Date().toISOString();
       const candidates = selectedRecordIds.size > 0 ? records.filter(r => selectedRecordIds.has(r.id)) : recordFilterProps.filteredRecords;
-      const recordsToExport = candidates.filter(r => r.status === RecordStatus.SIGNED || r.status === RecordStatus.REJECTED || (r.status === RecordStatus.WITHDRAWN && !r.exportBatch));
+      const recordsToExport = candidates.filter(r => r.status === RecordStatus.SIGNED || ((r.status === RecordStatus.REJECTED || r.status === RecordStatus.WITHDRAWN) && !r.exportBatch));
       if (recordsToExport.length === 0) return;
       const updatesToApply = recordsToExport.map(r => {
           const nextStatus = r.status === RecordStatus.WITHDRAWN ? RecordStatus.WITHDRAWN : r.status === RecordStatus.REJECTED ? RecordStatus.REJECTED : RecordStatus.HANDOVER;

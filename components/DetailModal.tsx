@@ -389,7 +389,7 @@ export const DetailModal: React.FC<DetailModalProps> = ({ isOpen, onClose, recor
       RecordStatus.SIGNED,
       RecordStatus.HANDOVER,
       RecordStatus.RETURNED
-  ].includes(record.status) || ((record.status === RecordStatus.REJECTED || record.status === RecordStatus.WITHDRAWN) && (!!record.pendingCheckDate || !!record.checkedDate || !!record.submissionDate || !!record.approvalDate));
+  ].includes(record.status) || ((record.status === RecordStatus.REJECTED || record.status === RecordStatus.WITHDRAWN) && (!!record.completedWorkDate || !!record.pendingCheckDate || !!record.checkedDate || !!record.submissionDate || !!record.approvalDate));
 
 
   return (

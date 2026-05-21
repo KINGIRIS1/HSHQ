@@ -103,8 +103,7 @@ export const useRecordFilter = (
                 // Tab chờ giao: Bao gồm Đã ký HOẶC (Đã rút VÀ chưa có đợt xuất) HOẶC Hồ sơ trả (REJECTED)
                 result = result.filter(r => 
                     r.status === RecordStatus.SIGNED || 
-                    r.status === RecordStatus.REJECTED || 
-                    (r.status === RecordStatus.WITHDRAWN && !r.exportBatch)
+                    ((r.status === RecordStatus.REJECTED || r.status === RecordStatus.WITHDRAWN) && !r.exportBatch)
                 );
             } else if (handoverTab === 'returned') {
                 // Tab Đã trả kết quả: Status = RETURNED
@@ -124,7 +123,7 @@ export const useRecordFilter = (
                 // Tab Lịch sử giao: Bao gồm Đã giao HOẶC (Đã rút VÀ đã có đợt xuất)
                 result = result.filter(r => 
                     r.status === RecordStatus.HANDOVER || 
-                    (r.status === RecordStatus.WITHDRAWN && r.exportBatch)
+                    ((r.status === RecordStatus.WITHDRAWN || r.status === RecordStatus.REJECTED) && r.exportBatch)
                 );
                 // Giữ nguyên logic lọc ngày đơn cho Lịch sử giao (theo đợt)
                 if (filterDate) {
