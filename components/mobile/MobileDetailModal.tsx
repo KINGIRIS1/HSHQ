@@ -272,12 +272,27 @@ export const MobileDetailModal: React.FC<MobileDetailModalProps> = ({
     );
   };
 
-  const isRejectedOrWithdrawn = record.status === RecordStatus.REJECTED || record.status === RecordStatus.WITHDRAWN;
-
+  // LOGIC CHECK NẾU ĐÃ THỰC HIỆN XONG (Để hiển thị bước "Đã thực hiện")
   const isWorkDone = [
     RecordStatus.COMPLETED_WORK, RecordStatus.PENDING_CHECK, RecordStatus.CHECKED, RecordStatus.PENDING_SIGN, RecordStatus.SIGNED, 
     RecordStatus.HANDOVER, RecordStatus.RETURNED
-  ].includes(record.status) || (isRejectedOrWithdrawn && (!!record.completedWorkDate || !!record.pendingCheckDate || !!record.checkedDate || !!record.submissionDate || !!record.approvalDate));
+  ].includes(record.status) || !!record.completedWorkDate;
+  
+  const isPendingCheckActive = [
+      RecordStatus.PENDING_CHECK, RecordStatus.CHECKED, RecordStatus.PENDING_SIGN, RecordStatus.SIGNED, RecordStatus.HANDOVER, RecordStatus.RETURNED
+  ].includes(record.status) || !!record.pendingCheckDate;
+
+  const isCheckedActive = [
+      RecordStatus.CHECKED, RecordStatus.PENDING_SIGN, RecordStatus.SIGNED, RecordStatus.HANDOVER, RecordStatus.RETURNED
+  ].includes(record.status) || !!record.checkedDate;
+
+  const isPendingSignActive = [
+      RecordStatus.PENDING_SIGN, RecordStatus.SIGNED, RecordStatus.HANDOVER, RecordStatus.RETURNED
+  ].includes(record.status) || !!record.submissionDate;
+
+  const isSignedActive = [
+      RecordStatus.SIGNED, RecordStatus.HANDOVER, RecordStatus.RETURNED
+  ].includes(record.status) || !!record.approvalDate;
 
 
   return (
@@ -493,27 +508,35 @@ export const MobileDetailModal: React.FC<MobileDetailModalProps> = ({
                   icon={CheckSquare}
                   colorClass={{text: 'text-cyan-600', border: 'border-cyan-600', bg: 'bg-cyan-600'}}
                 />
-                <TimelineItem 
-                  date={record.pendingCheckDate} 
-                  forceActive={record.status === RecordStatus.PENDING_CHECK || record.status === RecordStatus.CHECKED || record.status === RecordStatus.PENDING_SIGN || record.status === RecordStatus.SIGNED || record.status === RecordStatus.HANDOVER || record.status === RecordStatus.RETURNED || ((record.status === RecordStatus.REJECTED || record.status === RecordStatus.WITHDRAWN) && (!!record.checkedDate || !!record.submissionDate || !!record.approvalDate))}
-                  label="TRÌNH KIỂM TRA" 
-                  icon={Send}
-                  colorClass={{text: 'text-orange-600', border: 'border-orange-600', bg: 'bg-orange-600'}}
-                  subText={record.checkedBy ? (() => {
-                      const checker = employees.find(e => e.id === record.checkedBy);
-                      if (!checker) return undefined;
-                      return `${checker.name} (${checker?.position || 'Người kiểm tra'})`;
-                  })() : undefined}
-                />
-                <TimelineItem 
-                  date={record.checkedDate} 
-                  forceActive={record.status === RecordStatus.CHECKED || record.status === RecordStatus.PENDING_SIGN || record.status === RecordStatus.SIGNED || record.status === RecordStatus.HANDOVER || record.status === RecordStatus.RETURNED || ((record.status === RecordStatus.REJECTED || record.status === RecordStatus.WITHDRAWN) && (!!record.submissionDate || !!record.approvalDate))}
-                  label="ĐÃ KIỂM TRA" 
-                  icon={CheckSquare}
-                  colorClass={{text: 'text-orange-600', border: 'border-orange-600', bg: 'bg-orange-600'}}
-                />
+
+                {/* Ẩn mốc kiểm tra cho một số loại hồ sơ */}
+                {!(record.recordType === 'Cung cấp tài liệu đất đai' || record.recordType === 'Sao lục' || record.recordType === 'Công văn') && (
+                  <>
+                    <TimelineItem 
+                      date={record.pendingCheckDate} 
+                      forceActive={isPendingCheckActive}
+                      label="TRÌNH KIỂM TRA" 
+                      icon={Send}
+                      colorClass={{text: 'text-orange-600', border: 'border-orange-600', bg: 'bg-orange-600'}}
+                      subText={record.checkedBy ? (() => {
+                          const checker = employees.find(e => e.id === record.checkedBy);
+                          if (!checker) return undefined;
+                          return `${checker.name} (${checker?.position || 'Người kiểm tra'})`;
+                      })() : undefined}
+                    />
+                    <TimelineItem 
+                      date={record.checkedDate} 
+                      forceActive={isCheckedActive}
+                      label="ĐÃ KIỂM TRA" 
+                      icon={CheckSquare}
+                      colorClass={{text: 'text-orange-600', border: 'border-orange-600', bg: 'bg-orange-600'}}
+                    />
+                  </>
+                )}
+
                 <TimelineItem 
                   date={record.submissionDate} 
+                  forceActive={isPendingSignActive}
                   label="TRÌNH KÝ" 
                   icon={Send}
                   colorClass={{text: 'text-purple-600', border: 'border-purple-600', bg: 'bg-purple-600'}}
@@ -524,18 +547,23 @@ export const MobileDetailModal: React.FC<MobileDetailModalProps> = ({
                       return `${director.name} (${emp?.position || (director.role === UserRole.ADMIN ? 'Giám đốc' : 'Phó giám đốc')})`;
                   })() : undefined}
                 />
+                
                 <TimelineItem 
                   date={record.approvalDate} 
+                  forceActive={isSignedActive}
                   label="KÝ DUYỆT" 
                   icon={FileSignature}
                   colorClass={{text: 'text-indigo-600', border: 'border-indigo-600', bg: 'bg-indigo-600'}}
                 />
+
                 <TimelineItem 
                   date={record.completedDate} 
                   label={record.status === RecordStatus.REJECTED ? "HỒ SƠ TRẢ" : record.status === RecordStatus.WITHDRAWN ? "RÚT HỒ SƠ" : "HOÀN THÀNH"} 
                   icon={CheckSquare}
+                  isLast={false}
                   colorClass={{text: record.status === RecordStatus.REJECTED ? 'text-red-700' : 'text-green-700', border: record.status === RecordStatus.REJECTED ? 'border-red-600' : 'border-green-600', bg: record.status === RecordStatus.REJECTED ? 'bg-red-600' : 'bg-green-600'}}
                 />
+
                 <TimelineItem 
                   date={record.resultReturnedDate} 
                   label="TRẢ KẾT QUẢ" 

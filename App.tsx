@@ -390,45 +390,87 @@ function App() {
 
   const handleBulkUpdate = async (field: keyof RecordFile, value: any, customDateStr?: string) => {
       const selectedIds = Array.from(selectedRecordIds);
-      let updates: any = { [field]: value };
+      let baseUpdates: any = { [field]: value };
       const targetDateStr = customDateStr || new Date().toISOString();
 
       if (field === 'status') {
-          updates = getUpdatesForStatusChange(value as RecordStatus, targetDateStr);
+          baseUpdates = getUpdatesForStatusChange(value as RecordStatus, targetDateStr);
       } else if (field === 'deadline' || field === 'receivedDate') {
-          updates[field] = targetDateStr;
+          baseUpdates[field] = targetDateStr;
       }
       
       if (field === 'assignedTo') {
-          updates.assignedDate = targetDateStr;
-          updates.status = RecordStatus.ASSIGNED;
-          updates.submissionDate = null;
-          updates.approvalDate = null;
-          updates.completedDate = null;
-          updates.resultReturnedDate = null;
-          updates.exportBatch = null;
-          updates.exportDate = null;
+          baseUpdates.assignedDate = targetDateStr;
+          baseUpdates.status = RecordStatus.ASSIGNED;
+          baseUpdates.submissionDate = null;
+          baseUpdates.approvalDate = null;
+          baseUpdates.completedDate = null;
+          baseUpdates.resultReturnedDate = null;
+          baseUpdates.exportBatch = null;
+          baseUpdates.exportDate = null;
       }
 
-      setRecords(prev => prev.map(r => selectedIds.includes(r.id) ? { ...r, ...updates } : r));
-      const targets = records.filter(r => selectedIds.includes(r.id));
-      await Promise.all(targets.map(r => updateRecordApi({ ...r, ...updates })));
+      // Calculate the specific, fully-elaborated target records upfront
+      const updatedTargets = records
+          .filter(r => selectedIds.includes(r.id))
+          .map(r => {
+              let recordUpdates = { ...baseUpdates };
+              if (field === 'status' && (value === RecordStatus.REJECTED || value === RecordStatus.WITHDRAWN)) {
+                  recordUpdates.completedDate = r.completedDate || targetDateStr;
+                  const flow = [RecordStatus.RECEIVED, RecordStatus.ASSIGNED, RecordStatus.IN_PROGRESS, RecordStatus.COMPLETED_WORK, RecordStatus.PENDING_CHECK, RecordStatus.CHECKED, RecordStatus.PENDING_SIGN, RecordStatus.SIGNED, RecordStatus.HANDOVER];
+                  const prevIdx = flow.indexOf(r.status);
+                  if (prevIdx >= 0) {
+                      if (prevIdx >= flow.indexOf(RecordStatus.ASSIGNED) && !r.assignedDate) recordUpdates.assignedDate = targetDateStr;
+                      if (prevIdx >= flow.indexOf(RecordStatus.COMPLETED_WORK) && !r.completedWorkDate) recordUpdates.completedWorkDate = targetDateStr;
+                      if (prevIdx >= flow.indexOf(RecordStatus.PENDING_CHECK) && !r.pendingCheckDate) recordUpdates.pendingCheckDate = targetDateStr;
+                      if (prevIdx >= flow.indexOf(RecordStatus.CHECKED) && !r.checkedDate) recordUpdates.checkedDate = targetDateStr;
+                      if (prevIdx >= flow.indexOf(RecordStatus.PENDING_SIGN) && !r.submissionDate) recordUpdates.submissionDate = targetDateStr;
+                      if (prevIdx >= flow.indexOf(RecordStatus.SIGNED) && !r.approvalDate) recordUpdates.approvalDate = targetDateStr;
+                  }
+              }
+              return { ...r, ...recordUpdates };
+          });
+
+      setRecords(prev => prev.map(r => {
+          const updated = updatedTargets.find(u => u.id === r.id);
+          return updated ? updated : r;
+      }));
+      
+      await Promise.all(updatedTargets.map(r => updateRecordApi(r)));
       setToast({ type: 'success', message: `Đã cập nhật ${selectedIds.length} hồ sơ thành công!` });
       setSelectedRecordIds(new Set()); 
   };
 
   const handleQuickUpdate = useCallback(async (id: string, field: keyof RecordFile, value: string) => {
+      const record = records.find(r => r.id === id); 
+      if (!record) return;
+
+      const nowStr = new Date().toISOString();
       let updates: any = { [field]: value };
+      
       if (field === 'status') {
           updates = getUpdatesForStatusChange(value as RecordStatus);
+          
+          if (value === RecordStatus.REJECTED || value === RecordStatus.WITHDRAWN) {
+              updates.completedDate = record.completedDate || nowStr;
+              const flow = [RecordStatus.RECEIVED, RecordStatus.ASSIGNED, RecordStatus.IN_PROGRESS, RecordStatus.COMPLETED_WORK, RecordStatus.PENDING_CHECK, RecordStatus.CHECKED, RecordStatus.PENDING_SIGN, RecordStatus.SIGNED, RecordStatus.HANDOVER];
+              const prevIdx = flow.indexOf(record.status);
+              if (prevIdx >= 0) {
+                  if (prevIdx >= flow.indexOf(RecordStatus.ASSIGNED) && !record.assignedDate) updates.assignedDate = nowStr;
+                  if (prevIdx >= flow.indexOf(RecordStatus.COMPLETED_WORK) && !record.completedWorkDate) updates.completedWorkDate = nowStr;
+                  if (prevIdx >= flow.indexOf(RecordStatus.PENDING_CHECK) && !record.pendingCheckDate) updates.pendingCheckDate = nowStr;
+                  if (prevIdx >= flow.indexOf(RecordStatus.CHECKED) && !record.checkedDate) updates.checkedDate = nowStr;
+                  if (prevIdx >= flow.indexOf(RecordStatus.PENDING_SIGN) && !record.submissionDate) updates.submissionDate = nowStr;
+                  if (prevIdx >= flow.indexOf(RecordStatus.SIGNED) && !record.approvalDate) updates.approvalDate = nowStr;
+              }
+          }
       }
+
       setRecords(prev => prev.map(r => r.id === id ? { ...r, ...updates } : r));
-      const record = records.find(r => r.id === id); 
-      if (record) {
-          try { await updateRecordApi({ ...record, ...updates }); } catch (e) { console.error("Quick update failed", e); }
-      } else {
-          const tempRecord = { id } as RecordFile; 
-          await updateRecordApi({ ...tempRecord, ...updates });
+      try { 
+          await updateRecordApi({ ...record, ...updates }); 
+      } catch (e) { 
+          console.error("Quick update failed", e); 
       }
   }, [records]);
 
@@ -540,10 +582,28 @@ function App() {
       if (await confirmAction(`Xác nhận đánh dấu ${selectedRecordIds.size} hồ sơ đang chọn thành "Hồ sơ trả"?\n\nHồ sơ sẽ được chuyển vào danh sách Chờ giao của bộ phận 1 cửa.`)) {
           const nowStr = new Date().toISOString();
           const targets = records.filter(r => selectedRecordIds.has(r.id));
-          const updates = { status: RecordStatus.REJECTED, completedDate: nowStr };
           
-          setRecords(prev => prev.map(r => targets.find(p => p.id === r.id) ? { ...r, ...updates } : r));
-          await Promise.all(targets.map(r => updateRecordApi({ ...r, ...updates })));
+          const flow = [RecordStatus.RECEIVED, RecordStatus.ASSIGNED, RecordStatus.IN_PROGRESS, RecordStatus.COMPLETED_WORK, RecordStatus.PENDING_CHECK, RecordStatus.CHECKED, RecordStatus.PENDING_SIGN, RecordStatus.SIGNED, RecordStatus.HANDOVER];
+
+          const updatesToApply = targets.map(r => {
+             const updates: any = { status: RecordStatus.REJECTED, completedDate: r.completedDate || nowStr };
+             const prevIdx = flow.indexOf(r.status);
+             if (prevIdx >= 0) {
+                 if (prevIdx >= flow.indexOf(RecordStatus.ASSIGNED) && !r.assignedDate) updates.assignedDate = nowStr;
+                 if (prevIdx >= flow.indexOf(RecordStatus.COMPLETED_WORK) && !r.completedWorkDate) updates.completedWorkDate = nowStr;
+                 if (prevIdx >= flow.indexOf(RecordStatus.PENDING_CHECK) && !r.pendingCheckDate) updates.pendingCheckDate = nowStr;
+                 if (prevIdx >= flow.indexOf(RecordStatus.CHECKED) && !r.checkedDate) updates.checkedDate = nowStr;
+                 if (prevIdx >= flow.indexOf(RecordStatus.PENDING_SIGN) && !r.submissionDate) updates.submissionDate = nowStr;
+                 if (prevIdx >= flow.indexOf(RecordStatus.SIGNED) && !r.approvalDate) updates.approvalDate = nowStr;
+             }
+             return { ...r, ...updates };
+          });
+          
+          setRecords(prev => prev.map(r => {
+              const updated = updatesToApply.find(u => u.id === r.id);
+              return updated ? updated : r;
+          }));
+          await Promise.all(updatesToApply.map(r => updateRecordApi(r)));
           
           setSelectedRecordIds(new Set());
           setToast({ type: 'success', message: `Đã đánh dấu ${targets.length} hồ sơ thành "Hồ sơ trả".` });
