@@ -89,9 +89,12 @@ server.use(jsonServer.bodyParser);
 
 // Middleware hiển thị log (Chỉ log các request API, không log file tĩnh nữa do đã khai báo static ở trên)
 server.use((req: Request, res: Response, next: NextFunction) => {
-    if (['POST', 'PUT', 'DELETE'].includes(req.method)) {
-        console.log(`${new Date().toLocaleTimeString()} - ${req.method} request received`);
-    }
+    const start = Date.now();
+    res.on('finish', () => {
+        if (res.statusCode >= 400 || req.url.includes('App.tsx')) {
+            console.log(`[REQ] ${req.method} ${req.url} - ${res.statusCode} (${Date.now() - start}ms)`);
+        }
+    });
     next();
 });
 

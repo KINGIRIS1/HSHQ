@@ -27,10 +27,7 @@ interface ExcerptManagementProps {
 }
 
 const INITIAL_CONFIG: Record<string, number> = {
-  'Tân Khai': 0,
-  'Tân Quan': 0,
-  'Minh Đức': 0,
-  'Tân Hưng': 0
+  'GLOBAL': 0
 };
 
 const ExcerptManagement: React.FC<ExcerptManagementProps> = ({ currentUser, records, onUpdateRecord, wards, onAddWard, onDeleteWard, onResetWards }) => {
@@ -92,10 +89,11 @@ const ExcerptManagement: React.FC<ExcerptManagementProps> = ({ currentUser, reco
       }
   };
 
-  // --- LOGIC PHÂN BIỆT KHÓA THEO NĂM (QUAN TRỌNG) ---
-  const getCounterKey = (ward: string, year: number) => {
-      if (year <= 2025) return ward;
-      return `${ward}_${year}`;
+  // --- LOGIC PHÂN BIỆT KHÓA THEO NĂM ---
+  // Sử dụng chung 1 số tổng cho tất cả các xã (yêu cầu từ người dùng)
+  const getCounterKey = (year: number) => {
+      if (year <= 2025) return 'GLOBAL';
+      return `GLOBAL_${year}`;
   };
 
   const handleSearchRecord = () => {
@@ -126,19 +124,7 @@ const ExcerptManagement: React.FC<ExcerptManagementProps> = ({ currentUser, reco
           onAddWard(missingWard);
           setSelectedWard(missingWard);
           setMissingWard(null);
-          // Khi thêm xã mới, khởi tạo counter cho năm hiện tại
-          const key = getCounterKey(missingWard, currentYear);
-          if (counters[key] === undefined) {
-              setCounters(prev => {
-                  const newState = { ...prev, [key]: 0 };
-                  if (activeTab === 'trichluc') {
-                      saveExcerptCounters(newState); 
-                  } else {
-                      saveTrichDoCounters(newState);
-                  }
-                  return newState;
-              });
-          }
+          // Không cần tạo counter riêng cho xã mới vì dùng chung
       }
   };
 
@@ -153,15 +139,31 @@ const ExcerptManagement: React.FC<ExcerptManagementProps> = ({ currentUser, reco
     setIsCopied(false);
 
     try {
+        // Lấy lịch sử mới nhất từ server để tìm số lớn nhất đã được cấp (Cơ chế chống trùng lặp)
+        const serverHistory = activeTab === 'trichluc' ? await fetchExcerptHistory() : await fetchTrichDoHistory();
+        let maxNumberInHistory = 0;
+        serverHistory.forEach(r => {
+            const itemYear = new Date(r.createdAt).getFullYear();
+            let yearMatch = false;
+            if (currentYear <= 2025) {
+                yearMatch = itemYear <= 2025;
+            } else {
+                yearMatch = itemYear === currentYear;
+            }
+            if (yearMatch && r.excerptNumber > maxNumberInHistory) {
+                maxNumberInHistory = r.excerptNumber;
+            }
+        });
+
         // Lấy dữ liệu Counter mới nhất từ Server
         const serverCounters = activeTab === 'trichluc' ? await fetchExcerptCounters() : await fetchTrichDoCounters();
         
-        // Xác định Key dựa theo Năm đang chọn
-        const counterKey = getCounterKey(selectedWard, currentYear);
+        // Xác định Key dựa theo Năm đang chọn (dùng chung cho mọi xã)
+        const counterKey = getCounterKey(currentYear);
 
-        // Tính số tiếp theo
+        // Tính số tiếp theo: Là số lớn nhất giữa Cấu hình Counter và Lịch sử thực tế
         const currentCountOnServer = serverCounters[counterKey] || 0;
-        const nextCount = currentCountOnServer + 1;
+        const nextCount = Math.max(currentCountOnServer, maxNumberInHistory) + 1;
 
         const newRecord: ExcerptRecord = {
           id: Math.random().toString(36).substr(2, 9),
@@ -246,8 +248,6 @@ const ExcerptManagement: React.FC<ExcerptManagementProps> = ({ currentUser, reco
               return;
           }
           onAddWard(name);
-          const key = getCounterKey(name, currentYear);
-          setEditingCounters(prev => ({ ...prev, [key]: 0 }));
           setNewWardName('');
       }
   };
@@ -329,26 +329,16 @@ const ExcerptManagement: React.FC<ExcerptManagementProps> = ({ currentUser, reco
              </div>
          </div>
          
-         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-h-40 overflow-y-auto custom-scrollbar">
-             {wards.map(ward => {
-                 const key = getCounterKey(ward, currentYear);
-                 const count = counters[key] || 0;
-                 return (
-                     <div 
-                        key={ward} 
-                        onClick={() => setSelectedWard(ward)}
-                        className={`cursor-pointer rounded-lg p-4 border transition-all hover:shadow-md flex flex-col items-center justify-center gap-1 ${selectedWard === ward ? 'bg-blue-50 border-blue-400 ring-2 ring-blue-200' : 'bg-gray-50 border-gray-200 hover:border-blue-300'}`}
-                     >
-                         <div className="text-xs text-gray-500 font-bold uppercase text-center">{ward}</div>
-                         <div className="text-3xl font-black text-gray-800 font-mono">
-                             {count}
-                         </div>
-                         <div className="text-[10px] text-gray-400 flex items-center gap-1">
-                            Số hiện tại ({currentYear})
-                         </div>
-                     </div>
-                 );
-             })}
+         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+             <div className="col-span-1 md:col-span-2 rounded-lg p-6 border transition-all shadow-md bg-blue-50 border-blue-400 flex flex-col items-center justify-center gap-2">
+                 <div className="text-sm text-gray-500 font-bold uppercase text-center">TỔNG CHUNG (TẤT CẢ CÁC XÃ)</div>
+                 <div className="text-5xl font-black text-gray-800 font-mono">
+                     {counters[getCounterKey(currentYear)] || 0}
+                 </div>
+                 <div className="flex items-center gap-2 text-xs text-blue-700 font-bold mt-2">
+                     <span className="bg-blue-100 px-2 py-1 rounded">Sẽ lấy số tiếp theo là: {(counters[getCounterKey(currentYear)] || 0) + 1}</span>
+                 </div>
+             </div>
          </div>
       </div>
 
@@ -465,7 +455,7 @@ const ExcerptManagement: React.FC<ExcerptManagementProps> = ({ currentUser, reco
                     className="w-full mt-2 bg-blue-600 text-white py-3 rounded-lg font-semibold shadow-md hover:bg-blue-700 hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                     {loading ? <Loader2 className="animate-spin" /> : <BookOpen size={20} />}
-                    Cấp số tiếp theo: {selectedWard ? ((counters[getCounterKey(selectedWard, currentYear)] || 0) + 1) : '?'}
+                    Cấp số tiếp theo: {selectedWard ? ((counters[getCounterKey(currentYear)] || 0) + 1) : '?'}
                 </button>
                 </div>
                 
@@ -624,33 +614,37 @@ const ExcerptManagement: React.FC<ExcerptManagementProps> = ({ currentUser, reco
                           <RotateCcw size={12} /> Khôi phục danh sách xã/phường mặc định
                        </button>
                       
-                      <div className="space-y-3">
-                          {wards.map(ward => {
-                              const key = getCounterKey(ward, currentYear);
-                              return (
-                                <div key={ward} className="flex justify-between items-center bg-white p-3 rounded border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-                                    <div className="flex items-center gap-2">
-                                        <button 
-                                            onClick={() => handleDeleteWard(ward)}
-                                            className="text-gray-400 hover:text-red-500 p-1 hover:bg-red-50 rounded"
-                                            title="Xóa xã này"
-                                        >
-                                            <Trash2 size={14} />
-                                        </button>
-                                        <span className="text-sm font-medium text-gray-700">{ward}</span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-xs text-gray-400">Hiện tại:</span>
-                                        <input 
-                                            type="number" 
-                                            className="w-20 border border-gray-300 rounded px-2 py-1 text-right font-mono font-medium focus:outline-none focus:ring-1 focus:ring-blue-500"
-                                            value={editingCounters[key] ?? 0}
-                                            onChange={(e) => setEditingCounters({...editingCounters, [key]: parseInt(e.target.value) || 0})}
-                                        />
-                                    </div>
+                      <div className="space-y-3 mb-6">
+                            <div className="flex justify-between items-center bg-white p-4 rounded-lg border-2 border-blue-200 shadow-sm">
+                                <div className="flex items-center gap-2">
+                                    <span className="text-sm font-bold text-blue-800 uppercase">Tổng {activeTab === 'trichluc' ? 'số trích lục' : 'số trích đo'} hiện tại</span>
                                 </div>
-                              );
-                          })}
+                                <div className="flex items-center gap-2">
+                                    <span className="text-xs text-gray-500 font-medium">Đã cấp đến số:</span>
+                                    <input 
+                                        type="number" 
+                                        className="w-32 border border-gray-300 rounded-md px-3 py-2 text-right font-mono font-bold focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        value={editingCounters[getCounterKey(currentYear)] ?? 0}
+                                        onChange={(e) => setEditingCounters({...editingCounters, [getCounterKey(currentYear)]: parseInt(e.target.value) || 0})}
+                                    />
+                                </div>
+                            </div>
+                      </div>
+
+                      <h4 className="font-bold text-gray-700 text-sm mb-3">Danh sách địa bàn (chỉ để chọn)</h4>
+                      <div className="space-y-2 max-h-40 overflow-y-auto custom-scrollbar border rounded p-2 bg-white">
+                          {wards.map(ward => (
+                                <div key={ward} className="flex justify-between items-center p-2 rounded hover:bg-gray-50">
+                                    <span className="text-sm font-medium text-gray-700">{ward}</span>
+                                    <button 
+                                        onClick={() => handleDeleteWard(ward)}
+                                        className="text-gray-400 hover:text-red-500 p-1 hover:bg-red-50 rounded"
+                                        title="Xóa xã này"
+                                    >
+                                        <Trash2 size={14} />
+                                    </button>
+                                </div>
+                          ))}
                       </div>
                   </div>
 

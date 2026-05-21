@@ -2,6 +2,7 @@ import { Buffer } from 'buffer';
 import React, { ReactNode, ErrorInfo } from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
+import App from './App';
 
 // --- 1. SETUP POLYFILLS & MOCKS (CHẠY TRƯỚC KHI APP LOAD) ---
 
@@ -125,9 +126,6 @@ const mountApp = async () => {
   try {
     const rootElement = document.getElementById('root');
     if (!rootElement) throw new Error("Không tìm thấy phần tử root");
-
-    // Dynamic import App component
-    const { default: App } = await import('./App');
 
     const root = ReactDOM.createRoot(rootElement);
     root.render(
