@@ -35,15 +35,43 @@ export const migrateCungCapTaiLieu = async () => {
         if (fetchError) throw fetchError;
         if (!archiveData || archiveData.length === 0) return;
 
-        const cungCapRecords = archiveData.filter(r => r.data && r.data.recordType === 'Cung cấp tài liệu đất đai');
-        if (cungCapRecords.length === 0) return;
-
+        // Di chuyển toàn bộ các hồ sơ Sao Lục cũ, chuyển đổi sang loại 'Cung cấp tài liệu đất đai' chuẩn
+        const cungCapRecords = archiveData;
         console.log(`Found ${cungCapRecords.length} records to reverse migrate.`);
 
         const landRecordsToInsert = cungCapRecords.map(r => {
-            const { xa_phuong, to_ban_do, thua_dat, hen_tra, ...originalData } = r.data;
-            // Remove snake_case or invalid columns that might have slipped into originalData
-            const safeData: any = {};
+            const rData = r.data || {};
+            const { xa_phuong, to_ban_do, thua_dat, hen_tra, ...originalData } = rData;
+            
+            // Đồng bộ chuyển đổi trạng thái bản ghi tương thích
+            let status = 'RECEIVED';
+            if (r.status === 'assigned') status = 'ASSIGNED';
+            else if (r.status === 'executed') status = 'COMPLETED_WORK';
+            else if (r.status === 'pending_check') status = 'PENDING_CHECK';
+            else if (r.status === 'checked') status = 'CHECKED';
+            else if (r.status === 'pending_sign') status = 'PENDING_SIGN';
+            else if (r.status === 'signed') status = 'SIGNED';
+            else if (r.status === 'completed') status = 'RETURNED';
+            else if (r.status === 'rejected') status = 'REJECTED';
+            else if (r.status === 'withdrawn') status = 'WITHDRAWN';
+
+            // Khôi phục đầy đủ, vẹn toàn tất cả thông tin bị thiếu hụt hoặc rách nát cột trước đó
+            const safeData: any = {
+                id: r.id, // Sử dụng nguyên vẹn ID gốc UUID của archive_records để tránh nhân bản hồ sơ trùng mã hiệu
+                code: r.so_hieu || originalData.code,
+                customerName: r.noi_nhan_gui || originalData.customerName || 'Chưa Cập Nhật',
+                receivedDate: r.ngay_thang || originalData.receivedDate,
+                ward: xa_phuong || originalData.ward,
+                mapSheet: to_ban_do || originalData.mapSheet,
+                landPlot: thua_dat || originalData.landPlot,
+                deadline: hen_tra || originalData.deadline,
+                recordType: 'Cung cấp tài liệu đất đai',
+                status: status,
+                assignedTo: originalData.assigned_to || originalData.assignedTo,
+                assignedDate: originalData.assigned_date || originalData.assignedDate,
+                completedWorkDate: originalData.ngay_hoan_thanh || originalData.completedWorkDate
+            };
+
             const validCols = [
                 'id', 'code', 'customerName', 'phoneNumber', 'cccd', 'customerAddress', 'ward', 'landPlot', 'mapSheet', 
                 'area', 'address', 'group', 'content', 'recordType', 'receivedDate', 'receivedBy', 'deadline', 
@@ -57,8 +85,12 @@ export const migrateCungCapTaiLieu = async () => {
                 'needsMapCorrection',
                 'issueNumber', 'entryNumber', 'issueDate', 'residentialArea'
             ];
+
+            // Bảo toàn thêm các trường hợp lệ khác
             for (const key of Object.keys(originalData)) {
-                if (validCols.includes(key)) safeData[key] = originalData[key];
+                if (validCols.includes(key) && safeData[key] === undefined) {
+                    safeData[key] = originalData[key];
+                }
             }
             return safeData;
         });
