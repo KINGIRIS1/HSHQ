@@ -22,7 +22,7 @@ const TemplateConfigModal: React.FC<TemplateConfigModalProps> = ({ isOpen, onClo
   const [isSaving, setIsSaving] = useState(false);
   
   // State chọn loại hợp đồng con
-  const [contractSubType, setContractSubType] = useState<'dodac' | 'cammoc' | 'liq_dodac' | 'liq_cammoc' | 'liq_trichluc'>('dodac');
+  const [contractSubType, setContractSubType] = useState<'dodac' | 'cammoc' | 'liq_dodac' | 'liq_cammoc' | 'liq_trichluc' | 'annex'>('dodac');
   // State mới cho loại VPHC
   const [vphcSubType, setVphcSubType] = useState<'mau01' | 'mau02'>('mau01');
 
@@ -51,6 +51,9 @@ const TemplateConfigModal: React.FC<TemplateConfigModalProps> = ({ isOpen, onClo
           } else if (contractSubType === 'liq_trichluc') {
               storageKey = STORAGE_KEYS.CONTRACT_TEMPLATE_LIQ_TRICHLUC;
               title = 'Mẫu Thanh Lý HĐ Trích Lục';
+          } else if (contractSubType === 'annex') {
+              storageKey = STORAGE_KEYS.CONTRACT_TEMPLATE_ANNEX;
+              title = 'Mẫu Phụ Lục Gia Hạn Hợp Đồng';
           } else {
               storageKey = STORAGE_KEYS.CONTRACT_TEMPLATE_LIQ_CAMMOC;
               title = 'Mẫu Thanh Lý HĐ Cắm Mốc';
@@ -210,9 +213,15 @@ const TemplateConfigModal: React.FC<TemplateConfigModalProps> = ({ isOpen, onClo
                         </button>
                         <button 
                             onClick={() => setContractSubType('liq_trichluc')}
-                            className={`flex items-center justify-center gap-2 py-2 rounded-md text-xs font-bold border transition-all col-span-2 ${contractSubType === 'liq_trichluc' ? 'bg-orange-100 border-orange-300 text-orange-700' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'}`}
+                            className={`flex items-center justify-center gap-2 py-2 rounded-md text-xs font-bold border transition-all ${contractSubType === 'liq_trichluc' ? 'bg-orange-100 border-orange-300 text-orange-700' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'}`}
                         >
-                            <Copy size={14} /> TL Trích Lục (Mới)
+                            <Copy size={14} /> TL Trích Lục
+                        </button>
+                        <button 
+                            onClick={() => setContractSubType('annex')}
+                            className={`flex items-center justify-center gap-2 py-2 rounded-md text-xs font-bold border transition-all ${contractSubType === 'annex' ? 'bg-pink-100 border-pink-300 text-pink-700' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'}`}
+                        >
+                            <FileCheck size={14} /> Phụ lục HĐ (Mới)
                         </button>
                     </div>
                 </div>

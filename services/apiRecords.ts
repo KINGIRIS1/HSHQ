@@ -321,6 +321,60 @@ export const forceUpdateRecordsBatchApi = async (records: RecordFile[], onProgre
         return { success: true, count: 0 };
     }
 
+    // Helper tạo danh sách biến thể mã hồ sơ phong phú để truy vấn DB chính xác nhất
+    const getCodeSearchVariants = (code: string): string[] => {
+        if (!code) return [];
+        const clean = code.trim();
+        const variants = new Set<string>();
+        
+        variants.add(clean);
+        variants.add(clean.toLowerCase());
+        variants.add(clean.toUpperCase());
+        
+        // Gỡ tất cả khoảng trắng
+        const noSpaces = clean.replace(/\s+/g, '');
+        variants.add(noSpaces);
+        variants.add(noSpaces.toLowerCase());
+        variants.add(noSpaces.toUpperCase());
+
+        // Xử lý dấu gạch ngang
+        if (clean.includes('-')) {
+            const parts = clean.split('-');
+            const withSpaces = parts.map(p => p.trim()).join(' - ');
+            variants.add(withSpaces);
+            variants.add(withSpaces.toLowerCase());
+            variants.add(withSpaces.toUpperCase());
+            
+            const spaceInstead = parts.map(p => p.trim()).join(' ');
+            variants.add(spaceInstead);
+            variants.add(spaceInstead.toLowerCase());
+            variants.add(spaceInstead.toUpperCase());
+        } else {
+            // Chèn dấu gạch ngang nếu là định dạng HS123 -> HS-123
+            const match = clean.match(/^([A-Za-z]+)(\d+)$/);
+            if (match) {
+                const withDash = `${match[1]}-${match[2]}`;
+                variants.add(withDash);
+                variants.add(withDash.toLowerCase());
+                variants.add(withDash.toUpperCase());
+
+                const withDashSpaces = `${match[1]} - ${match[2]}`;
+                variants.add(withDashSpaces);
+                variants.add(withDashSpaces.toLowerCase());
+                variants.add(withDashSpaces.toUpperCase());
+            }
+
+            if (clean.includes(' ')) {
+                const withDash = clean.replace(/\s+/g, '-');
+                variants.add(withDash);
+                variants.add(withDash.toLowerCase());
+                variants.add(withDash.toUpperCase());
+            }
+        }
+
+        return Array.from(variants);
+    };
+
     try {
         const rawCodes = records.map(r => r.code).filter(c => c);
         if (rawCodes.length === 0) return { success: true, count: 0 };
@@ -331,9 +385,16 @@ export const forceUpdateRecordsBatchApi = async (records: RecordFile[], onProgre
         for (let i = 0; i < records.length; i += CHUNK_SIZE) {
             const chunkRecords = records.slice(i, i + CHUNK_SIZE);
             const chunkCodes = chunkRecords.map(r => r.code).filter(c => c);
-            const normalizedChunkCodes = chunkCodes.map(c => normalizeCode(c));
             
-            const searchCodes = Array.from(new Set([...chunkCodes, ...normalizedChunkCodes]));
+            // Generate all variants for querying Supabase
+            const searchCodesSet = new Set<string>();
+            chunkCodes.forEach(code => {
+                getCodeSearchVariants(code).forEach(variant => {
+                    searchCodesSet.add(variant);
+                });
+                searchCodesSet.add(normalizeCode(code));
+            });
+            const searchCodes = Array.from(searchCodesSet);
 
             if (searchCodes.length === 0) {
                 if (onProgress) onProgress(Math.min(i + CHUNK_SIZE, records.length), records.length);
@@ -415,6 +476,38 @@ export const forceUpdateRecordsBatchApi = async (records: RecordFile[], onProgre
 
     } catch (error) {
         logError("forceUpdateRecordsBatchApi", error);
+        return { success: false, count: 0 };
+    }
+};
+
+// Cập nhật hàng loạt hồ sơ an toàn bằng ID (Phòng tránh trùng mã hồ sơ)
+export const updateRecordsBatchById = async (updates: Partial<RecordFile>[], onProgress?: (processed: number, total: number) => void): Promise<{ success: boolean; count: number }> => {
+    if (!isConfigured) {
+        let count = 0;
+        updates.forEach(up => {
+            const idx = MOCK_RECORDS.findIndex(r => r.id === up.id);
+            if (idx !== -1) {
+                MOCK_RECORDS[idx] = { ...MOCK_RECORDS[idx], ...up } as RecordFile;
+                count++;
+            }
+        });
+        saveToCache(CACHE_KEYS.RECORDS, MOCK_RECORDS);
+        if (onProgress) onProgress(updates.length, updates.length);
+        return { success: true, count };
+    }
+
+    try {
+        const rows = updates.map(u => sanitizeData(u, RECORD_DB_COLUMNS));
+        const { error } = await supabase
+            .from('land_records')
+            .upsert(rows);
+
+        if (error) throw error;
+        
+        if (onProgress) onProgress(updates.length, updates.length);
+        return { success: true, count: updates.length };
+    } catch (error) {
+        logError("updateRecordsBatchById", error);
         return { success: false, count: 0 };
     }
 };

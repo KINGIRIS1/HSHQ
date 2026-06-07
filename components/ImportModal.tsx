@@ -255,13 +255,34 @@ const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImport, em
             const otherDocsRaw = getVal(['GIẤY TỜ KÈM THEO', 'GIẤY TỜ', 'otherdocs', 'other_docs', 'otherDocs']);
             if (otherDocsRaw !== undefined) record.otherDocs = String(otherDocsRaw);
 
-            // 2. NGÀY THÁNG
+            // 2. NGÀY THÁNG CỦA TỪNG TRẠNG THÁI & THÔNG TIN CHUNG
             const receivedRaw = getVal(['NGÀY NHẬN', 'NGÀY NỘP', 'receiveddate', 'received_date', 'receivedDate']);
             if (receivedRaw !== undefined) record.receivedDate = parseExcelDate(receivedRaw);
             else if (mode === 'create') record.receivedDate = new Date().toISOString();
 
             const deadlineRaw = getVal(['HẸN TRẢ', 'DEADLINE', 'deadline']);
             if (deadlineRaw !== undefined) record.deadline = parseExcelDate(deadlineRaw);
+
+            const completedWorkDateRaw = getVal(['NGÀY THỰC HIỆN', 'NGÀY ĐÃ THỰC HIỆN', 'completedworkdate', 'completed_work_date', 'completedWorkDate']);
+            if (completedWorkDateRaw !== undefined) record.completedWorkDate = parseExcelDate(completedWorkDateRaw);
+
+            const pendingCheckDateRaw = getVal(['NGÀY TRÌNH KIỂM TRA', 'NGÀY CHỜ KIỂM TRA', 'pendingcheckdate', 'pending_check_date', 'pendingCheckDate']);
+            if (pendingCheckDateRaw !== undefined) record.pendingCheckDate = parseExcelDate(pendingCheckDateRaw);
+
+            const checkedDateRaw = getVal(['NGÀY ĐÃ KIỂM TRA', 'checkeddate', 'checked_date', 'checkedDate']);
+            if (checkedDateRaw !== undefined) record.checkedDate = parseExcelDate(checkedDateRaw);
+
+            const submissionDateRaw = getVal(['NGÀY TRÌNH KÝ', 'submissiondate', 'submission_date', 'submissionDate']);
+            if (submissionDateRaw !== undefined) record.submissionDate = parseExcelDate(submissionDateRaw);
+
+            const approvalDateRaw = getVal(['NGÀY KÝ DUYỆT', 'NGÀY KÝ', 'approvaldate', 'approval_date', 'approvalDate']);
+            if (approvalDateRaw !== undefined) record.approvalDate = parseExcelDate(approvalDateRaw);
+
+            const completedDateRaw = getVal(['NGÀY HOÀN THÀNH', 'completeddate', 'completed_date', 'completedDate', 'NGÀY GIAO 1 CỬA']);
+            if (completedDateRaw !== undefined) record.completedDate = parseExcelDate(completedDateRaw);
+
+            const resultReturnedDateRaw = getVal(['NGÀY TRẢ DÂN', 'resultreturneddate', 'result_returned_date', 'resultReturnedDate']);
+            if (resultReturnedDateRaw !== undefined) record.resultReturnedDate = parseExcelDate(resultReturnedDateRaw);
 
             // 3. LOẠI HỒ SƠ
             const typeRaw = getVal(['LOẠI HỒ SƠ', 'LOAI HO SO', 'recordtype', 'record_type']);
@@ -292,35 +313,71 @@ const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImport, em
             }
 
             // 5. TRẠNG THÁI & NGƯỜI XỬ LÝ
-            // Logic ưu tiên: Nếu có ngày xuất/đợt -> HANDOVER. Ngược lại mới xét cột Trạng Thái.
+            // Logic ưu tiên: Nếu có cột Trạng Thái được điền trực tiếp từ Excel -> Ưu tiên dùng cột Trạng Thái trước.
+            // Nếu không có, mới dùng logic suy diễn dựa trên các cột mốc ngày đã điền.
             let explicitStatus: RecordStatus | undefined = undefined;
 
             // Kiểm tra cột trạng thái từ Excel trước
             const statusRaw = getVal(['TRẠNG THÁI', 'STATUS', 'status']);
-            if (statusRaw !== undefined) {
+            if (statusRaw !== undefined && String(statusRaw).trim() !== '') {
                 let sStr = String(statusRaw).toUpperCase();
-                if (sStr.includes('GIAO') || sStr.includes('ASSIGNED')) explicitStatus = RecordStatus.ASSIGNED;
+                if (sStr.includes('GIAO NHÂN VIÊN') || sStr.includes('PASSED_TO') || sStr.includes('ASSIGNED')) explicitStatus = RecordStatus.ASSIGNED;
                 else if (sStr.includes('ĐANG') || sStr.includes('PROGRESS')) explicitStatus = RecordStatus.IN_PROGRESS;
-                else if (sStr.includes('CHỜ KÝ') || sStr.includes('PENDING')) explicitStatus = RecordStatus.PENDING_SIGN;
-                else if (sStr.includes('ĐÃ KÝ') || sStr.includes('SIGNED')) explicitStatus = RecordStatus.SIGNED;
-                else if (sStr.includes('XONG') || sStr.includes('HOÀN THÀNH') || sStr.includes('HANDOVER')) explicitStatus = RecordStatus.HANDOVER;
+                else if (sStr.includes('ĐÃ THỰC HIỆN') || sStr.includes('THỰC HIỆN XONG') || sStr.includes('COMPLETED_WORK')) explicitStatus = RecordStatus.COMPLETED_WORK;
+                else if (sStr.includes('CHỜ KIỂM TRA') || sStr.includes('PENDING_CHECK')) explicitStatus = RecordStatus.PENDING_CHECK;
+                else if (sStr.includes('ĐÃ KIỂM TRA') || sStr.includes('CHECKED')) explicitStatus = RecordStatus.CHECKED;
+                else if (sStr.includes('CHỜ KÝ') || sStr.includes('PENDING_SIGN') || sStr.includes('TRÌNH KÝ')) explicitStatus = RecordStatus.PENDING_SIGN;
+                else if (sStr.includes('ĐÃ KÝ') || sStr.includes('SIGNED') || sStr.includes('KÝ DUYỆT')) explicitStatus = RecordStatus.SIGNED;
+                else if (sStr.includes('XONG') || sStr.includes('HOÀN THÀNH') || sStr.includes('HANDOVER') || sStr.includes('GIAO 1 CỬA')) explicitStatus = RecordStatus.HANDOVER;
+                else if (sStr.includes('TRẢ DÂN') || sStr.includes('RETURNED') || sStr.includes('ĐÃ TRẢ')) explicitStatus = RecordStatus.RETURNED;
+                else if (sStr.includes('TIẾP NHẬN') || sStr.includes('RECEIVED') || sStr.includes('MỚI NHẬN')) explicitStatus = RecordStatus.RECEIVED;
             }
 
-            // LOGIC TỰ ĐỘNG CHUYỂN TRẠNG THÁI (Override)
-            if (record.exportBatch || record.exportDate) {
-                // Nếu có thông tin xuất -> Chắc chắn là Đã Giao
-                record.status = RecordStatus.HANDOVER;
-                
-                // Nếu chưa có ngày hoàn thành, lấy ngày xuất làm ngày hoàn thành
-                if (!record.completedDate && record.exportDate) {
-                    record.completedDate = record.exportDate;
-                }
-            } else if (explicitStatus) {
-                // Nếu không có thông tin xuất, dùng trạng thái từ Excel
+            // Gán trạng thái theo độ ưu tiên
+            if (explicitStatus !== undefined) {
                 record.status = explicitStatus;
-            } else if (mode === 'create') {
-                // Mặc định cho tạo mới
-                record.status = RecordStatus.RECEIVED;
+                
+                // Điền tự động các trường ngày tương ứng với trạng thái đã chọn nếu trường ngày đó chưa có giá trị
+                const nowStr = new Date().toISOString();
+                if (explicitStatus === RecordStatus.HANDOVER) {
+                    if (!record.completedDate) record.completedDate = nowStr;
+                } else if (explicitStatus === RecordStatus.RETURNED) {
+                    if (!record.resultReturnedDate) record.resultReturnedDate = nowStr;
+                } else if (explicitStatus === RecordStatus.SIGNED) {
+                    if (!record.approvalDate) record.approvalDate = nowStr;
+                } else if (explicitStatus === RecordStatus.PENDING_SIGN) {
+                    if (!record.submissionDate) record.submissionDate = nowStr;
+                } else if (explicitStatus === RecordStatus.CHECKED) {
+                    if (!record.checkedDate) record.checkedDate = nowStr;
+                } else if (explicitStatus === RecordStatus.PENDING_CHECK) {
+                    if (!record.pendingCheckDate) record.pendingCheckDate = nowStr;
+                } else if (explicitStatus === RecordStatus.COMPLETED_WORK) {
+                    if (!record.completedWorkDate) record.completedWorkDate = nowStr;
+                } else if (explicitStatus === RecordStatus.ASSIGNED || explicitStatus === RecordStatus.IN_PROGRESS) {
+                    if (!record.assignedDate) record.assignedDate = nowStr;
+                }
+            } else {
+                // Nếu KHÔNG có cột TRẠNG THÁI cụ thể, ta dùng LOGIC SUY DIỄN DỰA TRÊN NGÀY THÁNG
+                if (record.exportBatch || record.exportDate || record.completedDate) {
+                    record.status = RecordStatus.HANDOVER;
+                    if (!record.completedDate && record.exportDate) {
+                        record.completedDate = record.exportDate;
+                    }
+                } else if (record.resultReturnedDate) {
+                    record.status = RecordStatus.RETURNED;
+                } else if (record.approvalDate) {
+                    record.status = RecordStatus.SIGNED;
+                } else if (record.submissionDate) {
+                    record.status = RecordStatus.PENDING_SIGN;
+                } else if (record.checkedDate) {
+                    record.status = RecordStatus.CHECKED;
+                } else if (record.pendingCheckDate) {
+                    record.status = RecordStatus.PENDING_CHECK;
+                } else if (record.completedWorkDate) {
+                    record.status = RecordStatus.COMPLETED_WORK;
+                } else if (mode === 'create') {
+                    record.status = RecordStatus.RECEIVED;
+                }
             }
 
             const assigneeRaw = getVal(['NGƯỜI XỬ LÝ', 'NHÂN VIÊN', 'assignedto', 'assigned_to', 'assignedTo']);
@@ -381,14 +438,15 @@ const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImport, em
           'MÃ HỒ SƠ', 'CHỦ SỬ DỤNG', 'CCCD', 'SĐT', 'ĐỊA CHỈ', 'NGƯỜI ỦY QUYỀN', 'LOẠI ỦY QUYỀN', 
           'XÃ', 'THỬA', 'TỜ', 'DIỆN TÍCH', 'ĐẤT Ở', 'SỐ PHÁT HÀNH', 'SỐ VÀO SỔ', 'NGÀY CẤP', 
           'LOẠI HỒ SƠ', 'NỘI DUNG', 'GIẤY TỜ KÈM THEO', 'NGÀY NHẬN', 'HẸN TRẢ', 
-          'TRẠNG THÁI', 'NGÀY XUẤT', 'ĐỢT', 'NGƯỜI XỬ LÝ', 'NGÀY GIAO'
+          'TRẠNG THÁI', 'NGÀY THỰC HIỆN', 'NGÀY TRÌNH KIỂM TRA', 'NGÀY ĐÃ KIỂM TRA', 'NGÀY TRÌNH KÝ', 
+          'NGÀY KÝ DUYỆT', 'NGÀY HOÀN THÀNH', 'NGÀY TRẢ DÂN', 'NGÀY XUẤT', 'ĐỢT', 'NGƯỜI XỬ LÝ', 'NGÀY GIAO'
       ];
       
       const sampleData = [
           ['HS001', 'Nguyễn Văn A', '070012345678', '0901234567', 'Tổ 1, KP 2', 'Lê Văn C', 'Giấy ủy quyền', 
            'Tân Khai', '123', '45', '100.5', '50', 'CD 123456', 'CH 01234', '2024-01-01', 
            'Đo đạc', 'Đo đạc cắm mốc', 'Sổ đỏ|Bản chính', '2024-01-01', '2024-01-15', 
-           'Đã nhận', '', '', '', '']
+           'Đã nhận', '', '', '', '', '', '', '', '', '', '', '']
       ];
 
       const ws = XLSX.utils.aoa_to_sheet([headers, ...sampleData]);

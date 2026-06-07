@@ -9,6 +9,9 @@ import { confirmAction } from '../utils/appHelpers';
 import { updateRecordApi } from '../services/api';
 import { fetchArchiveRecords, ArchiveRecord, saveArchiveRecord } from '../services/apiArchive';
 import SubmitModal from './receive-record/SubmitModal';
+import SystemAnnexTemplate from './receive-record/SystemAnnexTemplate';
+import { generateDocxBlobAsync, hasTemplate, STORAGE_KEYS } from '../services/docxService';
+import saveAs from 'file-saver';
 
 interface PersonalProfileProps {
   user: User;
@@ -56,6 +59,8 @@ const PersonalProfile: React.FC<PersonalProfileProps> = ({ user, records, isDire
   const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
   const [isSubmitCheckModalOpen, setIsSubmitCheckModalOpen] = useState(false);
   const [submitTargetRecords, setSubmitTargetRecords] = useState<RecordFile[]>([]);
+  const [isAnnexModalOpen, setIsAnnexModalOpen] = useState(false);
+  const [annexTargetRecord, setAnnexTargetRecord] = useState<RecordFile | null>(null);
 
   useEffect(() => {
     const loadArchive = async () => {
@@ -153,6 +158,13 @@ const PersonalProfile: React.FC<PersonalProfileProps> = ({ user, records, isDire
       const isDoDac = emp.department?.toLowerCase().includes('đo đạc') || emp.department?.toLowerCase().includes('kỹ thuật');
       const isLeader = emp.position?.toLowerCase().includes('tổ trưởng') || emp.position?.toLowerCase().includes('tổ phó');
       return isDoDac && isLeader;
+  }, [user.employeeId, employees]);
+
+  const isMeasurementTeam = useMemo(() => {
+      if (!user.employeeId) return false;
+      const emp = employees.find(e => e.id === user.employeeId);
+      if (!emp) return false;
+      return emp.department?.toLowerCase().includes('đo đạc') || emp.department?.toLowerCase().includes('kỹ thuật') || emp.position?.toLowerCase().includes('đo đạc');
   }, [user.employeeId, employees]);
 
   useEffect(() => {
@@ -417,6 +429,71 @@ const PersonalProfile: React.FC<PersonalProfileProps> = ({ user, records, isDire
         console.error("Error submitting records:", error);
         alert("Có lỗi xảy ra khi trình ký.");
     }
+  };
+
+  const handleExportAnnex = async (record: RecordFile) => {
+      const hasAnnexTemplate = hasTemplate(STORAGE_KEYS.CONTRACT_TEMPLATE_ANNEX);
+      if (!hasAnnexTemplate) {
+          alert("Chưa có mẫu Phụ lục gia hạn hợp đồng nào được cấu hình trong hệ thống.\nVui lòng vào mục Cài đặt hệ thống để cấu hình mẫu này.");
+          return;
+      }
+
+      // Lấy thời gian mốc hợp đồng
+      const dateHD = {
+          day: '...',
+          month: '...',
+          year: '...'
+      };
+      
+      const rDate = record.receivedDate || record.issueDate;
+      if (rDate) {
+          const d = new Date(rDate);
+          if (!isNaN(d.getTime())) {
+              dateHD.day = String(d.getDate()).padStart(2, '0');
+              dateHD.month = String(d.getMonth() + 1).padStart(2, '0');
+              dateHD.year = String(d.getFullYear());
+          }
+      }
+
+      const printData = {
+          MA_HS: record.code || '',
+          NGAY_HD: dateHD.day,
+          THANG_HD: dateHD.month,
+          NAM_HD: dateHD.year,
+          TEN: (record.customerName || '').toUpperCase(),
+          DIACHI: record.address || record.customerAddress || record.ward || '',
+          SDT: record.phoneNumber || ''
+      };
+
+      try {
+          const blob = await generateDocxBlobAsync(STORAGE_KEYS.CONTRACT_TEMPLATE_ANNEX, printData);
+          if (blob) {
+              const fileName = `Phu_Luc_Gia_Han_${record.code || 'HS'}.docx`;
+              
+              const electron = (window as any).electronAPI;
+              if (electron && electron.saveAndOpenFile) {
+                  const reader = new FileReader();
+                  reader.readAsDataURL(blob);
+                  reader.onloadend = async () => {
+                      if (!electron?.saveAndOpenFile) return;
+                      const base64Data = (reader.result as string).split(',')[1];
+                      const result = await electron.saveAndOpenFile({
+                          fileName: fileName,
+                          base64Data: base64Data
+                      });
+                      if (!result.success) {
+                          alert(`Lỗi khi lưu file: ${result.message}`);
+                      }
+                  };
+              } else {
+                  // Web Fallback
+                  saveAs(blob, fileName);
+              }
+          }
+      } catch (err: any) {
+          console.error("Lỗi khi xuất phụ lục:", err);
+          alert("Lỗi xuất phụ lục: " + err.message);
+      }
   };
 
   const formatDate = (dateStr?: string) => {
@@ -735,6 +812,13 @@ const PersonalProfile: React.FC<PersonalProfileProps> = ({ user, records, isDire
                                                 </button>
                                             )}
 
+                                            {/* Nút Phụ lục gia hạn HĐ - Chỉ áp dụng cho Nhân viên Tổ đo đạc */}
+                                            {isMeasurementTeam && r.recordType !== 'Cung cấp tài liệu đất đai' && r.recordType !== 'Sao lục' && r.recordType !== 'Công văn' && (
+                                                <button onClick={() => { setAnnexTargetRecord(r); setIsAnnexModalOpen(true); }} className="px-2 py-1.5 bg-rose-50 text-rose-700 border border-rose-200 rounded-md hover:bg-rose-100 text-xs font-bold flex items-center gap-1 shadow-sm transition-all" title="In phụ lục hợp đồng hệ thống">
+                                                    <FileDown size={14} /> Phụ lục
+                                                </button>
+                                            )}
+
                                             {/* Logic nút chuyển trạng thái theo từng Tab */}
                                             {activeTab === 'pending' && (
                                                 <button onClick={() => handleMarkAsDone(r)} title="Đánh dấu đã xong việc" className="px-3 py-1.5 bg-cyan-600 text-white rounded-md hover:bg-cyan-700 text-xs font-bold flex items-center gap-2 shadow-sm transition-all">
@@ -810,18 +894,62 @@ const PersonalProfile: React.FC<PersonalProfileProps> = ({ user, records, isDire
           employees={employees}
           isCheckMode={true}
           onConfirm={async (checkerId) => {
-              for (const record of submitTargetRecords) {
-                  await onUpdateRecord?.({
-                      ...record,
-                      status: RecordStatus.PENDING_CHECK,
-                      pendingCheckDate: new Date().toISOString(),
-                      checkedBy: checkerId
-                  });
+              try {
+                  for (const record of submitTargetRecords) {
+                      if (record.recordType === 'Sao lục' || record.recordType === 'Công văn') {
+                          // Xử lý hồ sơ lưu trữ
+                          const historyEntry = {
+                              action: 'Trình kiểm tra',
+                              status: 'pending_check',
+                              timestamp: new Date().toISOString(),
+                              user: user.name
+                          };
+
+                          const currentArchive = archiveRecords.find(r => r.id === record.id);
+                          if (currentArchive) {
+                              const oldHistory = Array.isArray(currentArchive.data?.history) ? currentArchive.data.history : [];
+                              const newHistory = [...oldHistory, historyEntry];
+                              
+                              await saveArchiveRecord({
+                                  id: record.id,
+                                  status: 'pending_check',
+                                  data: { ...currentArchive.data, history: newHistory, checked_by: checkerId }
+                              });
+                          }
+                      } else {
+                          // Hồ sơ Đo đạc thường
+                          await onUpdateRecord?.({
+                              ...record,
+                              status: RecordStatus.PENDING_CHECK,
+                              pendingCheckDate: new Date().toISOString(),
+                              checkedBy: checkerId
+                          });
+                      }
+                  }
+                  
+                  // Làm mới dữ liệu lưu trữ
+                  const saoluc = await fetchArchiveRecords('saoluc');
+                  const congvan = await fetchArchiveRecords('congvan');
+                  setArchiveRecords([...saoluc, ...congvan]);
+                  
+                  setIsSubmitCheckModalOpen(false);
+                  setSubmitTargetRecords([]);
+              } catch (err) {
+                  console.error("Lỗi khi trình kiểm tra:", err);
               }
-              setIsSubmitCheckModalOpen(false);
-              setSubmitTargetRecords([]);
           }}
       />
+
+      {isAnnexModalOpen && annexTargetRecord && (
+          <SystemAnnexTemplate 
+              data={annexTargetRecord} 
+              employees={employees}
+              onClose={() => {
+                  setIsAnnexModalOpen(false);
+                  setAnnexTargetRecord(null);
+              }}
+          />
+      )}
     </div>
   );
 };

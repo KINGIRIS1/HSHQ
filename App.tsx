@@ -11,7 +11,7 @@ import { DEFAULT_VISIBLE_COLUMNS, confirmAction } from './utils/appHelpers';
 import { exportReportToExcel, exportReturnedListToExcel } from './utils/excelExport';
 import { generateReport } from './services/geminiService';
 import { syncTemplatesFromCloud } from './services/docxService'; 
-import { updateRecordApi, saveEmployeeApi, saveUserApi, forceUpdateRecordsBatchApi } from './services/api';
+import { updateRecordApi, saveEmployeeApi, saveUserApi, forceUpdateRecordsBatchApi, updateRecordsBatchById } from './services/api';
 import { migrateCungCapTaiLieu } from './services/apiArchive';
 import * as XLSX from 'xlsx-js-style';
 import { CheckCircle, AlertTriangle } from 'lucide-react';
@@ -867,7 +867,7 @@ function App() {
                         submissionDate: new Date().toISOString(),
                         submittedTo: directorId
                     }));
-                    await forceUpdateRecordsBatchApi(updates);
+                    await updateRecordsBatchById(updates);
                     setToast({ type: 'success', message: `Đã trình ký ${updates.length} hồ sơ thành công!` });
                     setIsSubmitModalOpen(false);
                     setSubmitTargetRecords([]);
@@ -895,7 +895,7 @@ function App() {
                         pendingCheckDate: new Date().toISOString(),
                         checkedBy: checkerId
                     }));
-                    await forceUpdateRecordsBatchApi(updates);
+                    await updateRecordsBatchById(updates);
                     setToast({ type: 'success', message: `Đã trình kiểm tra ${updates.length} hồ sơ thành công!` });
                     setIsSubmitCheckModalOpen(false);
                     setSubmitTargetRecords([]);

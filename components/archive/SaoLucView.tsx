@@ -29,7 +29,7 @@ interface SaoLucFormData {
     ngay_nhan: string;      // Ngày nhận (Map vào ngay_thang)
     hen_tra: string;        // Hẹn trả (Lưu trong data)
     noi_dung: string;       // Nội dung yêu cầu (Map vào trich_yeu)
-    status: 'draft' | 'assigned' | 'executed' | 'pending_sign' | 'signed' | 'completed';
+    status: 'draft' | 'assigned' | 'executed' | 'pending_check' | 'checked' | 'pending_sign' | 'signed' | 'completed';
     ngay_hoan_thanh?: string;
     danh_sach?: string;
 }

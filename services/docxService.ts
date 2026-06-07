@@ -15,6 +15,7 @@ export const STORAGE_KEYS = {
     CONTRACT_TEMPLATE_LIQ_CAMMOC: 'docx_template_liquidation_cammoc',
     CONTRACT_TEMPLATE_LIQ_TRICHLUC: 'docx_template_liquidation_trichluc', // MỚI: Mẫu thanh lý trích lục
     CONTRACT_TEMPLATE: 'docx_template_contract',
+    CONTRACT_TEMPLATE_ANNEX: 'docx_template_contract_annex', // MỚI: Mẫu phụ lục gia hạn hợp đồng
     
     // MỚI: Template cho VPHC
     VPHC_TEMPLATE_01: 'docx_template_vphc_01', // Biên bản VPHC
@@ -114,6 +115,7 @@ export const syncTemplatesFromCloud = async () => {
             STORAGE_KEYS.CONTRACT_TEMPLATE_LIQ_DODAC,
             STORAGE_KEYS.CONTRACT_TEMPLATE_LIQ_CAMMOC,
             STORAGE_KEYS.CONTRACT_TEMPLATE_LIQ_TRICHLUC, // Thêm vào danh sách đồng bộ
+            STORAGE_KEYS.CONTRACT_TEMPLATE_ANNEX, // ĐỒNG BỘ MẪU PHỤ LỤC HỢP ĐỒNG
             STORAGE_KEYS.VPHC_TEMPLATE_01,
             STORAGE_KEYS.VPHC_TEMPLATE_02
         ];
