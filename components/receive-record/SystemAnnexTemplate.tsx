@@ -28,27 +28,35 @@ const SystemAnnexTemplate: React.FC<SystemAnnexTemplateProps> = ({ data, employe
 
     // Thời gian hiện tại cho phụ lục
     const now = new Date();
+
+    const safeParseDate = (dateVal: any, fallback: Date = new Date()) => {
+        if (!dateVal) return fallback;
+        const d = new Date(dateVal);
+        return isNaN(d.getTime()) ? fallback : d;
+    };
+
     const formatDateToInput = (date: Date) => {
-        const y = date.getFullYear();
-        const m = String(date.getMonth() + 1).padStart(2, '0');
-        const d = String(date.getDate()).padStart(2, '0');
+        const validDate = safeParseDate(date, now);
+        const y = validDate.getFullYear();
+        const m = String(validDate.getMonth() + 1).padStart(2, '0');
+        const d = String(validDate.getDate()).padStart(2, '0');
         return `${y}-${m}-${d}`;
     };
 
     const [annexRawDate, setAnnexRawDate] = useState<string>(formatDateToInput(now));
     const [contractRawDate, setContractRawDate] = useState<string>(
-        data.receivedDate ? formatDateToInput(new Date(data.receivedDate)) : formatDateToInput(now)
+        formatDateToInput(safeParseDate(data.receivedDate, now))
     );
 
     // Lấy ngày, tháng, năm từ annexRawDate
     const getSplitDate = (dateStr: string) => {
-        if (!dateStr) return { day: '.....', month: '.....', year: '.........' };
+        if (!dateStr || dateStr.includes('NaN')) return { day: '.....', month: '.....', year: '.........' };
         const parts = dateStr.split('-');
         if (parts.length < 3) return { day: '.....', month: '.....', year: '.........' };
         return {
-            day: parts[2],
-            month: parts[1],
-            year: parts[0]
+            day: parts[2] || '.....',
+            month: parts[1] || '.....',
+            year: parts[0] || '.........'
         };
     };
 

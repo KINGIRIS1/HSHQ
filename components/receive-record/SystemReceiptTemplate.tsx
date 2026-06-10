@@ -87,14 +87,28 @@ const SystemReceiptTemplate: React.FC<SystemReceiptTemplateProps> = ({ data, rec
     };
 
     const now = new Date();
-    const rDate = data.receivedDate ? new Date(data.receivedDate) : new Date();
-    const dDate = data.deadline ? new Date(data.deadline) : new Date();
+    
+    const safeParseDate = (dateVal: any, fallback: Date = new Date()) => {
+        if (!dateVal) return fallback;
+        const d = new Date(dateVal);
+        return isNaN(d.getTime()) ? fallback : d;
+    };
+
+    const rDate = safeParseDate(data.receivedDate, now);
+    const dDate = safeParseDate(data.deadline, now);
 
     // Set time to current time for exact receipt time
-    rDate.setHours(now.getHours(), now.getMinutes());
-    dDate.setHours(now.getHours(), now.getMinutes());
+    if (!isNaN(rDate.getTime())) {
+        rDate.setHours(now.getHours(), now.getMinutes());
+    }
+    if (!isNaN(dDate.getTime())) {
+        dDate.setHours(now.getHours(), now.getMinutes());
+    }
 
     const formatDateTime = (d: Date) => {
+        if (!d || isNaN(d.getTime())) {
+            return '..... giờ ..... phút, ngày ..... tháng ..... năm .........';
+        }
         const hours = d.getHours().toString().padStart(2, '0');
         const minutes = d.getMinutes().toString().padStart(2, '0');
         const day = d.getDate().toString().padStart(2, '0');
@@ -104,6 +118,9 @@ const SystemReceiptTemplate: React.FC<SystemReceiptTemplateProps> = ({ data, rec
     };
 
     const formatDateOnly = (d: Date) => {
+        if (!d || isNaN(d.getTime())) {
+            return 'ngày ..... tháng ..... năm .........';
+        }
         const day = d.getDate().toString().padStart(2, '0');
         const month = (d.getMonth() + 1).toString().padStart(2, '0');
         const year = d.getFullYear();
