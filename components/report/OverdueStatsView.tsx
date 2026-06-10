@@ -12,6 +12,7 @@ interface OverdueStatsViewProps {
 
 const OverdueStatsView: React.FC<OverdueStatsViewProps> = ({ records, employees }) => {
     const [filterType, setFilterType] = useState<'all' | 'completed' | 'pending'>('all');
+    const [selectedEmployee, setSelectedEmployee] = useState<string>('all');
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(20);
 
@@ -20,6 +21,15 @@ const OverdueStatsView: React.FC<OverdueStatsViewProps> = ({ records, employees 
         const pending: RecordFile[] = [];
 
         records.forEach(r => {
+            // Apply selectedEmployee filter
+            if (selectedEmployee !== 'all') {
+                if (selectedEmployee === 'unassigned') {
+                    if (r.assignedTo) return;
+                } else {
+                    if (r.assignedTo !== selectedEmployee) return;
+                }
+            }
+
             // Check pending overdue
             const isDone = r.status === RecordStatus.HANDOVER || r.status === RecordStatus.RETURNED || r.status === RecordStatus.SIGNED || !!r.exportBatch;
             const isWithdrawnOrRejected = r.status === RecordStatus.WITHDRAWN || r.status === RecordStatus.REJECTED;
@@ -63,7 +73,7 @@ const OverdueStatsView: React.FC<OverdueStatsViewProps> = ({ records, employees 
             totalPending: pending.length,
             filteredRecords: combined
         };
-    }, [records, filterType]);
+    }, [records, filterType, selectedEmployee]);
 
     const paginatedData = useMemo(() => {
         const start = (currentPage - 1) * itemsPerPage;
@@ -75,7 +85,7 @@ const OverdueStatsView: React.FC<OverdueStatsViewProps> = ({ records, employees 
     // Reset page when filter changes
     React.useEffect(() => {
         setCurrentPage(1);
-    }, [filterType, records]);
+    }, [filterType, selectedEmployee, records]);
 
     const formatDate = (d?: string | null) => d ? new Date(d).toLocaleDateString('vi-VN') : '-';
 
@@ -125,16 +135,34 @@ const OverdueStatsView: React.FC<OverdueStatsViewProps> = ({ records, employees 
 
             {/* Bảng dữ liệu */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 flex flex-col flex-1 overflow-hidden">
-                <div className="p-4 border-b flex justify-between items-center bg-gray-50/50">
-                    <h3 className="font-bold text-gray-700">
+                <div className="p-4 border-b flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center bg-gray-50/50">
+                    <h3 className="font-bold text-gray-700 shrink-0">
                         {filterType === 'all' ? 'Tất cả hồ sơ trễ hạn' : filterType === 'pending' ? 'Hồ sơ trễ - Chưa có kết quả' : 'Hồ sơ trễ - Đã có kết quả'}
                     </h3>
-                    <button 
-                        onClick={() => exportOverdueStatsToExcel(overdueData.filteredRecords, employees, filterType)}
-                        className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors font-medium text-sm shadow-sm"
-                    >
-                        <Download size={16} /> Xuất Excel
-                    </button>
+                    
+                    <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+                        <div className="flex items-center gap-2 bg-white px-3 py-1.5 border border-gray-300 rounded-lg h-[36px] w-full sm:w-64 focus-within:border-red-400 focus-within:ring-1 focus-within:ring-red-400">
+                            <span className="text-xs font-bold text-gray-500 whitespace-nowrap">Cán bộ xử lý:</span>
+                            <select 
+                                value={selectedEmployee} 
+                                onChange={(e) => setSelectedEmployee(e.target.value)} 
+                                className="text-sm outline-none bg-transparent text-gray-700 font-semibold cursor-pointer border-none focus:ring-0 p-0 w-full"
+                            >
+                                <option value="all">Tất cả cán bộ</option>
+                                <option value="unassigned">Chưa phân công</option>
+                                {employees.map(emp => (
+                                    <option key={emp.id} value={emp.id}>{emp.name}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <button 
+                            onClick={() => exportOverdueStatsToExcel(overdueData.filteredRecords, employees, filterType)}
+                            className="flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-bold text-sm shadow-sm h-[36px] min-w-[120px] ml-auto shrink-0"
+                        >
+                            <Download size={16} /> Xuất Excel
+                        </button>
+                    </div>
                 </div>
                 <div className="flex-1 overflow-auto">
                     <table className="w-full text-left text-sm whitespace-nowrap">

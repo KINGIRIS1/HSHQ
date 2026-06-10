@@ -624,7 +624,7 @@ const ReportSection: React.FC<ReportSectionProps> = ({ reportContent, isGenerati
                 {activeTab === 'daily_stats' && (
                     <DailyStatsView 
                         records={activeRecords} 
-                        employees={employees} 
+                        employees={activeEmployees} 
                         wards={wards} 
                         onFilteredRecordsChange={setDailyStatsRecords}
                     />
@@ -633,7 +633,7 @@ const ReportSection: React.FC<ReportSectionProps> = ({ reportContent, isGenerati
                 {activeTab === 'overdue' && (
                     <OverdueStatsView 
                         records={filteredData}
-                        employees={employees}
+                        employees={activeEmployees}
                     />
                 )}
 

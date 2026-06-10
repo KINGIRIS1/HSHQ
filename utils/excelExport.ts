@@ -283,7 +283,7 @@ export const exportReportToExcel = async (
     XLSX.writeFile(wb, fileName);
 };
 
-export const exportDailyStatsToExcel = (records: RecordFile[], employees: Employee[], receiveFrom: string, receiveTo: string, deadlineFrom: string, deadlineTo: string, assignedFrom?: string, assignedTo?: string) => {
+export const exportDailyStatsToExcel = (records: RecordFile[], employees: Employee[], receiveFrom: string, receiveTo: string, deadlineFrom: string, deadlineTo: string, assignedFrom?: string, assignedTo?: string, handoverFrom?: string, handoverTo?: string) => {
     if (records.length === 0) {
         alert("Không có hồ sơ nào để xuất.");
         return;
@@ -334,6 +334,9 @@ export const exportDailyStatsToExcel = (records: RecordFile[], employees: Employ
     }
     if (assignedFrom || assignedTo) {
         subtitle += `\nNgày giao NV: ${assignedFrom ? formatDate(assignedFrom) : '...'} - ${assignedTo ? formatDate(assignedTo) : '...'}`;
+    }
+    if (handoverFrom || handoverTo) {
+        subtitle += `\nNgày giao 1 cửa: ${handoverFrom ? formatDate(handoverFrom) : '...'} - ${handoverTo ? formatDate(handoverTo) : '...'}`;
     }
 
     const wsData = [
