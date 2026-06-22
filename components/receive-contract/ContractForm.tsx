@@ -285,39 +285,41 @@ const ContractForm: React.FC<ContractFormProps> = ({ initialData, onSave, onPrin
           return;
       }
 
-      // 1. Tìm kiếm trong danh sách hợp đồng hệ thống trước (c.code hoặc c.customerAddress chứa mã biên nhận)
-      const foundContract = contracts?.find(c => 
-          (c.code && c.code.trim().toLowerCase() === cleanSearch) ||
-          (c.customerAddress && c.customerAddress.trim().toLowerCase() === cleanSearch)
-      );
+      // 1. Chỉ tìm kiếm trong danh sách hợp đồng hệ thống khi ở chế độ THANH LÝ HỢP ĐỒNG (mode === 'liquidation')
+      if (mode === 'liquidation') {
+          const foundContract = contracts?.find(c => 
+              (c.code && c.code.trim().toLowerCase() === cleanSearch) ||
+              (c.customerAddress && c.customerAddress.trim().toLowerCase() === cleanSearch)
+          );
 
-      if (foundContract) {
-          // Nạp dữ liệu hợp đồng đã lưu
-          setFormData(prev => ({
-              ...prev,
-              ...foundContract,
-              // Đồng bộ diện tích & số tiền thanh lý dựa vào mode
-              liquidationArea: (mode === 'liquidation' && !foundContract.liquidationArea) ? foundContract.area : foundContract.liquidationArea,
-              liquidationAmount: (mode === 'liquidation' && !foundContract.liquidationAmount) ? foundContract.totalAmount : foundContract.liquidationAmount
-          }));
+          if (foundContract) {
+              // Nạp dữ liệu hợp đồng đã lưu
+              setFormData(prev => ({
+                  ...prev,
+                  ...foundContract,
+                  // Đồng bộ diện tích & số tiền thanh lý dựa vào mode
+                  liquidationArea: (mode === 'liquidation' && !foundContract.liquidationArea) ? foundContract.area : foundContract.liquidationArea,
+                  liquidationAmount: (mode === 'liquidation' && !foundContract.liquidationAmount) ? foundContract.totalAmount : foundContract.liquidationAmount
+              }));
 
-          if (foundContract.splitItems && foundContract.splitItems.length > 0) {
-              setTachThuaItems(foundContract.splitItems);
-          } else {
-              setTachThuaItems([]);
+              if (foundContract.splitItems && foundContract.splitItems.length > 0) {
+                  setTachThuaItems(foundContract.splitItems);
+              } else {
+                  setTachThuaItems([]);
+              }
+
+              // Chọn tab dịch vụ phù hợp
+              if (foundContract.contractType === 'Tách thửa') setActiveTab('tt');
+              else if (foundContract.contractType === 'Cắm mốc') setActiveTab('cm');
+              else if (foundContract.contractType === 'Trích lục') setActiveTab('tl');
+              else setActiveTab('dd');
+
+              setNotification({ 
+                  type: 'success', 
+                  message: `Đã tìm thấy & tải dữ liệu từ hợp đồng: ${foundContract.code}${foundContract.customerAddress ? ` (Hồ sơ gốc: ${foundContract.customerAddress})` : ''}` 
+              });
+              return;
           }
-
-          // Chọn tab dịch vụ phù hợp
-          if (foundContract.contractType === 'Tách thửa') setActiveTab('tt');
-          else if (foundContract.contractType === 'Cắm mốc') setActiveTab('cm');
-          else if (foundContract.contractType === 'Trích lục') setActiveTab('tl');
-          else setActiveTab('dd');
-
-          setNotification({ 
-              type: 'success', 
-              message: `Đã tìm thấy & tải dữ liệu từ hợp đồng: ${foundContract.code}${foundContract.customerAddress ? ` (Hồ sơ gốc: ${foundContract.customerAddress})` : ''}` 
-          });
-          return;
       }
 
       // 2. Không tìm thấy hợp đồng, tìm hồ sơ biên nhận gốc trong bảng records
@@ -348,10 +350,16 @@ const ContractForm: React.FC<ContractFormProps> = ({ initialData, onSave, onPrin
               mapSheet: found.mapSheet, 
               area: found.area || 0,
               serviceType: suggestedService || prev.serviceType
+              // TUYỆT ĐỐI không ghi đè code (Mã hợp đồng tự nhảy), giữ nguyên prev.code đang nạp sẵn trên form
           }));
           setNotification({ type: 'success', message: `Đã tải thông tin từ hồ sơ biên nhận: ${found.code}` });
       } else {
-          setNotification({ type: 'error', message: 'Không tìm thấy thông tin hợp đồng hoặc hồ sơ này.' });
+          setNotification({ 
+              type: 'error', 
+              message: mode === 'liquidation' 
+                  ? 'Không tìm thấy thông tin hợp đồng hoặc hồ sơ biên nhận có mã này.' 
+                  : 'Không tìm thấy hồ sơ biên nhận gốc có mã này.' 
+          });
       }
   };
 
