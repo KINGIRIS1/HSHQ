@@ -58,8 +58,11 @@ export const DetailModal: React.FC<DetailModalProps> = ({ isOpen, onClose, recor
           // Fetch Contract Price & Details
           const fetchPrice = async () => {
               const contracts = await fetchContracts();
-              // Tìm hợp đồng có cùng mã hồ sơ (Case insensitive)
-              const match = contracts.find(c => c.code && record.code && c.code.trim().toLowerCase() === record.code.trim().toLowerCase());
+              // Tìm hợp đồng có cùng mã hồ sơ (qua customerAddress hoặc trường code kế thừa) - Case insensitive
+              const match = contracts.find(c => 
+                  (c.customerAddress && record.code && c.customerAddress.trim().toLowerCase() === record.code.trim().toLowerCase()) ||
+                  (c.code && record.code && c.code.trim().toLowerCase() === record.code.trim().toLowerCase())
+              );
               
               if (match) {
                   // GIÁ TRỊ HỢP ĐỒNG (Lấy từ totalAmount - giá trị lúc lập hợp đồng)

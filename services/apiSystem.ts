@@ -186,7 +186,54 @@ export const deleteAllDataApi = async (): Promise<boolean> => {
     }
 };
 
-export const getNextContractCode = async (): Promise<string> => {
+export const getPreviewContractCode = async (): Promise<string> => {
+    if (!isConfigured) {
+        const year = new Date().getFullYear();
+        return `HĐ-${year}-0001`;
+    }
+
+    const year = new Date().getFullYear();
+    let prefix = `HĐ-${year}-`;
+    let nextSeq = 1;
+
+    // 1. Lấy prefix
+    try {
+        const { data: prefixData } = await supabase
+            .from('system_settings')
+            .select('value')
+            .eq('key', 'contract_prefix')
+            .single();
+
+        if (prefixData && prefixData.value !== undefined && prefixData.value !== null) {
+            prefix = prefixData.value.replace('{năm}', year.toString()).replace('{year}', year.toString());
+        }
+    } catch (e) {
+        // Sử dụng giá trị mặc định nếu chưa cài đặt
+    }
+
+    // 2. Lấy số nhảy hiện tại (không tăng tịnh tiến trong DB)
+    try {
+        const { data } = await supabase
+            .from('system_settings')
+            .select('value')
+            .eq('key', 'contract_next_seq')
+            .single();
+
+        if (data && data.value) {
+            const currentVal = parseInt(data.value, 10);
+            if (!isNaN(currentVal)) {
+                nextSeq = currentVal;
+            }
+        }
+    } catch (e) {
+        // Sử dụng mặc định 1
+    }
+
+    const seqStr = nextSeq.toString().padStart(4, '0');
+    return `${prefix}${seqStr}`;
+};
+
+export const consumeNextContractCode = async (): Promise<string> => {
     if (!isConfigured) {
         const year = new Date().getFullYear();
         const randomNum = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
@@ -214,7 +261,7 @@ export const getNextContractCode = async (): Promise<string> => {
         // Sử dụng giá trị mặc định nếu chưa cài đặt
     }
 
-    // 2. Lấy số nhảy tiếp theo với logic retry để đảm bỏ đồng bộ
+    // 2. Lấy số nhảy tiếp theo với logic retry để đảm bảo đồng bộ
     while (!success && attempts < 5) {
         attempts++;
         try {
@@ -265,4 +312,7 @@ export const getNextContractCode = async (): Promise<string> => {
     const seqStr = nextSeq.toString().padStart(4, '0');
     return `${prefix}${seqStr}`;
 };
+
+// Khai báo lại getNextContractCode để giữ độ tương thích nếu có import bên ngoài
+export const getNextContractCode = consumeNextContractCode;
 

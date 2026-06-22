@@ -59,7 +59,10 @@ export const MobileDetailModal: React.FC<MobileDetailModalProps> = ({
 
       const fetchPrice = async () => {
         const contracts = await fetchContracts();
-        const match = contracts.find(c => c.code && record.code && c.code.trim().toLowerCase() === record.code.trim().toLowerCase());
+        const match = contracts.find(c => 
+            (c.customerAddress && record.code && c.customerAddress.trim().toLowerCase() === record.code.trim().toLowerCase()) ||
+            (c.code && record.code && c.code.trim().toLowerCase() === record.code.trim().toLowerCase())
+        );
         
         if (match) {
           setContractPrice(match.totalAmount ?? null);

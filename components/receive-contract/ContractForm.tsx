@@ -5,20 +5,21 @@ import { Save, Calculator, Search, Plus, Trash2, Printer, FileCheck, CheckCircle
 
 interface ContractFormProps {
   initialData?: Contract;
-  onSave: (contract: Contract, isUpdate: boolean) => Promise<boolean>;
+  onSave: (contract: Contract, isUpdate: boolean) => Promise<string | null>;
   onPrint: (data: Partial<Contract>, type: 'contract' | 'liquidation') => void;
   priceList: PriceItem[];
   wards: string[];
   records: RecordFile[];
   generateCode: () => Promise<string>;
   mode: 'contract' | 'liquidation'; // New prop
+  contracts?: Contract[];
 }
 
 function _nd(s: string | undefined | null): string {
     return String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim();
 }
 
-const ContractForm: React.FC<ContractFormProps> = ({ initialData, onSave, onPrint, priceList, wards, records, generateCode, mode }) => {
+const ContractForm: React.FC<ContractFormProps> = ({ initialData, onSave, onPrint, priceList, wards, records, generateCode, mode, contracts }) => {
   const [activeTab, setActiveTab] = useState<'dd' | 'tt' | 'cm' | 'tl'>('dd');
   const [tachThuaItems, setTachThuaItems] = useState<SplitItem[]>([]);
   const [searchCode, setSearchCode] = useState('');
@@ -278,7 +279,49 @@ const ContractForm: React.FC<ContractFormProps> = ({ initialData, onSave, onPrin
   }, [formData.area, formData.serviceType, formData.ward, formData.areaType, formData.plotCount, formData.markerCount, formData.quantity, tachThuaItems, activeTab, priceList, mode]);
 
   const handleSearchRecord = () => {
-      const found = records.find(r => r.code.toLowerCase() === searchCode.toLowerCase());
+      const cleanSearch = searchCode.trim().toLowerCase();
+      if (!cleanSearch) {
+          setNotification({ type: 'error', message: 'Vui lòng nhập mã để tìm kiếm.' });
+          return;
+      }
+
+      // 1. Tìm kiếm trong danh sách hợp đồng hệ thống trước (c.code hoặc c.customerAddress chứa mã biên nhận)
+      const foundContract = contracts?.find(c => 
+          (c.code && c.code.trim().toLowerCase() === cleanSearch) ||
+          (c.customerAddress && c.customerAddress.trim().toLowerCase() === cleanSearch)
+      );
+
+      if (foundContract) {
+          // Nạp dữ liệu hợp đồng đã lưu
+          setFormData(prev => ({
+              ...prev,
+              ...foundContract,
+              // Đồng bộ diện tích & số tiền thanh lý dựa vào mode
+              liquidationArea: (mode === 'liquidation' && !foundContract.liquidationArea) ? foundContract.area : foundContract.liquidationArea,
+              liquidationAmount: (mode === 'liquidation' && !foundContract.liquidationAmount) ? foundContract.totalAmount : foundContract.liquidationAmount
+          }));
+
+          if (foundContract.splitItems && foundContract.splitItems.length > 0) {
+              setTachThuaItems(foundContract.splitItems);
+          } else {
+              setTachThuaItems([]);
+          }
+
+          // Chọn tab dịch vụ phù hợp
+          if (foundContract.contractType === 'Tách thửa') setActiveTab('tt');
+          else if (foundContract.contractType === 'Cắm mốc') setActiveTab('cm');
+          else if (foundContract.contractType === 'Trích lục') setActiveTab('tl');
+          else setActiveTab('dd');
+
+          setNotification({ 
+              type: 'success', 
+              message: `Đã tìm thấy & tải dữ liệu từ hợp đồng: ${foundContract.code}${foundContract.customerAddress ? ` (Hồ sơ gốc: ${foundContract.customerAddress})` : ''}` 
+          });
+          return;
+      }
+
+      // 2. Không tìm thấy hợp đồng, tìm hồ sơ biên nhận gốc trong bảng records
+      const found = records.find(r => r.code.toLowerCase() === cleanSearch);
       if (found) {
           let suggestedService = '';
           const recType = (found.recordType || '').toLowerCase();
@@ -296,7 +339,7 @@ const ContractForm: React.FC<ContractFormProps> = ({ initialData, onSave, onPrin
 
           setFormData(prev => ({ 
               ...prev, 
-              code: found.code,
+              customerAddress: found.code,
               customerName: found.customerName, 
               phoneNumber: found.phoneNumber, 
               ward: found.ward, 
@@ -306,9 +349,9 @@ const ContractForm: React.FC<ContractFormProps> = ({ initialData, onSave, onPrin
               area: found.area || 0,
               serviceType: suggestedService || prev.serviceType
           }));
-          setNotification({ type: 'success', message: `Đã tải thông tin từ hồ sơ: ${found.code}` });
+          setNotification({ type: 'success', message: `Đã tải thông tin từ hồ sơ biên nhận: ${found.code}` });
       } else {
-          setNotification({ type: 'error', message: 'Không tìm thấy mã hồ sơ này.' });
+          setNotification({ type: 'error', message: 'Không tìm thấy thông tin hợp đồng hoặc hồ sơ này.' });
       }
   };
 
@@ -341,17 +384,28 @@ const ContractForm: React.FC<ContractFormProps> = ({ initialData, onSave, onPrin
       // Đảm bảo không bị null
       if (!contractData.id) contractData.id = Math.random().toString(36).substr(2, 9);
       
-      const success = await onSave(contractData, !!initialData);
+      const savedCode = await onSave(contractData, !!initialData);
       setLoading(false);
 
-      if (success) {
+      if (savedCode) {
           const msg = initialData ? 'Cập nhật thành công!' : 'Đã tạo mới thành công!';
-          setNotification({ type: 'success', message: msg });
+          setNotification({ type: 'success', message: `${msg} Mã hợp đồng: ${savedCode}` });
           
-          // Tự động in sau khi lưu thành công
-          handlePrintClick(mode);
+          // Cập nhật lại code mới chốt chính thức vào form
+          setFormData(prev => ({ ...prev, code: savedCode }));
 
-          if (!initialData) handleReset(true); 
+          // Tự động in sau khi lưu thành công với mã hợp đồng chính thức vừa chốt
+          const finalDataToPrint = { 
+              ...formData, 
+              code: savedCode,
+              splitItems: activeTab === 'tt' ? tachThuaItems.map(i => ({...i, price: getDynamicPrice(i.serviceName)})) : [], 
+              serviceType: activeTab === 'tt' ? 'Đo đạc tách thửa' : formData.serviceType 
+          };
+          onPrint(finalDataToPrint, mode);
+
+          if (!initialData) {
+              setTimeout(() => handleReset(true), 100);
+          } 
       } else {
           setNotification({ type: 'error', message: 'Lỗi khi lưu. Vui lòng thử lại.' });
       }

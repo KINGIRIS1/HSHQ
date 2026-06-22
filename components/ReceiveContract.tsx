@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { RecordFile, Contract, PriceItem, SplitItem, User, Employee } from '../types';
-import { fetchPriceList, deleteContractApi, updateContractApi, createContractApi, fetchContracts, getNextContractCode } from '../services/api';
+import { fetchPriceList, deleteContractApi, updateContractApi, createContractApi, fetchContracts, getPreviewContractCode, consumeNextContractCode } from '../services/api';
 import { FileSignature, LayoutList, Settings, Settings2, FileCheck, FileText, ClipboardList } from 'lucide-react';
 import PriceConfigModal from './PriceConfigModal';
 import { generateDocxBlobAsync, hasTemplate, STORAGE_KEYS } from '../services/docxService';
@@ -94,8 +94,11 @@ const ReceiveContract: React.FC<ReceiveContractProps> = ({ wards, currentUser, e
           const normalize = (s: string) => String(s || '').trim().toLowerCase();
           const recCode = normalize(recordToLiquidate.code);
           
-          // 1. Tìm xem hồ sơ này đã có hợp đồng chưa
-          const existingContract = contracts.find(c => normalize(c.code) === recCode);
+          // 1. Tìm xem hồ sơ này đã có hợp đồng chưa (tìm qua customerAddress hoặc code của hợp đồng cũ)
+          const existingContract = contracts.find(c => 
+              (c.customerAddress && normalize(c.customerAddress) === recCode) ||
+              (normalize(c.code) === recCode)
+          );
 
           if (existingContract) {
               // NẾU CÓ HỢP ĐỒNG: Load toàn bộ dữ liệu hợp đồng đó (bao gồm splitItems, serviceType...)
@@ -107,84 +110,90 @@ const ReceiveContract: React.FC<ReceiveContractProps> = ({ wards, currentUser, e
                   // Đảm bảo trạng thái hiển thị đúng để form hiển thị nút
                   status: 'PENDING'
               });
+              setActiveModule('liquidation');
+              onClearRecordToLiquidate(); // Reset flag
           } else {
               // NẾU CHƯA CÓ HỢP ĐỒNG: Tạo Contract ảo từ Record (AUTO MAP THÔNG MINH)
-              
-              // 1. Detect Area Type (Khu vực)
-              let areaType = '';
-              const w = (recordToLiquidate.ward || '').toLowerCase();
-              if (w.includes('phường') || w.includes('tt.') || w.includes('thị trấn') || w.includes('minh hưng') || w.includes('chơn thành')) {
-                  areaType = 'Đất đô thị';
-              } else {
-                  areaType = 'Đất nông thôn';
-              }
+              const initVirtualContract = async () => {
+                  // 1. Detect Area Type (Khu vực)
+                  let areaType = '';
+                  const w = (recordToLiquidate.ward || '').toLowerCase();
+                  if (w.includes('phường') || w.includes('tt.') || w.includes('thị trấn') || w.includes('minh hưng') || w.includes('chơn thành')) {
+                      areaType = 'Đất đô thị';
+                  } else {
+                      areaType = 'Đất nông thôn';
+                  }
 
-              // 2. Detect Contract & Service Type (Loại dịch vụ)
-              const recType = (recordToLiquidate.recordType || '').toLowerCase();
-              let serviceType = '';
-              let contractType: 'Đo đạc' | 'Tách thửa' | 'Cắm mốc' | 'Trích lục' = 'Đo đạc';
+                  // 2. Detect Contract & Service Type (Loại dịch vụ)
+                  const recType = (recordToLiquidate.recordType || '').toLowerCase();
+                  let serviceType = '';
+                  let contractType: 'Đo đạc' | 'Tách thửa' | 'Cắm mốc' | 'Trích lục' = 'Đo đạc';
 
-              if (recType.includes('trích lục')) {
-                  contractType = 'Trích lục';
-                  // Cố gắng map chính xác tên dịch vụ trong bảng giá
-                  const match = priceList.find(p => p.serviceName.toLowerCase().includes('trích lục'));
-                  serviceType = match ? match.serviceName : 'Trích lục bản đồ địa chính';
-              } else if (recType.includes('cắm mốc')) {
-                  contractType = 'Cắm mốc';
-                  const match = priceList.find(p => p.serviceName.toLowerCase().includes('cắm mốc'));
-                  serviceType = match ? match.serviceName : 'Cắm mốc ranh giới';
-              } else if (recType.includes('tách thửa')) {
-                  contractType = 'Tách thửa';
-                  serviceType = 'Đo đạc tách thửa';
-              } else if (recType.includes('đo đạc')) {
-                  // Map theo diện tích
-                  const area = recordToLiquidate.area || 0;
-                  const match = priceList.find(p => 
-                      p.serviceName.toLowerCase().includes('đo đạc') && 
-                      area >= p.minArea && area < p.maxArea
-                  );
-                  serviceType = match ? match.serviceName : 'Đo đạc hiện trạng';
-              }
+                  if (recType.includes('trích lục')) {
+                      contractType = 'Trích lục';
+                      // Cố gắng map chính xác tên dịch vụ trong bảng giá
+                      const match = priceList.find(p => p.serviceName.toLowerCase().includes('trích lục'));
+                      serviceType = match ? match.serviceName : 'Trích lục bản đồ địa chính';
+                  } else if (recType.includes('cắm mốc')) {
+                      contractType = 'Cắm mốc';
+                      const match = priceList.find(p => p.serviceName.toLowerCase().includes('cắm mốc'));
+                      serviceType = match ? match.serviceName : 'Cắm mốc ranh giới';
+                  } else if (recType.includes('tách thửa')) {
+                      contractType = 'Tách thửa';
+                      serviceType = 'Đo đạc tách thửa';
+                  } else if (recType.includes('đo đạc')) {
+                      // Map theo diện tích
+                      const area = recordToLiquidate.area || 0;
+                      const match = priceList.find(p => 
+                          p.serviceName.toLowerCase().includes('đo đạc') && 
+                          area >= p.minArea && area < p.maxArea
+                      );
+                      serviceType = match ? match.serviceName : 'Đo đạc hiện trạng';
+                  }
 
-              const tempRand = `HĐ-${new Date().getFullYear()}-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`;
-              const newContract: Contract = {
-                  id: Math.random().toString(36).substr(2, 9),
-                  code: recordToLiquidate.code || tempRand,
-                  customerName: recordToLiquidate.customerName,
-                  phoneNumber: recordToLiquidate.phoneNumber,
-                  address: recordToLiquidate.address,
-                  ward: recordToLiquidate.ward,
-                  landPlot: recordToLiquidate.landPlot,
-                  mapSheet: recordToLiquidate.mapSheet,
-                  area: recordToLiquidate.area || 0,
-                  
-                  // Các trường quan trọng cần điền tự động
-                  contractType: contractType,
-                  serviceType: serviceType, 
-                  areaType: areaType,       
-                  
-                  plotCount: 1,
-                  markerCount: 1,
-                  quantity: 1, 
-                  unitPrice: 0, // Form sẽ tự tính lại dựa trên serviceType
-                  vatRate: 8, 
-                  vatAmount: 0, 
-                  totalAmount: 0, 
-                  deposit: 0,
-                  createdDate: new Date().toISOString(),
-                  status: 'PENDING',
-                  liquidationArea: recordToLiquidate.area || 0
+                  // Lấy mã số hợp đồng tiếp theo từ cấu hình settings
+                  const contractCode = await getPreviewContractCode();
+
+                  const newContract: Contract = {
+                      id: Math.random().toString(36).substr(2, 9),
+                      code: contractCode, // Lấy mã hợp đồng từ setting thay vì số biên nhận hồ sơ!
+                      customerAddress: recordToLiquidate.code, // Lưu mã số biên nhận vào customerAddress để liên kết!
+                      customerName: recordToLiquidate.customerName,
+                      phoneNumber: recordToLiquidate.phoneNumber,
+                      address: recordToLiquidate.address,
+                      ward: recordToLiquidate.ward,
+                      landPlot: recordToLiquidate.landPlot,
+                      mapSheet: recordToLiquidate.mapSheet,
+                      area: recordToLiquidate.area || 0,
+                      
+                      // Các trường quan trọng cần điền tự động
+                      contractType: contractType,
+                      serviceType: serviceType, 
+                      areaType: areaType,       
+                      
+                      plotCount: 1,
+                      markerCount: 1,
+                      quantity: 1, 
+                      unitPrice: 0, // Form sẽ tự tính lại dựa trên serviceType
+                      vatRate: 8, 
+                      vatAmount: 0, 
+                      totalAmount: 0, 
+                      deposit: 0,
+                      createdDate: new Date().toISOString(),
+                      status: 'PENDING',
+                      liquidationArea: recordToLiquidate.area || 0
+                  };
+                  setEditingContract(newContract);
+                  setActiveModule('liquidation');
+                  onClearRecordToLiquidate(); // Reset flag
               };
-              setEditingContract(newContract);
+              initVirtualContract();
           }
-          
-          setActiveModule('liquidation');
-          onClearRecordToLiquidate(); // Reset flag
       }
   }, [recordToLiquidate, contracts, priceList]);
 
   const generateContractCode = async (): Promise<string> => {
-    return await getNextContractCode();
+    return await getPreviewContractCode();
   };
 
   const handleEdit = (c: Contract) => { 
@@ -205,15 +214,28 @@ const ReceiveContract: React.FC<ReceiveContractProps> = ({ wards, currentUser, e
       } 
   }; 
 
-  const handleSaveContract = async (contract: Contract, isUpdate: boolean): Promise<boolean> => {
+  const handleSaveContract = async (contract: Contract, isUpdate: boolean): Promise<string | null> => {
       let success = false;
+      let finalCode = contract.code;
+
       if (isUpdate) {
           success = await updateContractApi(contract);
       } else {
-          success = await createContractApi(contract);
+          try {
+              // Thực sự Lấy mã hợp đồng chính thức và TĂNG giá trị seq tự động trong DB khi LƯU THÀNH CÔNG
+              finalCode = await consumeNextContractCode();
+              const finalContract = { ...contract, code: finalCode };
+              success = await createContractApi(finalContract);
+          } catch (e) {
+              console.error("Lỗi khi sinh mã hợp đồng chính thức và lưu:", e);
+              success = false;
+          }
       }
-      if (success) loadContracts(); // Reload list
-      return success;
+      if (success) {
+          loadContracts(); // Reload list
+          return finalCode;
+      }
+      return null;
   };
 
   // --- LOGIC IN ẤN (TẢI VỀ & MỞ) ---
@@ -521,6 +543,7 @@ const ReceiveContract: React.FC<ReceiveContractProps> = ({ wards, currentUser, e
                     records={records}
                     generateCode={generateContractCode}
                     mode='contract'
+                    contracts={contracts}
                 />
             )}
 
@@ -534,6 +557,7 @@ const ReceiveContract: React.FC<ReceiveContractProps> = ({ wards, currentUser, e
                     records={records}
                     generateCode={generateContractCode}
                     mode='liquidation'
+                    contracts={contracts}
                 />
             )}
 
