@@ -185,3 +185,84 @@ export const deleteAllDataApi = async (): Promise<boolean> => {
         return false;
     }
 };
+
+export const getNextContractCode = async (): Promise<string> => {
+    if (!isConfigured) {
+        const year = new Date().getFullYear();
+        const randomNum = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+        return `HĐ-${year}-${randomNum}`;
+    }
+
+    const year = new Date().getFullYear();
+    let success = false;
+    let attempts = 0;
+    let nextSeq = 1;
+    let prefix = `HĐ-${year}-`;
+
+    // 1. Lấy prefix
+    try {
+        const { data: prefixData } = await supabase
+            .from('system_settings')
+            .select('value')
+            .eq('key', 'contract_prefix')
+            .single();
+
+        if (prefixData && prefixData.value !== undefined && prefixData.value !== null) {
+            prefix = prefixData.value.replace('{năm}', year.toString()).replace('{year}', year.toString());
+        }
+    } catch (e) {
+        // Sử dụng giá trị mặc định nếu chưa cài đặt
+    }
+
+    // 2. Lấy số nhảy tiếp theo với logic retry để đảm bỏ đồng bộ
+    while (!success && attempts < 5) {
+        attempts++;
+        try {
+            const { data } = await supabase
+                .from('system_settings')
+                .select('value')
+                .eq('key', 'contract_next_seq')
+                .single();
+
+            let currentVal = 1;
+            if (data && data.value) {
+                currentVal = parseInt(data.value, 10);
+                if (isNaN(currentVal)) currentVal = 1;
+            }
+
+            nextSeq = currentVal;
+
+            if (data) {
+                const { data: updatedData, error } = await supabase
+                    .from('system_settings')
+                    .update({ value: (nextSeq + 1).toString() })
+                    .eq('key', 'contract_next_seq')
+                    .eq('value', data.value)
+                    .select();
+
+                if (!error && updatedData && updatedData.length > 0) {
+                    success = true;
+                }
+            } else {
+                const { data: insertedData, error } = await supabase
+                    .from('system_settings')
+                    .insert([{ key: 'contract_next_seq', value: (nextSeq + 1).toString() }])
+                    .select();
+
+                if (!error && insertedData && insertedData.length > 0) {
+                    success = true;
+                }
+            }
+        } catch (e) {
+            // retry
+        }
+
+        if (!success) {
+            await new Promise(resolve => setTimeout(resolve, 3 + Math.random() * 200));
+        }
+    }
+
+    const seqStr = nextSeq.toString().padStart(4, '0');
+    return `${prefix}${seqStr}`;
+};
+

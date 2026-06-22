@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { RecordFile, Contract, PriceItem, SplitItem, User, Employee } from '../types';
-import { fetchPriceList, deleteContractApi, updateContractApi, createContractApi, fetchContracts } from '../services/api';
+import { fetchPriceList, deleteContractApi, updateContractApi, createContractApi, fetchContracts, getNextContractCode } from '../services/api';
 import { FileSignature, LayoutList, Settings, Settings2, FileCheck, FileText, ClipboardList } from 'lucide-react';
 import PriceConfigModal from './PriceConfigModal';
 import { generateDocxBlobAsync, hasTemplate, STORAGE_KEYS } from '../services/docxService';
@@ -146,9 +146,10 @@ const ReceiveContract: React.FC<ReceiveContractProps> = ({ wards, currentUser, e
                   serviceType = match ? match.serviceName : 'Đo đạc hiện trạng';
               }
 
+              const tempRand = `HĐ-${new Date().getFullYear()}-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`;
               const newContract: Contract = {
                   id: Math.random().toString(36).substr(2, 9),
-                  code: recordToLiquidate.code || generateContractCode(),
+                  code: recordToLiquidate.code || tempRand,
                   customerName: recordToLiquidate.customerName,
                   phoneNumber: recordToLiquidate.phoneNumber,
                   address: recordToLiquidate.address,
@@ -182,10 +183,8 @@ const ReceiveContract: React.FC<ReceiveContractProps> = ({ wards, currentUser, e
       }
   }, [recordToLiquidate, contracts, priceList]);
 
-  const generateContractCode = () => {
-    const year = new Date().getFullYear();
-    const randomNum = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
-    return `HĐ-${year}-${randomNum}`;
+  const generateContractCode = async (): Promise<string> => {
+    return await getNextContractCode();
   };
 
   const handleEdit = (c: Contract) => { 

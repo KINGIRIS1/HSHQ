@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Database, AlertTriangle, Cloud, Loader2, CheckCircle, Save, Globe, Calendar, Plus, Trash2, ShieldAlert, Key } from 'lucide-react';
+import { Database, AlertTriangle, Cloud, Loader2, CheckCircle, Save, Globe, Calendar, Plus, Trash2, ShieldAlert, Key, FileSignature } from 'lucide-react';
 import { Holiday, UserRole, RolePermissions, DepartmentPermissions, DEFAULT_ROLE_PERMISSIONS, AVAILABLE_PERMISSIONS, Employee } from '../types';
 import { fetchHolidays, saveHolidays, testDatabaseConnection, saveUpdateInfo, fetchUpdateInfo, getSystemSetting, saveSystemSetting } from '../services/api';
 import { APP_VERSION } from '../constants';
@@ -44,11 +44,40 @@ const SystemSettingsView: React.FC<SystemSettingsViewProps> = ({
   const [isSavingPermissions, setIsSavingPermissions] = useState(false);
   const [permissionTab, setPermissionTab] = useState<'role' | 'department'>('role');
 
+  // Contract Number Settings States
+  const [contractPrefix, setContractPrefix] = useState('HĐ-{năm}-');
+  const [contractNextSeq, setContractNextSeq] = useState('1');
+  const [isSavingContractSettings, setIsSavingContractSettings] = useState(false);
+
   useEffect(() => {
       loadHolidays();
       loadUpdateConfig();
       loadPermissions();
+      loadContractSettings();
   }, []);
+
+  const loadContractSettings = async () => {
+      const savedPrefix = await getSystemSetting('contract_prefix');
+      const savedSeq = await getSystemSetting('contract_next_seq');
+      if (savedPrefix !== null) setContractPrefix(savedPrefix);
+      if (savedSeq !== null) setContractNextSeq(savedSeq);
+  };
+
+  const handleSaveContractSettings = async () => {
+      if (!contractNextSeq.trim() || isNaN(parseInt(contractNextSeq))) {
+          alert("Vui lòng nhập số hợp đồng tiếp theo hợp lệ.");
+          return;
+      }
+      setIsSavingContractSettings(true);
+      const successPrefix = await saveSystemSetting('contract_prefix', contractPrefix.trim());
+      const successSeq = await saveSystemSetting('contract_next_seq', contractNextSeq.trim());
+      setIsSavingContractSettings(false);
+      if (successPrefix && successSeq) {
+          alert('Đã lưu thiết lập Số hợp đồng thành công!');
+      } else {
+          alert('Lỗi khi lưu thiết lập Số hợp đồng.');
+      }
+  };
 
   const loadPermissions = async () => {
       const savedPerms = await getSystemSetting('role_permissions');
@@ -266,6 +295,59 @@ const SystemSettingsView: React.FC<SystemSettingsViewProps> = ({
                             {dbTestStatus === 'error' && <div className="text-xs font-black text-red-600 uppercase tracking-wider">{dbTestMsg || 'Lỗi!'}</div>}
                             <button onClick={handleTestDatabase} disabled={dbTestStatus === 'testing'} className="w-full md:w-auto px-6 py-2.5 bg-blue-50 border border-blue-200 text-blue-700 font-medium text-sm rounded-xl hover:bg-blue-100 transition-colors shadow-sm flex items-center justify-center gap-2"> 
                                 {dbTestStatus === 'testing' ? <Loader2 className="animate-spin" size={16} /> : 'Kiểm tra kết nối'} 
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Thiết lập Số hợp đồng */}
+                    <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
+                        <h3 className="font-black text-gray-700 flex items-center gap-2 mb-5 tracking-tight">
+                            <FileSignature size={18} className="text-orange-500" /> Thiết lập Số hợp đồng
+                        </h3>
+                        <p className="text-xs text-gray-500 mb-4 font-medium">
+                            Định nghĩa định dạng số hiệu và số thứ tự nhảy tự động tiếp theo khi lập hoặc thanh lý hợp đồng.
+                        </p>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Tiền tố Số hợp đồng (Prefix)</label>
+                                <input 
+                                    type="text" 
+                                    className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-blue-500 outline-none transition-all" 
+                                    placeholder="Ví dụ: HĐ-{năm}-" 
+                                    value={contractPrefix} 
+                                    onChange={(e) => setContractPrefix(e.target.value)} 
+                                />
+                                <span className="text-[10px] text-gray-400 mt-1.5 block">Hỗ trợ gắn động: <code>{`{năm}`}</code> hoặc <code>{`{year}`}</code> để tự động đổi thành năm hiện hành.</span>
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Số thứ tự tiếp theo (Sequence)</label>
+                                <input 
+                                    type="number" 
+                                    className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm font-black text-slate-700 focus:ring-2 focus:ring-blue-500 outline-none transition-all" 
+                                    placeholder="Ví dụ: 1" 
+                                    value={contractNextSeq} 
+                                    onChange={(e) => setContractNextSeq(e.target.value)} 
+                                />
+                                <span className="text-[10px] text-gray-400 mt-1.5 block">Khởi tạo số đếm kế tiếp. Sau khi cấp mã hợp đồng, hệ thống sẽ tự sinh tịnh tiến +1.</span>
+                            </div>
+                        </div>
+
+                        {/* Demo xem trước số hợp đồng */}
+                        <div className="mt-5 p-4 bg-orange-50/50 border border-orange-100/50 rounded-2xl text-xs font-semibold text-orange-850 flex items-center justify-between gap-4">
+                            <span>Mẫu Số hợp đồng được xuất tiếp theo (Năm {new Date().getFullYear()}):</span>
+                            <span className="font-mono font-bold text-sm text-orange-700 bg-orange-100/50 px-3 py-1 rounded-lg">
+                                {contractPrefix.replace('{năm}', new Date().getFullYear().toString()).replace('{year}', new Date().getFullYear().toString())}
+                                {(!isNaN(parseInt(contractNextSeq)) ? parseInt(contractNextSeq) : 1).toString().padStart(4, '0')}
+                            </span>
+                        </div>
+
+                        <div className="mt-6 flex justify-end">
+                            <button 
+                                onClick={handleSaveContractSettings} 
+                                disabled={isSavingContractSettings} 
+                                className="w-full md:w-auto flex items-center justify-center gap-2 bg-orange-600 text-white px-8 py-3 rounded-xl hover:bg-orange-700 text-sm font-black shadow-lg transition-all active:scale-95 cursor-pointer"
+                            >
+                                {isSavingContractSettings ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />} Lưu thiết lập Số hợp đồng
                             </button>
                         </div>
                     </div>

@@ -10,7 +10,7 @@ interface ContractFormProps {
   priceList: PriceItem[];
   wards: string[];
   records: RecordFile[];
-  generateCode: () => string;
+  generateCode: () => Promise<string>;
   mode: 'contract' | 'liquidation'; // New prop
 }
 
@@ -68,7 +68,11 @@ const ContractForm: React.FC<ContractFormProps> = ({ initialData, onSave, onPrin
           
           setNotification(null);
       } else {
-          setFormData(prev => ({ ...prev, code: generateCode() }));
+          const fetchCode = async () => {
+              const code = await generateCode();
+              setFormData(prev => ({ ...prev, code }));
+          };
+          fetchCode();
           setTachThuaItems([]);
       }
   }, [initialData, mode]); 
@@ -353,11 +357,13 @@ const ContractForm: React.FC<ContractFormProps> = ({ initialData, onSave, onPrin
       }
   };
 
-  const handleReset = (keepNotification = false) => {
+  const handleReset = async (keepNotification = false) => {
       const d = new Date();
       const todayStrLocal = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      
+      const newCode = await generateCode();
       setFormData({
-        code: generateCode(), customerName: '', phoneNumber: '', address: '', ward: '', landPlot: '', mapSheet: '', area: 0,
+        code: newCode, customerName: '', phoneNumber: '', address: '', ward: '', landPlot: '', mapSheet: '', area: 0,
         contractType: activeTab === 'tt' ? 'Tách thửa' : activeTab === 'cm' ? 'Cắm mốc' : activeTab === 'tl' ? 'Trích lục' : 'Đo đạc', 
         serviceType: '', areaType: '', plotCount: 1, markerCount: 1, quantity: 1, 
         unitPrice: 0, vatRate: 8, vatAmount: 0, totalAmount: 0, deposit: 0, content: '',
