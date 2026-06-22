@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from "react";
-import { RecordFile, RecordStatus, User, Employee } from "../types";
+import { RecordFile, RecordStatus, User, Employee, Contract } from "../types";
 import StatusBadge from "./StatusBadge";
 import {
   Briefcase,
@@ -27,7 +27,7 @@ import {
 import * as XLSX from "xlsx-js-style";
 import { getShortRecordType } from "../constants";
 import { confirmAction } from "../utils/appHelpers";
-import { updateRecordApi } from "../services/api";
+import { updateRecordApi, fetchContracts } from "../services/api";
 import {
   fetchArchiveRecords,
   ArchiveRecord,
@@ -106,6 +106,7 @@ const PersonalProfile: React.FC<PersonalProfileProps> = ({
   });
 
   const [archiveRecords, setArchiveRecords] = useState<ArchiveRecord[]>([]);
+  const [contracts, setContracts] = useState<Contract[]>([]);
   const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
   const [isSubmitCheckModalOpen, setIsSubmitCheckModalOpen] = useState(false);
   const [submitTargetRecords, setSubmitTargetRecords] = useState<RecordFile[]>(
@@ -122,7 +123,16 @@ const PersonalProfile: React.FC<PersonalProfileProps> = ({
       const congvan = await fetchArchiveRecords("congvan");
       setArchiveRecords([...saoluc, ...congvan]);
     };
+    const loadContracts = async () => {
+      try {
+        const fetched = await fetchContracts();
+        setContracts(fetched);
+      } catch (err) {
+        console.error("Error loading contracts:", err);
+      }
+    };
     loadArchive();
+    loadContracts();
   }, []);
 
   const myRecords = useMemo(() => {
@@ -578,6 +588,47 @@ const PersonalProfile: React.FC<PersonalProfileProps> = ({
     }
   };
 
+  const getAnnexContractCode = (recordCode: string, contractsList: Contract[]): string => {
+    const recCode = (recordCode || "").trim();
+    if (!recCode) return "";
+
+    const cleanRecCode = recCode.toLowerCase();
+    const foundContract = contractsList.find(
+      (c) =>
+        (c.customerAddress && c.customerAddress.trim().toLowerCase() === cleanRecCode) ||
+        (c.code && c.code.trim().toLowerCase() === cleanRecCode)
+    );
+
+    const rawContractCode = foundContract && foundContract.code ? foundContract.code : recCode;
+    const cleanContract = rawContractCode.trim();
+
+    // Nếu trùng với mã số biên nhận hoặc rỗng, giữ nguyên theo mã hợp đồng
+    if (!cleanContract) return recCode;
+    if (cleanContract.toLowerCase() === cleanRecCode) {
+      return cleanContract;
+    }
+
+    // Nếu đã có định dạng /HĐDV/ thì giữ nguyên
+    if (cleanContract.includes("/HĐDV/")) {
+      return cleanContract;
+    }
+
+    // Nếu là mã hệ thống (hoặc dạng khác mã biên nhận):
+    // Thử tìm chuỗi số từ 2 đến 4 chữ số ở cuối làm số thứ tự (MÃ HĐ)
+    const seqMatch = cleanContract.match(/(\d+)$/);
+    if (seqMatch) {
+      const seq = seqMatch[1]; // Ví dụ: "0521"
+      
+      // Thử tìm năm 4 chữ số trong mã hợp đồng (ví dụ: "2026")
+      const yearMatch = cleanContract.match(/\b(20\d{2})\b/);
+      const year = yearMatch ? yearMatch[1] : new Date().getFullYear().toString();
+      
+      return `${seq}/HĐDV/${year}`;
+    }
+
+    return cleanContract;
+  };
+
   const handleExportAnnex = async (record: RecordFile) => {
     const hasAnnexTemplate = hasTemplate(STORAGE_KEYS.CONTRACT_TEMPLATE_ANNEX);
     if (!hasAnnexTemplate) {
@@ -604,8 +655,10 @@ const PersonalProfile: React.FC<PersonalProfileProps> = ({
       }
     }
 
+    const finalContractCode = getAnnexContractCode(record.code || "", contracts);
+
     const printData = {
-      MA_HS: record.code || "",
+      MA_HS: finalContractCode,
       NGAY_HD: dateHD.day,
       THANG_HD: dateHD.month,
       NAM_HD: dateHD.year,
@@ -1355,7 +1408,10 @@ const PersonalProfile: React.FC<PersonalProfileProps> = ({
 
       {isAnnexModalOpen && annexTargetRecord && (
         <SystemAnnexTemplate
-          data={annexTargetRecord}
+          data={{
+            ...annexTargetRecord,
+            code: getAnnexContractCode(annexTargetRecord.code || "", contracts)
+          }}
           employees={employees}
           onClose={() => {
             setIsAnnexModalOpen(false);
